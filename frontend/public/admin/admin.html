@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="id" data-theme="dark">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Master Control | Admin E-Voting</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&family=JetBrains+Mono&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="admin.css">
+</head>
+
+<body>
+
+    <div id="loginSection" class="auth-wrapper">
+    <div class="auth-bg-gradient"></div>
+    <div class="auth-glass-circle-1"></div>
+    <div class="auth-glass-circle-2"></div>
+
+    <div class="auth-card text-center animate-fade-in">
+        <div class="auth-card-inner">
+            <div class="brand-badge mb-4">
+                <i class="bi bi-shield-lock-fill"></i>
+            </div>
+            
+            <h4 class="fw-bold m-2"><i class="text-primary"></i>E-VOTE Master Control <span
+                            class="text-primary">OS</span></h4>
+            <p class="text-muted small mb-4 px-4">Kontrol Penuh & Transparan via Blockchain</p>
+
+            <button id="btnConnectMetamask" class="btn btn-connect w-100 rounded-pill py-3 fw-bold mb-3">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/3/36/MetaMask_Fox.svg" width="24" class="me-2">
+                Connect MetaMask
+            </button>
+
+            <div id="loginStatus" class="mt-4 d-flex align-items-center justify-content-center gap-3">
+    <div class="status-pill-login">
+        <span class="dot-indicator" id="statusDot"></span>
+        <span id="statusText" class="fw-semibold">Inisialisasi...</span>
+    </div>
+    <div class="time-stamp-wrapper">
+        <span class="text-muted small">Update: </span>
+        <span id="loginTimer" class="mono small fw-bold">--:--:--</span>
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+
+    <div id="adminDashboard" style="display: none;">
+        <div class="d-flex">
+
+            <aside class="sidebar p-3 d-none d-lg-block">
+                <div class="sidebar-header mb-5 px-3 text-center">
+                    <h5 class="fw-bold m-0"><i class="bi bi-cpu-fill text-primary"></i> E-VOTE <span
+                            class="text-primary">OS</span></h5>
+                </div>
+                <nav class="nav flex-column gap-2">
+                    <a href="#" class="nav-link active"><i class="bi bi-grid-1x2-fill me-2"></i> Dashboard</a>
+                    <a href="#" class="nav-link" id="menuDataPemilih">
+                        <i class="bi bi-people-fill me-2"></i> Data Pemilih
+                    </a>
+                    <a href="#" class="nav-link" id="menuKandidat">
+                        <i class="bi bi-person-badge-fill me-2"></i> Kandidat
+                    </a>
+                    <hr class="my-3 opacity-10">
+                    <a href="#" class="nav-link text-danger" id="btnLogoutSidebar"><i class="bi bi-power me-2"></i>
+                        Logout</a>
+                </nav>
+            </aside>
+
+            <main class="content-area w-100">
+
+                <nav class="navbar navbar-expand px-4 py-3 sticky-top glass-nav">
+                    <div class="container-fluid p-0">
+                        <div class="d-flex align-items-center">
+                            <h4 class="m-0 fw-bold d-lg-none me-3">E-VOTE</h4>
+                            <div class="status-pill d-none d-sm-flex align-items-center">
+                                <span class="dot-pulse me-2"></span>
+                                Realtime Blockchain Sync
+                            </div>
+                        </div>
+
+                        <div class="ms-auto d-flex align-items-center gap-2">
+                            <div class="dropdown">
+                                <button class="btn btn-icon-only border-0 shadow-none" id="bd-theme" type="button"
+                                    data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="bi bi-circle-half"></i>
+                                </button>
+                                <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 mt-2 animate-slide-in"
+                                    aria-labelledby="bd-theme">
+                                    <li>
+                                        <button type="button" class="dropdown-item d-flex align-items-center gap-2"
+                                            data-bs-theme-value="light">
+                                            <i class="bi bi-sun-fill text-warning"></i> Light Mode
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <button type="button" class="dropdown-item d-flex align-items-center gap-2"
+                                            data-bs-theme-value="dark">
+                                            <i class="bi bi-moon-stars-fill text-primary"></i> Dark Mode
+                                        </button>
+                                    </li>
+                                    <li>
+                                        <button type="button" class="dropdown-item d-flex align-items-center gap-2"
+                                            data-bs-theme-value="auto">
+                                            <i class="bi bi-laptop"></i> System
+                                        </button>
+                                    </li>
+                                </ul>
+                            </div>
+
+                            <div class="admin-badge d-none d-md-flex align-items-center">
+                                <i class="bi bi-wallet2 me-2 text-primary"></i>
+                                <span id="adminWallet" class="mono small fw-bold text-truncate"
+                                    style="max-width: 120px;">0x0...</span>
+                            </div>
+
+                            <button id="btnLogout" class="btn btn-icon-only d-lg-none"><i
+                                    class="bi bi-box-arrow-right"></i></button>
+                        </div>
+                    </div>
+                </nav>
+
+                <div class="p-4 p-lg-5">
+
+                    <div class="card border-0 shadow-sm rounded-4 mb-4 bg-primary-subtle">
+                        <div class="card-body p-4">
+                            <div
+                                class="d-flex flex-column flex-md-row justify-content-between align-items-md-center gap-3">
+                                <div>
+                                    <div class="d-flex align-items-center gap-2 mb-1">
+                                        <h4 class="fw-bold m-0 text-primary">Master Control</h4>
+                                        <span id="badgeStatusVoting" class="badge rounded-pill bg-secondary">Status:
+                                            Loading...</span>
+                                    </div>
+                                    <p class="text-muted small m-0">Kontrol Penuh & Transparan via Blockchain</p>
+                                </div>
+                                <div id="actionArea">
+                                    <button id="btnStartVoting"
+                                        class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm">
+                                        <i class="bi bi-play-fill me-2"></i>Buka Voting
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4 mb-4">
+                        <div class="col-xl-3 col-md-6">
+                            <div class="stat-widget border-blue">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="text-muted small fw-bold mb-1">DPT TERDAFTAR</p>
+                                        <h2 class="fw-extrabold m-0" id="statTotalVoters">0</h2>
+                                    </div>
+                                    <div class="icon-circle bg-blue"><i class="bi bi-people"></i></div>
+                                </div>
+                                <div class="progress mt-4" style="height: 5px;">
+                                    <div id="dptProgress" class="progress-bar bg-blue" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-md-6">
+                            <div class="stat-widget border-green">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="text-muted small fw-bold mb-1">SUARA MASUK</p>
+                                        <h2 class="fw-extrabold m-0" id="statTotalVotes">0</h2>
+                                    </div>
+                                    <div class="icon-circle bg-green"><i class="bi bi-check-all"></i></div>
+                                </div>
+                                <div class="progress mt-4" style="height: 5px;">
+                                    <div id="voteProgress" class="progress-bar bg-green" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-md-6">
+                            <div class="stat-widget border-orange">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="text-muted small fw-bold mb-1">PARTISIPASI</p>
+                                        <h2 class="fw-extrabold m-0" id="statParticipation">0%</h2>
+                                    </div>
+                                    <div class="icon-circle bg-orange"><i class="bi bi-pie-chart"></i></div>
+                                </div>
+                                <div class="progress mt-4" style="height: 5px;">
+                                    <div id="particProgress" class="progress-bar bg-orange" style="width: 0%"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-xl-3 col-md-6">
+                            <div class="stat-widget border-purple">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div>
+                                        <p class="text-muted small fw-bold mb-1">COUNTDOWN</p>
+                                        <h2 class="fw-extrabold m-0 mono" id="statTimer">00:00:00</h2>
+                                    </div>
+                                    <div class="icon-circle bg-purple"><i class="bi bi-stopwatch"></i></div>
+                                </div>
+                                <div class="mt-2 small text-muted">Berdasarkan waktu Blockchain</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row g-4">
+                        <div class="col-lg-8">
+                            <div class="card card-custom h-100 shadow-sm border-0">
+                                <div
+                                    class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center p-4">
+                                    <h5 class="m-0 fw-bold"><i class="bi bi-bar-chart-fill me-2 text-primary"></i>Live
+                                        Count Leaderboard</h5>
+                                    <div class="d-flex gap-2">
+                                        <span class="badge bg-success-subtle text-success rounded-pill px-3">On-Chain
+                                            Data</span>
+                                    </div>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-responsive">
+                                        <table class="table table-custom align-middle">
+                                            <thead>
+                                                <tr>
+                                                    <th class="ps-4">No</th>
+                                                    <th>Profil Kandidat</th>
+                                                    <th style="width: 35%;">Visualisasi Suara</th>
+                                                    <th class="text-end pe-4">Total Perolehan</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="leaderboardBody">
+                                                <tr>
+                                                    <td colspan="4" class="text-center py-5 text-muted">Menunggu
+                                                        sinkronisasi data...</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="col-lg-4">
+                            <div class="card card-custom h-100 shadow-sm border-0 system-logs">
+                                <div
+                                    class="card-header bg-transparent border-0 d-flex justify-content-between align-items-center p-4">
+                                    <h5 class="m-0 fw-bold"><i class="bi bi-terminal-fill me-2 text-primary"></i>System
+                                        Logs</h5>
+                                    <button class="btn btn-sm btn-light rounded-circle" onclick="refreshLogs()"
+                                        title="Refresh Logs">
+                                        <i class="bi bi-arrow-clockwise"></i>
+                                    </button>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div id="systemLogs" class="log-container">
+                                        <div class="log-item">[System] Dashboard diinisialisasi...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row g-4 mt-0">
+                        <div class="col-12">
+                            <div class="card card-custom shadow-sm border-0 rounded-4 overflow-hidden">
+                                <div
+                                    class="card-header bg-transparent border-0 p-4 d-flex justify-content-between align-items-center">
+                                    <h5 class="m-0 fw-bold"><i class="bi bi-cpu-fill me-2 text-primary"></i>Live
+                                        Transaction Monitor</h5>
+                                    <div class="d-flex align-items-center">
+                                        <span class="dot-pulse me-2"></span>
+                                        <span
+                                            class="badge bg-primary-subtle text-primary rounded-pill px-3 small">Real-time
+                                            Node Sync</span>
+                                    </div>
+                                </div>
+                                <div class="card-body p-0">
+                                    <div class="table-scroll" style="max-height: 450px;">
+                                        <table class="table table-hover align-middle m-0">
+                                            <thead>
+                                                <tr class="small text-muted">
+                                                    <th class="ps-4 py-3">NO</th>
+                                                    <th class="py-3">TRANSACTION HASH</th>
+                                                    <th class="py-3">ADDRESS PEMILIH (HASH NIK)</th>
+                                                    <th class="py-3">WAKTU VOTING</th>
+                                                    <th class="py-3 text-center">STATUS</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody id="transactionTableBody">
+                                                <tr>
+                                                    <td colspan="4" class="text-center py-5 text-muted">
+                                                        <div class="spinner-border spinner-border-sm me-2"
+                                                            role="status"></div>
+                                                        Menunggu transaksi masuk...
+                                                    </td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                                <div class="card-footer border-0 bg-transparent p-3">
+                                    <div class="d-flex justify-content-between align-items-center small w-100">
+                                        <div class="text-muted opacity-50 d-none d-md-block">
+                                            <i class="bi bi-shield-check me-1"></i> Verified by Sepolia Smart Contract
+                                        </div>
+
+                                        <div class="d-flex align-items-center ms-auto">
+                                            <span id="lastUpdateText" class="text-muted opacity-50 me-0">Last sync: Just
+                                                now</span>
+
+                                            <nav id="txPaginationNav" class="ms-3 d-none">
+                                                <ul class="pagination pagination-sm m-0 gap-1">
+                                                    <li class="page-item"><button
+                                                            class="btn btn-sm btn-outline-secondary rounded-pill px-3"
+                                                            id="prevTxPage"><i class="bi bi-chevron-left"></i></button>
+                                                    </li>
+                                                    <li class="page-item"><button
+                                                            class="btn btn-sm btn-outline-secondary rounded-pill px-3"
+                                                            id="nextTxPage"><i class="bi bi-chevron-right"></i></button>
+                                                    </li>
+                                                </ul>
+                                            </nav>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalDataPemilih" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0 p-4">
+                    <h5 class="fw-bold m-0"><i class="bi bi-people-fill text-primary me-2"></i>Data Pemilih Terdaftar
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="search-container p-4">
+                    <div class="search-wrapper">
+                        <i class="bi bi-search search-icon"></i>
+                        <input type="text" id="voterSearchInput" class="search-input" placeholder="Cari Hash NIK...">
+                        <div class="search-badge d-none d-md-block">
+                            <span class="badge">NIK</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="table-scroll" style="max-height: 400px;">
+                        <table class="table table-hover align-middle m-0">
+                            <thead>
+                                <tr>
+                                    <th class="ps-4">No</th>
+                                    <th>Hash NIK</th>
+                                    <th class="text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="voterTableBody">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+                <div
+                    class="modal-footer border-0 d-flex justify-content-between align-items-center bg-body-tertiary rounded-bottom-4">
+                    <div class="small text-muted" id="paginationInfo">
+                        Menampilkan 1 - 10 dari 1000
+                    </div>
+                    <nav>
+                        <ul class="pagination pagination-sm m-0 gap-1">
+                            <li class="page-item"><button class="page-link rounded-pill px-3"
+                                    id="prevPage">Prev</button></li>
+                            <li class="page-item"><button class="page-link rounded-pill px-3"
+                                    id="nextPage">Next</button></li>
+                        </ul>
+                    </nav>
+                </div>
+                <div class="modal-footer border-0 p-3">
+                    <small class="text-muted mx-auto">Data diambil secara realtime dari backend</small>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalKandidat" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg">
+                <div class="modal-header border-0 p-4">
+                    <h5 class="fw-bold m-0"><i class="bi bi-person-badge-fill text-primary me-2"></i>Profil Kandidat
+                        On-Chain</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4">
+                    <div class="row g-4" id="kandidatContainer">
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="modalConfirmStart" tabindex="-1" aria-hidden="true" data-bs-backdrop="static">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg overflow-hidden" style="border-radius: 24px; background: var(--card-bg);">
+            <div class="position-absolute top-0 start-50 translate-middle-x w-100" style="height: 6px; background: linear-gradient(90deg, #0d6efd, #0dcaf0);"></div>
+            
+            <div class="modal-body p-5">
+                <div class="text-center">
+                    <div class="activation-icon-wrapper mb-4">
+                        <div class="pulse-ring"></div>
+                        <i class="bi bi-shield-lock-fill text-primary"></i>
+                    </div>
+
+                    <h4 class="fw-bold mb-2">Konfirmasi Buka Voting</h4>
+                    <p class="text-muted px-3">
+                        Anda akan memulai sesi pemungutan suara blockchain. Tindakan ini akan mencatat durasi otomatis selama <span class="badge bg-primary-subtle text-primary rounded-pill">6 Jam</span> ke dalam Smart Contract.
+                    </p>
+
+                    <div class="d-flex align-items-center justify-content-center p-3 mb-4 rounded-4" style="background: rgba(13, 110, 253, 0.05); border: 1px dashed rgba(13, 110, 253, 0.2);">
+                        <i class="bi bi-info-circle me-2 text-primary"></i>
+                        <small class="text-primary fw-medium">Waktu akan berjalan real-time di jaringan.</small>
+                    </div>
+
+                    <div class="d-grid gap-2">
+                        <button type="button" id="btnConfirmExecute" class="btn btn-primary btn-lg rounded-pill fw-bold shadow-sm py-3">
+                            <i class="bi bi-check2-circle me-2"></i>Ya, Buka Sekarang
+                        </button>
+                        <button type="button" class="btn btn-link text-muted text-decoration-none fw-medium" data-bs-dismiss="modal">
+                            Batalkan
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="modalConfirmLogout" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-sm">
+        <div class="modal-content border-0 shadow-lg overflow-hidden custom-logout-modal">
+            <div class="modal-accent-line"></div>
+            
+            <div class="modal-body p-4 text-center">
+                <div class="logout-visual-wrapper mb-4">
+                    <div class="icon-glow-bg"></div>
+                    <i class="bi bi-box-arrow-right text-danger"></i>
+                </div>
+                
+                <h4 class="fw-bold m-2">Akhiri Sesi?</h4>
+                <p class="text-muted small mb-4 px-2">
+                    Koneksi ke <span class="text-primary fw-bold">Master Control</span> akan terputus. Anda harus login ulang dengan MetaMask.
+                </p>
+
+                <div class="d-flex flex-column gap-2">
+                    <button type="button" id="btnDoLogout" class="btn btn-danger btn-lg rounded-pill fw-bold py-2 shadow-sm">
+                        Logout Sekarang
+                    </button>
+                    <button type="button" class="btn btn-link text-muted text-decoration-none small fw-medium" data-bs-dismiss="modal">
+                        Batal, Tetap di Sini
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
+    <script src="admin.js"></script>
+</body>
+
+</html>

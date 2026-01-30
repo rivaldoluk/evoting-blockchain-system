@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>E-Voting Pilkades 2025 | Pemilihan Kepala Desa</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap 5.3 + Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- HTML5 QR Code Scanner Library -->
+    <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
+
+    <!-- Keccak256 library (untuk hash NIK di frontend) -->
+    <script src="https://cdn.jsdelivr.net/npm/js-sha3@0.8.0/keccak.min.js"></script>
+
+    <link rel="stylesheet" href="index.css">
+</head>
+
+<body>
+
+    <!-- Alert Container -->
+    <div id="alertContainer" class="alert-fixed"></div>
+
+    <!-- Halaman Utama: Verifikasi Identitas -->
+    <div id="mainPage" class="container py-5">
+        <div class="text-center mb-5">
+            <h1 class="fw-bold text-primary">E-VOTING PILKADES</h1>
+            <p class="text-muted">Pemilihan Kepala Desa Tahun 2025</p>
+        </div>
+
+        <div class="card mx-auto" style="max-width: 540px;">
+            <div class="card-header text-center">
+                <h4 class="mb-0">Langkah 1 : Verifikasi Identitas</h4>
+            </div>
+            <div class="card-body p-4">
+                <p class="text-center mb-4">
+                    Scan QR Code yang diberikan panitia<br>
+                    atau masukkan kode token secara manual
+                </p>
+
+                <div class="d-grid gap-3">
+                    <button id="btnScanQR" class="btn btn-primary btn-lg">
+                        <i class="bi bi-qr-code-scan me-2"></i> Scan QR Code
+                    </button>
+
+                    <div class="text-center my-2">— ATAU —</div>
+
+                    <div class="input-group input-group-lg">
+                        <input type="text" id="inputToken" class="form-control" placeholder="Masukkan kode token (UUID)"
+                            autocomplete="off" />
+                        <button id="btnVerifyToken" class="btn btn-outline-primary" type="button">Verifikasi</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Halaman Scan QR -->
+    <div id="scanPage">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="text-white mb-0">Pindai Kode QR</h4>
+            <button id="btnCloseScan" class="btn btn-outline-light btn-sm">
+                <i class="bi bi-x-lg"></i> Tutup
+            </button>
+        </div>
+
+        <div id="reader"></div>
+
+        <div class="text-center mt-4">
+            <button id="btnChooseGallery" class="btn btn-outline-light btn-lg">
+                <i class="bi bi-images me-2"></i> Pilih dari Galeri
+            </button>
+            <input type="file" id="fileInput" accept="image/*" style="display:none;" />
+        </div>
+    </div>
+
+    <!-- Tahap 2: Input NIK -->
+    <div id="stage2" class="container py-5" style="display:none;">
+        <div class="card mx-auto" style="max-width: 540px;">
+            <div class="card-header text-center">
+                <h4 class="mb-0">Langkah 2 : Masukkan NIK</h4>
+            </div>
+            <div class="card-body p-4">
+                <form id="formNIK">
+                    <div class="mb-4">
+                        <label for="nikInput" class="form-label fw-bold">Nomor Induk Kependudukan (NIK)</label>
+                        <input type="text" class="form-control form-control-lg text-center" id="nikInput"
+                            placeholder="16 digit NIK Anda" maxlength="16" inputmode="numeric" pattern="[0-9]{16}"
+                            required autocomplete="off" />
+                    </div>
+
+                    <div class="d-grid">
+                        <button type="submit" id="btnCheckNIK" class="btn btn-primary btn-lg">
+                            <i class="bi bi-shield-check me-2"></i> Verifikasi & Lanjut
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="stagePanduan" class="container py-5" style="display:none;">
+        <div class="card mx-auto" style="max-width: 600px;">
+            <div class="card-header text-center">
+                <h4 class="mb-0">Panduan & Tata Cara Voting</h4>
+            </div>
+            <div class="card-body p-4">
+                <div class="alert alert-info">
+                    <i class="bi bi-info-circle-fill me-2"></i>
+                    Status Voting: <strong id="votingStatusText">Mengecek status...</strong>
+                </div>
+
+                <div class="mb-4">
+                    <label class="fw-bold mb-2">Daftar Kandidat Tetap:</label>
+                    <div id="candidatePreviewList" class="list-group">
+                        <div class="text-center py-2 text-muted small">Memuat daftar calon...</div>
+                    </div>
+                </div>
+
+                <h5>Penting untuk diperhatikan:</h5>
+                <ul class="mb-4">
+                    <li>Anda hanya memiliki <strong>1 (satu)</strong> kali kesempatan memilih.</li>
+                    <li>Pilihan yang sudah dikirim tidak dapat diubah atau dibatalkan.</li>
+                    <li>Identitas Anda (NIK) akan dianonimkan menggunakan teknologi Blockchain.</li>
+                    <li>Pastikan koneksi internet Anda stabil saat menekan tombol kirim.</li>
+                </ul>
+                <div class="d-grid">
+                    <button id="btnStartVoting" class="btn btn-primary btn-lg">
+                        Mulai Voting Sekarang <i class="bi bi-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading -->
+    <div id="stageLoading" class="container py-5 text-center" style="display:none;">
+        <div class="loader"></div>
+        <h4 class="mt-4">Sedang memproses...</h4>
+        <p class="text-muted">Mohon tunggu sebentar</p>
+    </div>
+
+    <div id="theme-touch" class="assistive-touch">
+        <i class="bi bi-sun-fill" id="theme-icon"></i>
+    </div>
+
+    <div class="modal fade" id="candidateModal" tabindex="-1" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg" style="border-radius: 24px; overflow: hidden;">
+                <div id="modalHeaderColor" style="height: 100px; transition: 0.3s;"></div>
+
+                <div class="modal-body pt-0 text-center" style="margin-top: -50px;">
+                    <img id="modalFoto" src="" class="rounded-circle border border-4 shadow-sm mb-3"
+                        style="width: 110px; height: 110px; object-fit: cover; background: white; border-color: white !important;">
+
+                    <div class="px-3">
+                        <span id="modalNoUrut" class="badge rounded-pill mb-2 px-3 py-2"
+                            style="font-size: 0.9rem;"></span>
+                        <h4 id="modalNamaKetua" class="fw-bold mb-1"></h4>
+                        <div class="d-flex align-items-center justify-content-center mb-3">
+                            <hr class="flex-grow-1"> <span class="mx-2 small text-muted">WAKIL</span>
+                            <hr class="flex-grow-1">
+                        </div>
+                        <h5 id="modalNamaWakil" class="fw-medium text-secondary mb-3"></h5>
+
+                        <p id="modalTagline" class="fst-italic text-primary small mb-4"></p>
+
+                        <div class="text-start p-3 bg-light rounded-4 mb-3 border-start border-4" id="visiContainer">
+                            <label class="fw-bold small text-muted text-uppercase d-block mb-1">Visi</label>
+                            <p id="modalVisi" class="mb-0 small" style="line-height: 1.6;"></p>
+                        </div>
+
+                        <div class="text-start p-3 bg-light rounded-4 border-start border-4" id="misiContainer">
+                            <label class="fw-bold small text-muted text-uppercase d-block mb-1">Misi & Program</label>
+                            <ul id="modalMisi" class="mb-0 ps-3 small" style="line-height: 1.8;"></ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-0 p-3">
+                    <button type="button" class="btn btn-secondary w-100 rounded-3 py-2"
+                        data-bs-dismiss="modal">Tutup</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="index.js"></script>
+</body>
+
+</html>

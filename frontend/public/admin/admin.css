@@ -1,0 +1,930 @@
+/* ============================================================
+   1. VARIABLES & THEMES
+   ============================================================ */
+:root,
+[data-theme="dark"] {
+    --bg-main: #020617;
+    --bg-sidebar: #0f172a;
+    --card-bg: #1e293b;
+    --text-main: #f8fafc;
+    --text-muted: #94a3b8;
+    --glass-nav: rgba(15, 23, 42, 0.8);
+    --border: rgba(255, 255, 255, 0.1);
+    --table-header: #131d2c;
+    --input-bg: rgba(255, 255, 255, 0.05);
+    /* Fix untuk elemen Bootstrap */
+    --bs-body-bg: #020617;
+    --bs-body-color: #f8fafc;
+    --bs-tertiary-bg: #1e293b;
+}
+
+[data-theme="light"] {
+    --bg-main: #f1f5f9;
+    --bg-sidebar: #ffffff;
+    --card-bg: #ffffff;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --glass-nav: rgba(255, 255, 255, 0.8);
+    --border: rgba(0, 0, 0, 0.05);
+    --table-header: #f8fafc;
+    --input-bg: #f8fafc;
+    /* Fix untuk elemen Bootstrap */
+    --bs-body-bg: #f1f5f9;
+    --bs-body-color: #1e293b;
+    --bs-tertiary-bg: #f8fafc;
+}
+
+:root {
+    --accent-blue: #3b82f6;
+    --accent-green: #10b981;
+    --accent-orange: #f59e0b;
+    --accent-purple: #8b5cf6;
+    --sidebar-width: 280px;
+}
+
+/* ============================================================
+   2. GLOBAL STYLES
+   ============================================================ */
+body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    transition: all 0.3s ease;
+}
+
+/* Memastikan tulisan bawaan Bootstrap tetap kontras */
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+.modal-title {
+    color: var(--text-main);
+}
+
+/* ============================================================
+   3. AUTH / LOGIN SECTION
+   ============================================================ */
+.auth-wrapper {
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: radial-gradient(circle at top right, var(--bg-sidebar), var(--bg-main));
+}
+
+.auth-card {
+    background: var(--bg-sidebar);
+    padding: 3rem 2rem;
+    border-radius: 2rem;
+    width: 100%;
+    max-width: 420px;
+    border: 1px solid var(--border);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* ============================================================
+   4. LAYOUT & SIDEBAR
+   ============================================================ */
+.sidebar {
+    width: var(--sidebar-width);
+    height: 100vh;
+    background: var(--bg-sidebar);
+    border-right: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+}
+
+.nav-link {
+    color: var(--text-muted);
+    padding: 0.9rem 1.2rem;
+    border-radius: 12px;
+    transition: all 0.2s;
+    font-weight: 600;
+}
+
+.nav-link:hover,
+.nav-link.active {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--accent-blue) !important;
+}
+
+.glass-nav {
+    background: var(--glass-nav);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+}
+
+/* ============================================================
+   5. COMPONENTS (CARDS & TABLES)
+   ============================================================ */
+.stat-widget,
+.card-custom {
+    background: var(--card-bg) !important;
+    border-radius: 1.5rem;
+    border: 1px solid var(--border);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    overflow: hidden;
+}
+
+.stat-widget {
+    padding: 1.5rem;
+}
+
+.icon-circle {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.25rem;
+}
+
+.bg-blue {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--accent-blue);
+}
+
+.bg-green {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--accent-green);
+}
+
+.bg-orange {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--accent-orange);
+}
+
+.bg-purple {
+    background: rgba(139, 92, 246, 0.1);
+    color: var(--accent-purple);
+}
+
+/* Fix Tabel agar tidak putih sendiri */
+.table {
+    color: var(--text-main);
+}
+
+.table-custom thead th,
+.table thead th {
+    background: var(--table-header) !important;
+    color: var(--text-muted) !important;
+    border: none;
+    font-size: 0.75rem;
+    text-transform: uppercase;
+    padding: 1rem;
+}
+
+.table-custom tbody td,
+.table tbody td {
+    padding: 1rem;
+    border-color: var(--border);
+    background: transparent !important;
+    color: var(--text-main);
+}
+
+.table-scroll {
+    max-height: 450px;
+    overflow-y: auto;
+    position: relative;
+}
+
+/* Sticky hanya di header cell */
+.table-scroll thead th {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background-color: var(--card-bg); /* WARNA SOLID */
+    color: var(--text-muted);
+    border-bottom: 1px solid var(--border);
+}
+
+/* Dark mode – header lebih gelap */
+[data-theme="dark"] .table-scroll thead th {
+    background-color: #131d2c; /* solid, tidak tembus */
+}
+
+/* Light mode – header putih solid */
+[data-theme="light"] .table-scroll thead th {
+    background-color: #ffffff;
+}
+
+/* ============================================================
+   6. MODAL STYLING (CRITICAL FIX)
+   ============================================================ */
+.modal-content {
+    background-color: var(--card-bg) !important;
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    border-radius: 1.5rem;
+}
+
+.modal-header,
+.modal-footer {
+    border-color: var(--border) !important;
+    background-color: transparent !important;
+}
+
+/* Perbaikan area "bg-body-tertiary" di modal footer agar tidak putih */
+.bg-body-tertiary {
+    background-color: var(--input-bg) !important;
+}
+
+.btn-close {
+    filter: invert(1) brightness(200%);
+    /* Agar tombol silang putih di dark mode */
+}
+
+[data-theme="light"] .btn-close {
+    filter: none;
+}
+
+/* Wrapper Input */
+.search-wrapper {
+    position: relative;
+    display: flex;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.03);
+    border: 2px solid transparent;
+    border-radius: 16px;
+    padding: 4px 16px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Efek saat Dark Mode */
+[data-theme="dark"] .search-wrapper {
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* Efek Fokus (Glow) */
+.search-wrapper:focus-within {
+    background: var(--bs-body-bg);
+    border-color: #0d6efd;
+    box-shadow: 0 8px 24px rgba(13, 110, 253, 0.15);
+    transform: translateY(-2px);
+}
+
+/* Ikon Search */
+.search-icon {
+    font-size: 1.1rem;
+    color: #6c757d;
+    margin-right: 12px;
+    transition: color 0.3s;
+}
+
+.search-wrapper:focus-within .search-icon {
+    color: #0d6efd;
+}
+
+/* Input Field */
+.search-input {
+    border: none;
+    background: transparent;
+    padding: 12px 0;
+    width: 100%;
+    outline: none;
+    font-weight: 500;
+    font-size: 0.95rem;
+    color: var(--bs-body-color);
+}
+
+.search-input::placeholder {
+    color: #adb5bd;
+    font-weight: 400;
+}
+
+/* Badge di dalam Input */
+.search-badge .badge {
+    background: rgba(0, 0, 0, 0.05);
+    color: #6c757d;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    padding: 5px 10px;
+    border-radius: 8px;
+    letter-spacing: 1px;
+}
+
+[data-theme="dark"] .search-badge .badge {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+/* ============================================================
+   8. PAGINATION & LOGS
+   ============================================================ */
+/* Styling Pagination */
+.pagination .page-link {
+    background-color: var(--input-bg); /* Mengikuti warna input agar serasi */
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    margin: 0 2px;
+    font-weight: 600;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+    box-shadow: none;
+}
+
+/* State Hover */
+.pagination .page-link:hover:not(:disabled) {
+    background-color: var(--accent-blue);
+    color: white !important;
+    border-color: var(--accent-blue);
+    transform: translateY(-1px);
+}
+
+/* State Disabled (Penting agar tidak hilang di dark mode) */
+.pagination .page-item.disabled .page-link,
+.pagination .page-link:disabled {
+    background-color: rgba(255, 255, 255, 0.02);
+    color: var(--text-muted);
+    opacity: 0.4;
+    border-color: var(--border);
+    cursor: not-allowed;
+}
+
+/* Khusus Dark Mode agar lebih nampak */
+[data-theme="dark"] .pagination .page-link {
+    background-color: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Info teks di footer modal */
+#paginationInfo {
+    font-size: 0.85rem;
+    font-weight: 500;
+    color: var(--text-muted) !important;
+}
+
+/* Styling Tombol Navigasi Transaksi (Live Monitor) */
+#txPaginationNav .btn-outline-secondary {
+    color: var(--text-muted);
+    border-color: var(--border);
+    background: transparent;
+    transition: all 0.2s ease;
+}
+
+#txPaginationNav .btn-outline-secondary:hover {
+    background-color: var(--accent-blue) !important;
+    border-color: var(--accent-blue) !important;
+    color: #ffffff !important;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
+}
+
+/* State Aktif/Tekan */
+#txPaginationNav .btn-outline-secondary:active {
+    transform: translateY(0);
+}
+
+/* State Disabled */
+#txPaginationNav .btn-outline-secondary:disabled {
+    opacity: 0.3;
+    border-color: var(--border);
+    color: var(--text-muted);
+    pointer-events: none;
+}
+
+.log-container {
+    background: var(--bg-sidebar);
+    border-radius: 0 0 1.5rem 1.5rem;
+    padding: 1rem;
+    height: 300px;
+    overflow-y: auto;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.85rem;
+}
+
+.log-item {
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
+
+}
+
+.log-item span.time {
+    color: var(--accent-blue);
+    margin-right: 8px;
+}
+
+.log-item.success {
+    color: var(--accent-green);
+}
+
+.log-item.warning {
+    color: var(--accent-orange);
+}
+
+/* ============================================================
+   9. UTILITIES
+   ============================================================ */
+.mono {
+    font-family: 'JetBrains Mono', monospace !important;
+}
+
+.status-pill {
+    background: rgba(16, 185, 129, 0.1);
+    /* Warna Hijau Transparan */
+    color: var(--accent-green);
+    padding: 6px 12px;
+    border-radius: 50px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    border: 1px solid rgba(16, 185, 129, 0.2);
+    display: inline-flex;
+    align-items: center;
+}
+
+.dot-pulse {
+    width: 8px;
+    height: 8px;
+    background: var(--accent-green);
+    border-radius: 50%;
+    position: relative;
+}
+
+.dot-pulse::after {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: var(--accent-green);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        opacity: 1;
+    }
+
+    100% {
+        transform: scale(3);
+        opacity: 0;
+    }
+}
+
+.btn-icon-only {
+    width: 40px;
+    height: 40px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 10px;
+    background: var(--input-bg);
+    color: var(--text-main);
+    transition: 0.2s;
+}
+
+.btn-icon-only:hover {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--accent-blue);
+}
+
+.status-pill {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--accent-green);
+    padding: 6px 14px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.admin-badge {
+    background: var(--input-bg);
+    padding: 6px 12px;
+    border-radius: 10px;
+    border: 1px solid var(--border);
+}
+
+/* Dropdown */
+.dropdown-menu {
+    background: var(--bg-sidebar);
+    border: 1px solid var(--border);
+}
+
+.dropdown-item {
+    color: var(--text-main);
+    font-size: 0.9rem;
+    padding: 0.6rem 1rem;
+}
+
+.dropdown-item:hover {
+    background: rgba(59, 130, 246, 0.1);
+    color: var(--accent-blue);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+    width: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: var(--border);
+    border-radius: 10px;
+}
+
+.row.g-4 {
+    align-items: stretch !important;   /* memaksa kolom stretch vertikal */
+}
+
+.row.g-4 > div[class*="col-"] > .card {
+    flex: 1 1 auto !important;         /* card ambil ruang penuh + grow */
+    display: flex !important;
+    flex-direction: column;
+}
+
+.system-logs .card-body {
+    flex: 1 1 auto !important;
+    display: flex !important;
+    flex-direction: column;
+}
+
+.system-logs .log-container {
+    flex: 1 1 auto !important;         /* logs stretch & scroll jika perlu */
+    min-height: 0;                     /* penting agar overflow bekerja di flex child */
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch; /* smooth scroll di iOS */
+}
+
+.status-pill {
+    transition: all 0.2s ease;
+}
+
+.status-pill:hover {
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+}
+
+/* Animasi berputar untuk icon pending */
+@keyframes spin-slow {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.bi-hourglass-split.spinning {
+    display: inline-block;
+    animation: spin-slow 2s linear infinite;
+}
+
+/* Warna status Pending */
+.status-pill.pending {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--accent-orange);
+    border: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+#systemLogs {
+    height: 250px;
+    overflow-y: auto;
+    font-family: 'Monaco', 'Consolas', monospace;
+    font-size: 0.85rem;
+    background: var(--bg-card);
+    padding: 10px;
+    border-radius: 8px;
+}
+
+.log-item {
+    margin-bottom: 5px;
+    padding: 3px 8px;
+    border-left: 3px solid transparent;
+}
+
+.log-item.success { border-left-color: #28a745; color: #28a745; }
+.log-item.info { border-left-color: #17a2b8; color: #17a2b8; }
+.log-item.warning { border-left-color: #ffc107; color: #ffc107; }
+.log-item.danger { border-left-color: #dc3545; color: #dc3545; }
+
+.log-item .time { color: gray; margin-right: 8px; }
+
+/* Animasi putar untuk icon pending dan refresh log */
+.spinning, .bi-spin {
+    animation: rotate 2s linear infinite;
+    display: inline-block;
+}
+
+@keyframes rotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+/* Status Pill Style */
+.status-pill {
+    padding: 4px 12px;
+    border-radius: 20px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    background: rgba(40, 167, 69, 0.1);
+    color: #28a745;
+    border: 1px solid #28a745;
+}
+
+.status-pill.pending {
+    background: rgba(255, 193, 7, 0.1);
+    color: #ffc107;
+    border: 1px solid #ffc107;
+}
+
+.animate-pulse {
+    animation: pulse-animation 2s infinite;
+}
+
+@keyframes pulse-animation {
+    0% { box-shadow: 0 0 0 0px rgba(25, 135, 84, 0.4); }
+    70% { box-shadow: 0 0 0 10px rgba(25, 135, 84, 0); }
+    100% { box-shadow: 0 0 0 0px rgba(25, 135, 84, 0); }
+}
+
+/* Styling khusus untuk Login Section */
+.auth-wrapper {
+    position: relative;
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    background-color: #0f172a; /* Warna gelap deep blue */
+}
+
+/* Efek Cahaya Latar Belakang */
+.auth-bg-gradient {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at 50% 50%, rgba(37, 99, 235, 0.1) 0%, transparent 50%);
+    z-index: 0;
+}
+
+.auth-glass-circle-1, .auth-glass-circle-2 {
+    position: absolute;
+    border-radius: 50%;
+    filter: blur(80px);
+    z-index: 0;
+}
+
+.auth-glass-circle-1 {
+    width: 300px; height: 300px;
+    background: rgba(37, 99, 235, 0.2);
+    top: -100px; right: -100px;
+}
+
+.auth-glass-circle-2 {
+    width: 250px; height: 250px;
+    background: rgba(147, 51, 234, 0.15);
+    bottom: -50px; left: -50px;
+}
+
+/* Card Styling */
+.auth-card {
+    position: relative;
+    z-index: 10;
+    width: 100%;
+    max-width: 420px;
+    padding: 2.5rem;
+    background: rgba(255, 255, 255, 0.03);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 2rem;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.brand-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(135deg, #2563eb, #7c3aed);
+    border-radius: 1.5rem;
+    font-size: 2rem;
+    color: white;
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.3);
+}
+
+/* Button Custom */
+.btn-connect {
+    background: white;
+    color: #0f172a;
+    border: none;
+    transition: all 0.3s ease;
+}
+
+.btn-connect:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    background: #f8fafc;
+    color: #0f172a;
+}
+
+.btn-connect:active {
+    transform: translateY(0);
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.8s ease-out;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Container Status */
+.status-pill-login {
+    /* Menggunakan variabel warna teks utama yang otomatis berubah di dark/light mode */
+    color: var(--bs-body-color); 
+    
+    /* Background adaptif: sedikit gelap di light mode, sedikit terang di dark mode */
+    background: rgba(var(--bs-emphasis-color-rgb), 0.05);
+    
+    /* Border adaptif */
+    border: 1px solid rgba(var(--bs-emphasis-color-rgb), 0.1);
+    
+    padding: 8px 18px;
+    border-radius: 100px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-size: 0.85rem;
+    transition: all 0.3s ease; /* Agar perpindahan tema halus */
+}
+
+/* Memastikan teks tetap putih terang di Dark Mode */
+[data-theme="dark"] .status-pill-login {
+    background: rgba(255, 255, 255, 0.05);
+    color: #f8fafc;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+/* Pastikan dot indicator tetap terlihat kontras */
+.dot-indicator {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background-color: #6c757d; /* Warna default jika belum terkoneksi */
+}
+
+/* Status Merah (Tidak Terdeteksi) */
+.dot-red {
+    background-color: #ef4444;
+    box-shadow: 0 0 15px rgba(239, 68, 68, 0.8);
+}
+
+/* Status Kuning (Menunggu/Loading) */
+.dot-amber {
+    background-color: #f59e0b;
+    box-shadow: 0 0 15px rgba(245, 158, 11, 0.8);
+    animation: pulse-amber 2s infinite;
+}
+
+/* Status Hijau (Terhubung) */
+.dot-green {
+    background-color: #10b981;
+    box-shadow: 0 0 15px rgba(16, 185, 129, 0.8);
+}
+
+/* Animasi Denyut untuk status menunggu */
+@keyframes pulse-amber {
+    0% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.5; transform: scale(0.9); }
+    100% { opacity: 1; transform: scale(1); }
+}
+
+/* Wrapper Waktu */
+.time-stamp-wrapper {
+    color: var(--bs-secondary-color);
+    font-size: 0.9rem;
+}
+
+#loginTimer {
+    color: var(--bs-primary); /* Berikan warna brand agar menonjol di kedua mode */
+}
+
+.mono {
+    font-family: 'JetBrains Mono', monospace;
+}
+
+/* Efek Animasi Ikon Modal */
+.activation-icon-wrapper {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    background: rgba(13, 110, 253, 0.1);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto;
+    font-size: 2rem;
+}
+
+.pulse-ring {
+    content: '';
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    border: 4px solid rgba(13, 110, 253, 0.3);
+    border-radius: 50%;
+    animation: modal-pulse 2s infinite;
+}
+
+@keyframes modal-pulse {
+    0% { transform: scale(1); opacity: 1; }
+    100% { transform: scale(1.6); opacity: 0; }
+}
+
+/* Blur Background Modal */
+.modal-backdrop.show {
+    backdrop-filter: blur(8px);
+    background-color: rgba(0, 0, 0, 0.4);
+}
+
+/* Gaya Khusus Modal Logout Modern */
+.custom-logout-modal {
+    border-radius: 28px !important;
+    background: var(--card-bg) !important;
+    backdrop-filter: blur(10px);
+}
+
+.modal-accent-line {
+    height: 5px;
+    width: 100%;
+    background: linear-gradient(90deg, #ff416c, #ff4b2b);
+}
+
+.logout-visual-wrapper {
+    position: relative;
+    width: 80px;
+    height: 80px;
+    margin: 0 auto;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.logout-visual-wrapper i {
+    font-size: 2.5rem;
+    z-index: 2;
+    filter: drop-shadow(0 0 10px rgba(220, 53, 69, 0.4));
+}
+
+.icon-glow-bg {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    background: rgba(220, 53, 69, 0.1);
+    border-radius: 50%;
+    animation: pulse-red 2s infinite;
+}
+
+@keyframes pulse-red {
+    0% { transform: scale(0.95); opacity: 0.5; }
+    50% { transform: scale(1.1); opacity: 0.2; }
+    100% { transform: scale(0.95); opacity: 0.5; }
+}
+
+/* Mempercantik Tombol Logout */
+#btnDoLogout {
+    transition: all 0.3s ease;
+    border: none;
+    background: linear-gradient(135deg, #dc3545 0%, #a71d2a 100%);
+}
+
+#btnDoLogout:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px rgba(220, 53, 69, 0.3) !important;
+}
+
+/* Membuat bar lebih tebal dan menyala */
+.progress {
+    background-color: rgba(255, 255, 255, 0.1) !important; /* Background sisa bar agar kontras */
+    height: 8px !important; /* Sedikit lebih tebal dari 5px */
+    overflow: visible; /* Agar efek glow tidak terpotong */
+}
+
+.progress-bar {
+    border-radius: 10px;
+    transition: width 1s ease-in-out;
+}
+
+/* Warna Hijau (Suara Masuk) */
+.progress-bar.bg-green {
+    background-color: #10b981 !important;
+    box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+
+/* Warna Oranye (Partisipasi) */
+.progress-bar.bg-orange {
+    background-color: #f59e0b !important;
+    box-shadow: 0 0 10px rgba(255, 159, 67, 0.5);
+}
+
+/* Warna Biru (DPT) */
+.progress-bar.bg-blue {
+    background-color: #3b82f6 !important;
+    box-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+}

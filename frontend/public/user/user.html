@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Surat Suara Digital | E-Voting System</title>
+
+    <script>
+        (function () {
+            const savedTheme = localStorage.getItem('theme-preference');
+            const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme || systemTheme);
+        })();
+    </script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+        rel="stylesheet">
+
+    <link rel="stylesheet" href="user.css">
+</head>
+
+<body>
+
+    <nav class="navbar sticky-top glass-effect">
+        <div class="container d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <div class="brand-logo-container me-2 me-sm-3">
+                    <i class="bi bi-shield-lock-fill"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0 fw-extrabold tracking-tight" style="font-size: 0.9rem;">E-VOTING</h6>
+                    <span class="status-indicator d-flex align-items-center gap-1">
+    <span id="statusDot" class="dot"></span>
+    <span id="statusText" class="status-text">Memuat...</span>
+</span>
+                </div>
+            </div>
+
+            <div class="user-profile-chip">
+                <div class="chip-avatar d-none d-sm-flex">
+                    <i class="bi bi-person-fill"></i>
+                </div>
+                <div class="chip-text text-end text-sm-start">
+                    <small class="text-muted d-block" style="font-size: 0.6rem; line-height: 1;">PEMILIH SAH</small>
+                    <span id="displayNIK" class="fw-bold" style="font-size: 0.75rem;">NIK: ************</span>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="container py-5">
+        <div class="text-center mb-4 animate-fade-in">
+            <div class="glass-countdown d-inline-flex align-items-center gap-2 px-4 py-2 rounded-pill">
+                <i class="bi bi-clock-history icon-timer"></i>
+                <span class="timer-label">LOADING...</span>
+                <span id="navTimerValue" class="timer-digits"></span>
+            </div>
+        </div>
+
+        <div class="row justify-content-center mb-5 animate-fade-in">
+            <div class="col-lg-8 text-center">
+                <h1 class="display-5 fw-extrabold mb-3">Pilih Kepala Desa</h1>
+                <p class="text-secondary fs-5">Suara Anda adalah masa depan desa. Silakan pilih satu kandidat di bawah
+                    ini.</p>
+                <div class="divider mx-auto"></div>
+            </div>
+        </div>
+
+        <div id="candidateGrid" class="row g-4 animate-staggered">
+            <div class="col-12 text-center py-5">
+                <div class="custom-loader mx-auto"></div>
+                <p class="mt-3 text-muted fw-medium">Menyiapkan Surat Suara...</p>
+            </div>
+        </div>
+    </main>
+
+    <div class="modal fade" id="confirmVoteModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg rounded-5 overflow-hidden">
+
+                <div id="voteStateConfirm" class="modal-body text-center">
+                    <div class="modal-header-icon mb-3" style="font-size: 2.5rem; color: var(--accent);">
+                        <i class="bi bi-patch-check-fill"></i>
+                    </div>
+                    <h4 class="fw-extrabold mb-4">Konfirmasi Pilihan</h4>
+
+                    <div class="selection-preview-card mb-4">
+                        <div class="avatar-ring">
+                            <img id="confirmImg" src="" alt="Kandidat">
+                        </div>
+
+                        <h4 id="confirmNama" class="fw-bold mb-1"></h4>
+                        <p class="text-secondary small mb-4"></p>
+                        <span class="badge bg-primary rounded-pill px-3 py-2" id="confirmNoUrut"></span>
+                    </div>
+
+                    <p class="text-muted small mb-4">Geser tombol biru ke kanan untuk memvalidasi pilihan Anda</p>
+
+                    <div class="swipe-container-wrapper">
+                        <div class="swipe-container" id="swipeTrack">
+                            <div class="swipe-text">GESER UNTUK VOTE</div>
+                            <div class="swipe-handle" id="swipeHandle">
+                                <i class="bi bi-chevron-double-right"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button class="btn btn-link text-muted mt-3 text-decoration-none fw-semibold btn-sm"
+                        data-bs-dismiss="modal">
+                        Batal, Pilih Kembali
+                    </button>
+                </div>
+
+                <div id="voteStateSuccess" class="modal-body p-5 text-center" style="display: none;">
+                    <div class="success-lottie-wrapper mb-4">
+                        <div class="checkmark-circle">
+                            <i class="bi bi-check-lg"></i>
+                        </div>
+                    </div>
+                    <h2 class="fw-extrabold mb-2">Suara Terkirim!</h2>
+                    <p class="text-muted mb-5">Terima kasih telah berpartisipasi dalam demokrasi desa yang jujur dan
+                        adil.</p>
+
+                    <div class="alert alert-info rounded-4 border-0 small py-2 mb-4">
+                        Di alihkan ke dashboard dalam <span id="redirectTimer" class="fw-bold">3</span> detik...
+                    </div>
+
+                    <div class="d-grid">
+                        <a href="../dashboard/dashboard.html"
+                            class="btn btn-primary btn-lg rounded-4 fw-bold py-3 shadow-sm btn-hover-effect">
+                            Lihat Hasil Sementara <i class="bi bi-arrow-right ms-2"></i>
+                        </a>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <div class="modal fade" id="concurrentModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-body text-center p-5">
+                <div class="mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-danger rounded-circle" style="width: 80px; height: 80px;">
+                        <i class="bi bi-shield-lock-fill" style="font-size: 2.5rem;"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-3">Keamanan Sesi</h3>
+                <p class="text-secondary mb-4" id="concurrentMessage">
+                    Sistem mendeteksi NIK ini telah aktif di tab atau perangkat lain. Sesi ini dihentikan untuk melindungi integritas suara Anda.
+                </p>
+                <button type="button" onclick="clearAndExit()" class="btn btn-primary w-100 py-3 fw-bold rounded-3 shadow-sm">
+                    Kembali ke Beranda
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="errorVoteModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-body text-center p-5">
+                <div class="mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-warning bg-opacity-10 text-warning rounded-circle" style="width: 80px; height: 80px;">
+                        <i class="bi bi-exclamation-octagon-fill" style="font-size: 2.5rem;"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-3">Gagal Memilih</h3>
+                <p class="text-secondary mb-4" id="errorVoteMessage">
+                    Terjadi kesalahan saat mengirimkan suara Anda.
+                </p>
+                <button type="button" onclick="clearAndExit()" class="btn btn-secondary w-100 py-3 fw-bold rounded-3 shadow-sm" data-bs-dismiss="modal">
+                    Kembali ke Beranda
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+    <button id="theme-toggle" class="theme-fab" title="Ganti Mode">
+        <div class="fab-content">
+            <i class="bi bi-sun-fill" id="theme-icon"></i>
+        </div>
+    </button>
+
+    <footer class="container py-5 text-center">
+        <p class="text-muted small mb-0">E-Voting System &copy; 2026 - Aman, Jujur, Transparan</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="user.js"></script>
+</body>
+
+</html>

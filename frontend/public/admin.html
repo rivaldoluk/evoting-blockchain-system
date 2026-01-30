@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Panel Pilkades</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    body { margin:0; font-family:Arial; background:#0f172a; color:white; }
+    .header { background:#1e293b; padding:20px; text-align:center; }
+    .card { background:#1e293b; margin:20px; padding:25px; border-radius:15px; }
+    button { padding:12px 25px; margin:10px; background:#10b981; border:none; border-radius:10px; font-size:18px; cursor:pointer; }
+    canvas { margin-top:20px; }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>ADMIN PANEL PILKADES 2025</h1>
+    <p>Contract: 0xb815...9Fd5</p>
+  </div>
+
+  <div class="card">
+    <h2>Statistik Pemilihan</h2>
+    <p>Total Terdaftar: <b id="total">0</b></p>
+    <p>Sudah Voting: <b id="voted">0</b></p>
+    <p>Sisa: <b id="sisa">0</b></p>
+    <button onclick="refresh()">Refresh</button>
+    <button onclick="window.print()">Cetak Rekap PDF</button>
+  </div>
+
+  <div class="card">
+    <canvas id="myChart"></canvas>
+  </div>
+
+  <script>
+    const ctx = document.getElementById('myChart').getContext('2d');
+    let chart;
+
+    async function refresh() {
+      const res = await fetch('http://localhost:3001/api/status');
+      const data = await res.json();
+
+      document.getElementById('total').textContent = data.totalVoters;
+      document.getElementById('voted').textContent = data.voted;
+      document.getElementById('sisa').textContent = data.totalVoters - data.voted;
+
+      // Dummy hasil suara (nanti diganti polling on-chain kalau mau)
+      const hasil = [0,0,0];
+      // Contoh simulasi: hasil[0] = data.voted * 0.4, dll
+
+      if (chart) chart.destroy();
+      chart = new Chart(ctx, {
+        type: 'bar',
+        data: {
+          labels: ['H. Ahmad', 'Hj. Siti', 'Budi S.'],
+          datasets: [{
+            label: 'Jumlah Suara',
+            data: hasil,
+            backgroundColor: ['#f59e0b', '#ec4899', '#3b82f6'],
+            borderWidth: 2
+          }]
+        },
+        options: { responsive:true, scales:{ y:{ beginAtZero:true } } }
+      });
+    }
+
+    refresh();
+    setInterval(refresh, 8000);
+  </script>
+</body>
+</html>

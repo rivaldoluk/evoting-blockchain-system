@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pilkades 2025 - Dashboard Pemilih</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+  <style>
+    :root { 
+      --p: #ff6b00; --pl: #ff8c33; --green: #00ff9d; --gold: #ffd700;
+      --bg: #0f0f23; --card: rgba(25,25,55,0.95); --row: rgba(40,40,80,0.4);
+      --border: rgba(255,107,0,0.3);
+    }
+    * { margin:0; padding:0; box-sizing:border-box; }
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg);
+      color: #e0e0ff;
+      min-height: 100vh;
+      padding: 15px;
+    }
+    .container { max-width: 720px; margin: 0 auto; }
+    .card {
+      background: var(--card);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      padding: 35px;
+      border: 1px solid var(--border);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.8);
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: ''; position: absolute; top:0; left:0; right:0; height:6px;
+      background: linear-gradient(90deg, var(--p), var(--pl), var(--gold));
+    }
+    h1 { 
+      font-size: 2.8rem; font-weight: 800; text-align: center; margin-bottom: 10px;
+      background: linear-gradient(90deg, #fff, #ffd700);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .subtitle { text-align: center; opacity: 0.9; font-size: 1.1rem; margin-bottom: 35px; }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 18px;
+      margin: 35px 0;
+    }
+    .stat-box {
+      background: rgba(255,255,255,0.05);
+      padding: 22px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,107,0,0.3);
+      text-align: center;
+    }
+    .stat-num {
+      font-size: 2.8rem;
+      font-weight: 800;
+      color: var(--p);
+      text-shadow: 0 0 30px rgba(255,107,0,0.6);
+    }
+
+    .progress {
+      height: 12px; background: rgba(255,255,255,0.1); border-radius: 6px; overflow: hidden; margin: 30px 0;
+    }
+    .bar { height: 100%; width: 0%; background: linear-gradient(90deg, var(--p), var(--pl)); border-radius: 6px; transition: width 2s ease; }
+
+    .timer {
+      text-align: center; font-size: 1.9rem; font-weight: 700; color: var(--pl); margin: 35px 0;
+      padding: 18px; background: rgba(0,0,0,0.3); border-radius: 16px;
+    }
+    .closed { color: var(--green) !important; font-size: 2.3rem !important; }
+
+    /* TABEL PEMILIH */
+    .voter-table {
+      width: 100%;
+      background: rgba(0,0,0,0.4);
+      border-radius: 20px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+      margin: 40px 0;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .table-wrapper {
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      border-radius: 20px;
+    }
+    table {
+      width: 100%;
+      min-width: 600px;
+      border-collapse: collapse;
+    }
+    thead {
+      background: rgba(255,107,0,0.2);
+      color: #ffcc80;
+      font-weight: 600;
+    }
+    th, td {
+      padding: 16px 18px;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+    th { font-size: 0.92rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    tbody tr {
+      transition: all 0.3s;
+      background: rgba(255,255,255,0.02);
+    }
+    tbody tr:hover {
+      background: rgba(255,255,255,0.08);
+    }
+    tbody tr.new {
+      background: rgba(0,255,157,0.2);
+      animation: flash 3s;
+    }
+    @keyframes flash { 0%,100% { background: rgba(0,255,157,0.2); } 50% { background: rgba(0,255,157,0.5); } }
+
+    .no { color: var(--gold); font-weight: 800; text-align: center; }
+    .address {
+      font-family: 'Courier New', monospace;
+      color: #00ff9d;
+      font-weight: 600;
+      font-size: 0.95rem;
+      word-break: break-all;
+    }
+    .address:hover { color: #33ffaa; }
+    .time { color: #ffcc80; font-size: 0.95rem; }
+    .status {
+      color: var(--green);
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .status i { font-size: 1.3rem; }
+
+    .chart { background: rgba(255,255,255,0.06); border-radius: 24px; padding: 40px; margin: 40px 0; display: none; border: 1px solid rgba(255,215,0,0.5); }
+    .tx { background: rgba(0,0,0,0.6); padding: 20px; border-radius: 16px; font-family: 'Courier New', monospace; margin: 30px 0; word-break: break-all; border: 1px solid rgba(0,255,157,0.4); }
+
+    .btn {
+      display: block; width: 100%; margin: 40px auto 0; max-width: 400px;
+      background: linear-gradient(135deg, var(--p), var(--pl));
+      color: white; border: none; padding: 20px; border-radius: 50px;
+      font-size: 1.4rem; font-weight: 700; cursor: pointer;
+      box-shadow: 0 15px 40px rgba(255,107,0,0.6);
+      transition: 0.4s;
+    }
+    .btn:hover { transform: translateY(-5px); }
+
+    @media (max-width: 768px) {
+      h1 { font-size: 2.5rem; }
+      .stat-num { font-size: 2.4rem; }
+      .timer { font-size: 1.7rem; }
+      th, td { font-size: 0.9rem; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <div class="card">
+    <h1>PEMILUKADES 2025</h1>
+    <p class="subtitle">Desa Sukamaju • Kec. Cicalengka • Kab. Bandung</p>
+
+    <div class="stats-grid">
+      <div class="stat-box">
+        <div class="stat-num" id="voted">0</div>
+        <div>Sudah Memilih</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-num" id="total">0</div>
+        <div>Total DPT</div>
+      </div>
+    </div>
+
+    <div class="progress"><div class="bar" id="bar"></div></div>
+    <div style="text-align:center; font-size:1.8rem; font-weight:700; margin:20px 0;" id="percent">0%</div>
+
+    <div class="timer" id="timer">Memuat waktu...</div>
+
+    <!-- TABEL PEMILIH -->
+    <div class="voter-table">
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>No</th>
+              <th>Hash Identitas Pemilih</th> <!-- Diperbaiki judulnya -->
+              <th>Waktu Voting</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="voterList">
+            <tr><td colspan="4" style="text-align:center; padding:60px; opacity:0.6;">Memuat daftar pemilih...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="chart" id="chartBox">
+      <h2 style="text-align:center; color:var(--pl); margin-bottom:30px; font-size:2.2rem; font-weight:800;">
+        Hasil Akhir Perolehan Suara
+      </h2>
+      <canvas id="myChart"></canvas>
+    </div>
+
+    <div class="tx" id="txBox">
+      Bukti transaksi Anda:<br>
+      <span id="txHash" style="color:var(--green); font-weight:bold;">Loading...</span>
+    </div>
+
+    <button class="btn" onclick="location.href='../index.html'">Kembali ke Beranda</button>
+  </div>
+</div>
+
+<script>
+  const API = "http://localhost:3001";
+  let votingEndTime = 0;
+  let chart = null;
+  let lastVotedCount = 0;
+
+  if (!localStorage.getItem('hasVoted')) {
+    alert("Hanya pemilih yang sudah memberikan suara yang boleh masuk!");
+    window.location.href = '../index.html';
+  }
+
+  const tx = localStorage.getItem('latestTxHash');
+  if (tx) {
+    document.getElementById('txHash').innerHTML = 
+      tx.slice(0,20)+'...'+tx.slice(-18) +
+      ` <a href="https://sepolia.etherscan.io/tx/${tx}" target="_blank" style="color:var(--green);">(lihat)</a>`;
+  }
+
+  function timeAgo(votedAt) {
+    if (!votedAt) return "baru saja";
+    const date = new Date(votedAt);
+    const seconds = Math.floor((new Date() - date) / 1000);
+
+    if (seconds < 60) return `${seconds} detik lalu`;
+    if (seconds < 3600) return `${Math.floor(seconds/60)} menit lalu`;
+    if (seconds < 86400) return `${Math.floor(seconds/3600)} jam lalu`;
+    
+    const days = Math.floor(seconds / 86400);
+    return days === 1 ? "1 hari lalu" : `${days} hari lalu`;
+  }
+
+  function shortAddress(hash) {
+    if (!hash || hash === "0x0000...0000") return "Unknown";
+    return hash.slice(0, 10) + '...' + hash.slice(-8);
+  }
+
+  function renderVoters(voters) {
+    const tbody = document.getElementById('voterList');
+    
+    if (!voters || voters.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; padding:60px; opacity:0.6;">Belum ada yang memilih</td></tr>';
+      return;
+    }
+
+    if (voters.length > lastVotedCount) {
+      confetti({ particleCount: 180, spread: 100, origin: { y: 0.6 } });
+    }
+    lastVotedCount = voters.length;
+
+    const sorted = [...voters].reverse(); // terbaru di atas
+
+    tbody.innerHTML = sorted.map((v, i) => `
+      <tr class="${i < (voters.length - lastVotedCount) ? 'new' : ''}">
+        <td class="no">${i + 1}</td>
+        <td class="address" title="${v.hash}">${shortAddress(v.hash)}</td>
+        <td class="time">${timeAgo(v.votedAt)}</td>
+        <td class="status"><i class="fas fa-check-circle"></i> Success</td>
+      </tr>
+    `).join('');
+  }
+
+  async function loadData() {
+    try {
+      const r = await fetch(`${API}/api/stats?t=${Date.now()}`);
+      const d = await r.json();
+
+      document.getElementById('voted').textContent = d.votedCount.toLocaleString();
+      document.getElementById('total').textContent = d.totalVoters.toLocaleString();
+
+      const persen = d.totalVoters ? (d.votedCount / d.totalVoters * 100).toFixed(1) : 0;
+      document.getElementById('percent').textContent = persen + '%';
+      document.getElementById('bar').style.width = persen + '%';
+
+      if (!votingEndTime && d.votingEndTime) {
+        votingEndTime = d.votingEndTime;
+        startCountdown(votingEndTime);
+      }
+
+      if (d.voters) renderVoters(d.voters);
+
+      if (d.isVotingClosed && d.results?.length > 0 && !chart) {
+        document.getElementById('chartBox').style.display = 'block';
+        confetti({ particleCount: 400, spread: 160 });
+        renderChart(d.results);
+      }
+
+    } catch (e) {
+      document.getElementById('timer').textContent = "Server sedang maintenance...";
+    }
+  }
+
+  function startCountdown(endTimestamp) {
+    const timer = document.getElementById('timer');
+    const interval = setInterval(() => {
+      const diff = endTimestamp - Date.now()/1000;
+      if (diff <= 0) {
+        timer.innerHTML = `<span class="closed">PEMILIHAN TELAH BERAKHIR</span>`;
+        clearInterval(interval);
+        loadData(); // refresh sekali lagi setelah selesai
+        return;
+      }
+      const h = String(Math.floor(diff/3600)).padStart(2,'0');
+      const m = String(Math.floor((diff%3600)/60)).padStart(2,'0');
+      const s = String(Math.floor(diff%60)).padStart(2,'0');
+      timer.textContent = `Berakhir dalam ${h}:${m}:${s}`;
+    }, 1000);
+  }
+
+  function renderChart(data) {
+    chart = new Chart(document.getElementById('myChart'), {
+      type: 'bar',
+      data: {
+        labels: data.map(x => x.nama),
+        datasets: [{
+          data: data.map(x => x.votes),
+          backgroundColor: 'rgba(255,107,0,0.85)',
+          borderColor: '#fff',
+          borderWidth: 2,
+          borderRadius: 12,
+        }]
+      },
+      options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { 
+          y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.1)' }, ticks: { color: '#fff' } },
+          x: { grid: { display: false }, ticks: { color: '#fff' } } 
+        }
+      }
+    });
+  }
+
+  loadData();
+  setInterval(loadData, 60000);
+</script>
+</body>
+</html>

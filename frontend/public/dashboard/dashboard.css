@@ -1,0 +1,405 @@
+/* --- Root Variables (Smooth Theme Transitions) --- */
+:root {
+    --bg-body: #f8fafc;
+    --bg-card: #ffffff;
+    --text-primary: #0f172a;
+    --text-secondary: #64748b;
+    --text-muted: #94a3b8;
+    --accent: #2563eb;
+    --accent-light: #dbeafe;
+    --border: #e2e8f0;
+    --glass-bg: rgba(255, 255, 255, 0.8);
+    --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+}
+
+[data-theme="dark"] {
+    --bg-body: #020617;
+    --bg-card: #0f172a;
+    --text-primary: #f8fafc;    /* Putih terang */
+    --text-secondary: #cbd5e1;  /* Abu terang agar kontras */
+    --text-muted: #94a3b8;
+    --accent: #3b82f6;
+    --accent-light: rgba(59, 130, 246, 0.15);
+    --border: #1e293b;
+    --glass-bg: rgba(15, 23, 42, 0.9);
+    --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+}
+
+/* --- Base Styles --- */
+body {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    background-color: var(--bg-body);
+    color: var(--text-primary);
+    transition: background-color 0.4s ease, color 0.4s ease;
+    min-height: 100vh;
+    margin: 0;
+}
+
+/* Fix Global: Memaksa semua teks mengikuti variabel tema */
+h1, h2, h3, h4, h5, h6, .h1, .h2, .h3, .h4, .h5, .h6 {
+    color: var(--text-primary) !important;
+}
+
+p, span, small, label {
+    color: var(--text-secondary);
+}
+
+/* Container pembungkus dot dan teks */
+.status-indicator {
+    line-height: 1;
+    margin-top: 2px;
+}
+
+.status-text {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Lingkaran Dot Hijau */
+.dot {
+    width: 8px;
+    height: 8px;
+    background-color: #10b981; /* Warna hijau emerald */
+    border-radius: 50%;
+    display: inline-block;
+    position: relative;
+    box-shadow: 0 0 8px rgba(16, 185, 129, 0.6); /* Efek cahaya di sekitar dot */
+}
+
+/* Efek Animasi Denyut (Pulse) */
+.dot::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    background-color: #10b981;
+    animation: pulse-dot 1.5s cubic-bezier(0.455, 0.03, 0.515, 0.955) infinite;
+}
+
+@keyframes pulse-dot {
+    0% { transform: scale(1); opacity: 0.8; }
+    100% { transform: scale(2.5); opacity: 0; }
+}
+
+/* Penyesuaian Brand Logo jika diperlukan agar sejajar dengan teks dua baris */
+.brand-logo-container {
+    width: 38px;
+    height: 38px;
+    background: var(--accent);
+    color: white;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.2rem;
+}
+
+/* Paksa warna putih untuk elemen di dalam kartu biru (Total Vote) */
+.total-vote-card, .total-vote-card * {
+    color: white !important;
+}
+
+.fw-800 { font-weight: 800; }
+.tracking-tight { letter-spacing: -0.025em; }
+
+/* --- Navbar Glassmorphism --- */
+.glass-effect {
+    background: var(--glass-bg);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+.brand-logo {
+    width: 42px; height: 42px;
+    background: var(--accent);
+    color: white !important;
+    border-radius: 12px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+    box-shadow: 0 4px 12px var(--accent-light);
+}
+
+/* --- Total Vote Card --- */
+.total-vote-card {
+    background: linear-gradient(135deg, var(--accent), #1d4ed8);
+    padding: 2rem;
+    border-radius: 24px;
+    box-shadow: 0 20px 25px -5px var(--accent-light);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+.total-vote-card::after {
+    content: '';
+    position: absolute;
+    top: -50%; right: -20%;
+    width: 200px; height: 200px;
+    background: rgba(255,255,255,0.1);
+    border-radius: 50%;
+}
+
+/* --- Grafik / Progress Bar Styling --- */
+.card {
+    background-color: var(--bg-card) !important;
+    border: 1px solid var(--border) !important;
+    border-radius: 24px !important;
+    box-shadow: var(--shadow);
+}
+
+.vote-bar-wrapper {
+    width: 100%;
+    padding: 10px 0;
+}
+
+.progress-label {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+}
+
+/* Memastikan nama kandidat di label progress terbaca */
+.progress-label span:first-child {
+    color: var(--text-primary);
+    font-weight: 700;
+}
+
+.progress {
+    height: 12px;
+    background-color: var(--bg-body);
+    border-radius: 100px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+}
+
+/* --- Candidate Detail Cards --- */
+.cand-detail-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    transition: all 0.3s ease;
+}
+
+/* Fix teks di dalam kartu detail */
+.cand-detail-card h6 {
+    color: var(--text-primary) !important;
+    margin: 0;
+}
+
+.cand-detail-card small {
+    color: var(--text-secondary) !important;
+}
+
+.cand-detail-img {
+    width: 56px; height: 56px;
+    border-radius: 14px;
+    object-fit: cover;
+    border: 2px solid var(--border);
+}
+
+/* --- Floating Theme Button --- */
+.theme-fab {
+    position: fixed; bottom: 30px; right: 30px;
+    width: 56px; height: 56px;
+    background: var(--accent);
+    color: white !important;
+    border: none; border-radius: 16px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.4rem;
+    cursor: pointer;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+    z-index: 1001;
+}
+
+/* --- Animations & Indicators --- */
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-secondary) !important;
+}
+
+/* Fix untuk class text-muted bootstrap agar mengikuti tema */
+.text-muted {
+    color: var(--text-muted) !important;
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.6s ease-out forwards;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(15px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Custom Styling untuk SweetAlert2 */
+.swal2-popup-custom {
+    border-radius: 24px !important;
+    border: 1px solid var(--border) !important;
+    font-family: 'Plus Jakarta Sans', sans-serif !important;
+    background-color: var(--bg-card) !important;
+    padding: 2rem !important;
+}
+
+.swal2-title-custom {
+    color: var(--text-primary) !important;
+    font-weight: 800 !important;
+    padding-top: 10px !important;
+}
+
+.swal2-html-custom {
+    color: var(--text-secondary) !important;
+    line-height: 1.6 !important;
+    margin-bottom: 20px !important;
+}
+
+/* Berikan jarak antar tombol di sini */
+.swal2-confirm-custom {
+    border-radius: 12px !important;
+    padding: 12px 24px !important;
+    font-weight: 700 !important;
+    margin-left: 10px !important; /* Jarak tombol konfirmasi */
+}
+
+.swal2-cancel-custom {
+    border-radius: 12px !important;
+    padding: 12px 24px !important;
+    font-weight: 700 !important;
+    margin-right: 10px !important; /* Jarak tombol batal */
+}
+
+/* Pastikan container tombol memberikan ruang yang cukup */
+.swal2-actions {
+    gap: 15px !important; /* Cara paling modern untuk memberi jarak */
+    margin-top: 25px !important;
+}
+
+/* --- Utilities --- */
+.text-accent { color: var(--accent) !important; }
+
+/* Responsivitas Mobile */
+@media (max-width: 768px) {
+    .total-vote-card { padding: 1.5rem; }
+    .theme-fab { bottom: 20px; right: 20px; width: 48px; height: 48px; }
+}
+
+/* --- Ultra Modern Total Vote Card --- */
+.total-vote-card {
+    background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+    padding: 1.5rem !important;
+    border-radius: 24px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    box-shadow: 0 20px 40px rgba(37, 99, 235, 0.25);
+    position: relative;
+    overflow: hidden;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Efek Cahaya Dekoratif di Background */
+.total-vote-card::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -20%;
+    width: 150px;
+    height: 150px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 50%;
+    filter: blur(30px);
+}
+
+/* Sisi Kiri (Countdown) */
+#navTimerValue {
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    font-weight: 800;
+    color: #ffffff;
+    text-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+    letter-spacing: -1px;
+}
+
+#timerLabel {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.65rem !important;
+    letter-spacing: 1px;
+}
+
+/* Sisi Kanan (Total Votes) */
+#totalVotes {
+    font-size: 2.2rem;
+    color: #ffffff;
+    text-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+}
+
+#navTimerValue, #totalVotes {
+    margin: 0 !important;
+    padding: 0 !important;
+    display: flex;
+    align-items: center;
+}
+
+.vote-icon-circle {
+    width: 32px;
+    height: 32px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(4px);
+}
+
+/* Garis Pemisah Vertikal */
+.v-divider {
+    width: 1px;
+    height: 50px;
+    background: linear-gradient(to bottom, transparent, rgba(255,255,255,0.4), transparent);
+}
+
+/* Animasi Spinner Pulse */
+.spinner-grow-custom {
+    width: 8px;
+    height: 8px;
+    /* background-color dihapus dari sini karena akan diatur oleh JavaScript */
+    border-radius: 50%;
+    display: inline-block;
+    flex-shrink: 0;
+    margin-bottom: 1px;
+    transition: background-color 0.4s ease, box-shadow 0.4s ease; /* Transisi warna halus */
+    animation: pulse-active 1.5s infinite;
+}
+
+@keyframes pulse-active {
+    0% { 
+        transform: scale(1); 
+        /* Menggunakan currentColor atau bayangan tipis agar fleksibel */
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.4); 
+    }
+    70% { 
+        transform: scale(1.5); 
+        box-shadow: 0 0 0 10px rgba(255, 255, 255, 0); 
+    }
+    100% { 
+        transform: scale(1); 
+        box-shadow: 0 0 0 0 rgba(255, 255, 255, 0); 
+    }
+}
+
+.border-end {
+    border-color: rgba(255, 255, 255, 0.15) !important;
+}

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="id">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Hasil | Pilkades 2026</title>
+
+    <script>
+        (function () {
+            const savedTheme = localStorage.getItem('theme-preference');
+            const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', savedTheme || systemTheme);
+        })();
+    </script>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="dashboard.css">
+
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+</head>
+
+<body>
+
+    <nav class="navbar sticky-top glass-effect">
+        <div class="container d-flex align-items-center justify-content-between">
+            <div class="d-flex align-items-center">
+                <div class="brand-logo me-3">
+                    <i class="bi bi-pie-chart-fill"></i>
+                </div>
+                <div>
+                    <h6 class="mb-0 fw-bold tracking-tight">HASIL SEMENTARA</h6>
+                    <span class="status-indicator d-flex align-items-center gap-1">
+                        <span class="dot"></span>
+                        <span class="status-text">Update Real-time</span>
+                    </span>
+                </div>
+            </div>
+            <button class="btn btn-outline-danger btn-sm rounded-pill px-3 fw-bold" onclick="logout()">
+                <i class="bi bi-box-arrow-right me-1"></i> Keluar
+            </button>
+        </div>
+    </nav>
+
+    <main class="container py-5">
+        <div class="row align-items-center mb-5 animate-fade-in">
+            <div class="col-md-6 mb-4 mb-md-0">
+                <h1 class="fw-800 display-6 mb-2">Statistik Pemilihan</h1>
+                <p class="text-secondary fs-5">Data perolehan suara digital masuk secara real-time.</p>
+            </div>
+            <div class="col-md-6">
+                <div class="total-vote-card animate-fade-in">
+                    <div class="row g-0 align-items-center">
+                        <div
+                            class="col-6 border-end border-white border-opacity-25 d-flex flex-column justify-content-center">
+                            <div class="d-flex align-items-center gap-2 mb-1">
+                                <span class="spinner-grow-custom" id="statusPulse"></span>
+                                <small id="timerLabel" class="text-uppercase fw-bold opacity-75"
+                                    style="font-size: 0.6rem; letter-spacing: 0.5px;">Berakhir Dalam</small>
+                            </div>
+                            <div class="d-flex align-items-center gap-2">
+                                <div id="navTimerValue" class="fw-800 fs-3 lh-1 text-white">00:00:00</div>
+                                <i class="bi bi-stopwatch small opacity-50 text-white"></i>
+                            </div>
+                        </div>
+
+                        <div class="col-6 ps-3 d-flex flex-column justify-content-center">
+                            <small class="text-uppercase fw-bold opacity-75 d-block mb-1"
+                                style="font-size: 0.6rem; letter-spacing: 0.5px;">Total Suara Masuk</small>
+                            <div class="d-flex align-items-center gap-2">
+                                <h2 class="fw-800 mb-0 text-white lh-1 fs-3" id="totalVotes">0</h2>
+                                <i class="bi bi-people-fill small opacity-50 text-white"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card border-0 shadow-sm rounded-4 mb-5 overflow-hidden">
+            <div class="card-header bg-transparent border-0 pt-4 px-4">
+                <h5 class="fw-bold mb-0">Grafik Perolehan Suara</h5>
+            </div>
+            <div class="card-body p-4">
+                <div id="chartContainer" class="d-flex flex-column gap-4">
+                    <div class="text-center py-5">
+                        <div class="spinner-border text-primary" role="status"></div>
+                        <p class="mt-3 text-muted">Sinkronisasi data...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="mb-4">
+            <h5 class="fw-bold mb-3">Detail Kandidat</h5>
+            <div class="row g-4" id="candidateCards">
+            </div>
+        </div>
+    </main>
+
+    <button id="theme-toggle" class="theme-fab" title="Ganti Mode">
+        <i class="bi bi-sun-fill" id="theme-icon"></i>
+    </button>
+
+    <footer class="container py-5 text-center">
+        <div class="divider mx-auto mb-4"
+            style="width: 50px; height: 3px; background: var(--border); border-radius: 10px;"></div>
+        <p class="text-muted small mb-0">E-Voting Dashboard System &copy; 2026</p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="dashboard.js"></script>
+</body>
+
+</html>
