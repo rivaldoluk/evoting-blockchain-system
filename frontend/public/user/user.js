@@ -5,6 +5,13 @@ const NGROK_HEADERS = {
 let selectedCandidateId = null;
 let countdownInterval = null;
 
+function getFullImageUrl(path) {
+    if (!path) return '/img/default.png';
+    if (path.startsWith('http')) return path;
+    const fileName = path.split('/').pop();
+    return `/img/${fileName}`; // Mengambil langsung dari public Vercel
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     initAuth();
     initTheme();
@@ -44,7 +51,7 @@ async function loadCandidates() {
                 <div class="candidate-card" onclick="openVoteModal('${cand.id}', '${cand.nama}', '${cand.noUrut}', '${cand.foto}')">
                     <div class="candidate-number">${cand.noUrut}</div>
                     
-                    <img src="${BACKEND_URL}${cand.foto}" class="img-circle" alt="${cand.nama}" onerror="this.src='https://via.placeholder.com/150'">
+                    <img src="${getFullImageUrl(cand.foto)}" class="img-circle" alt="${cand.nama}" onerror="this.src='/img/default.png'">
                     <h4 class="fw-extrabold mb-1 tracking-tight">${cand.nama}</h4>
                     <p class="text-secondary small mb-4"></p>
                     <button class="btn btn-outline-primary btn-sm rounded-pill px-4 fw-bold">Pilih Calon</button>
@@ -75,7 +82,7 @@ function openVoteModal(id, nama, noUrut, foto) {
     selectedCandidateId = id;
     document.getElementById('confirmNama').innerText = nama;
     document.getElementById('confirmNoUrut').innerText = `Kandidat Nomor ${noUrut}`;
-    document.getElementById('confirmImg').src = BACKEND_URL + foto;
+    document.getElementById('confirmImg').src = getFullImageUrl(foto);
 
     // Reset modal ke state awal (Konfirmasi)
     document.getElementById('voteStateConfirm').style.display = 'block';
