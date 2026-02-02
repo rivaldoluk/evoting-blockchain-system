@@ -338,63 +338,77 @@ function showAdminAuthModal() {
     }, 1000);
 }
 
-function startRealtimeStream() {
+async function startRealtimeStream() {
+    // --- LANGKAH 1: Ambil data awal via FETCH (Solusi paling ampuh) ---
+    try {
+        const res = await fetch(`${BACKEND_URL}/results`, { 
+            headers: NGROK_HEADERS 
+        });
+        if (res.ok) {
+            const initialData = await res.json();
+            console.log("Data awal diterima:", initialData);
+            updateDashboardUI(initialData); 
+        }
+    } catch (err) {
+        console.error("Gagal mengambil data awal:", err);
+    }
+
+    // --- LANGKAH 2: Inisialisasi SSE ---
     if (eventSource) eventSource.close();
-    eventSource = new EventSource(`${BACKEND_URL}/results-stream`, { headers: NGROK_HEADERS });
+    
+    eventSource = new EventSource(`${BACKEND_URL}/results-stream`);
 
     eventSource.onmessage = async (event) => {
         try {
-            // 1. Update Chart & Leaderboard (Data dari SSE)
             const candidates = JSON.parse(event.data);
+            console.log("Update dari Stream:", candidates);
+            
+            // Panggil render tabel
             updateDashboardUI(candidates);
             
-            // 2. Ambil data voter terbaru (Termasuk TxHash & Timestamp) dari Config
-            const configRes = await fetch(`${BACKEND_URL}/admin/config`, {
-    headers: NGROK_HEADERS // Tambahkan ini
-});
+            // Update tabel transaksi pemilih
+            const configRes = await fetch(`${BACKEND_URL}/admin/config`, { headers: NGROK_HEADERS });
             if (configRes.ok) {
                 const configData = await configRes.json();
-                // Update tabel transaksi di halaman utama
                 updateTransactionTable(configData.votersList);
             }
-            
-            addLog("Blockchain sync: Node diperbarui.", "info");
         } catch (e) {
-            console.error("Gagal sinkronisasi:", e);
+            console.error("Gagal parse data stream:", e);
         }
+    };
+
+    eventSource.onerror = (err) => {
+        console.warn("Koneksi stream terputus, mencoba reconnect...");
     };
 }
 
 function updateDashboardUI(candidates) {
-    const totalVotes = candidates.reduce((sum, c) => sum + c.votes, 0);
+    if (!candidates || !Array.isArray(candidates)) return;
 
-    const participation = TOTAL_DPT > 0 ? ((totalVotes / TOTAL_DPT) * 100).toFixed(1) : 0;
+    // Hitung total suara
+    const totalVotes = candidates.reduce((sum, c) => sum + (Number(c.votes) || 0), 0);
+    
+    // Update Widget Statistik Atas
+    if(document.getElementById('statTotalVotes')) {
+        document.getElementById('statTotalVotes').innerText = totalVotes.toLocaleString('id-ID');
+    }
 
-    // 1. Update Widget Statistik
-    document.getElementById('statTotalVotes').innerText = totalVotes.toLocaleString('id-ID');
-    document.getElementById('statTotalVoters').innerText = TOTAL_DPT.toLocaleString('id-ID');
-    document.getElementById('statParticipation').innerText = participation + "%";
-
-    // 2. Update Progress Bars
-    const voteBar = document.getElementById('voteProgress');
-    const particBar = document.getElementById('particProgress');
-    const dptBar = document.getElementById('dptProgress');
-    if (voteBar) voteBar.style.width = Math.min(participation, 100) + "%";
-    if (particBar) particBar.style.width = Math.min(participation, 100) + "%";
-    if (dptBar) dptBar.style.width = "100%";
-
-    // 3. Update Tabel Leaderboard (Sorted by Votes)
     const tbody = document.getElementById('leaderboardBody');
-    const sorted = [...candidates].sort((a, b) => b.votes - a.votes);
+    if (!tbody) return;
+
+    // Urutkan berdasarkan suara terbanyak
+    const sorted = [...candidates].sort((a, b) => (Number(b.votes) || 0) - (Number(a.votes) || 0));
 
     tbody.innerHTML = sorted.map((cand, index) => {
-        const pct = totalVotes > 0 ? ((cand.votes / totalVotes) * 100).toFixed(1) : 0;
+        // Jika totalVotes 0, persentase diset ke 0 agar tidak Error
+        const pct = totalVotes > 0 ? ((Number(cand.votes) / totalVotes) * 100).toFixed(1) : "0.0";
+        
         return `
             <tr>
                 <td class="ps-4 text-muted mono">#${index + 1}</td>
                 <td>
                     <div class="d-flex align-items-center">
-                        <img src="${getFullImageUrl(cand.foto)}" class="rounded-circle me-3 border border-secondary" width="40" height="40" style="object-fit: cover;">
+                        <img src="${getFullImageUrl(cand.foto)}" class="rounded-circle me-3 border border-secondary" width="40" height="40" style="object-fit: cover;" onerror="this.src='/img/default.png'">
                         <div>
                             <div class="fw-bold">${cand.nama}</div>
                             <div class="small text-muted">Kandidat No. ${cand.noUrut}</div>
@@ -403,8 +417,8 @@ function updateDashboardUI(candidates) {
                 </td>
                 <td style="width: 35%">
                     <div class="d-flex align-items-center gap-2">
-                        <div class="progress flex-grow-1" style="height: 6px; background: var(--border)">
-                            <div class="progress-bar" style="width: ${pct}%; background: ${cand.warna || 'var(--accent-blue)'}"></div>
+                        <div class="progress flex-grow-1" style="height: 6px; background: rgba(0,0,0,0.1)">
+                            <div class="progress-bar" style="width: ${pct}%; background: ${cand.warna || '#2563eb'}"></div>
                         </div>
                         <span class="small fw-bold mono">${pct}%</span>
                     </div>
