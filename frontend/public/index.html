@@ -514,7 +514,7 @@
       if (path.startsWith('http')) return path;
       // Jika tidak, tambahkan BACKEND_URL di depannya
       // Contoh: /img/kandidat-1.png menjadi http://localhost:3001/img/kandidat-1.png
-      return `${BACKEND_URL}${path.startsWith('/') ? '' : '/'}${path}`;
+      return `/img/${fileName}`;
     }
 
     let countdownInterval = null;

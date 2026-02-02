@@ -333,9 +333,7 @@ function showAdminAuthModal() {
 
 function startRealtimeStream() {
     if (eventSource) eventSource.close();
-    eventSource = new EventSource(`${BACKEND_URL}/results-stream`, {
-    headers: NGROK_HEADERS // Tambahkan ini
-});
+    eventSource = new EventSource(`${BACKEND_URL}/results-stream`);
 
     eventSource.onmessage = async (event) => {
         try {
