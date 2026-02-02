@@ -509,13 +509,11 @@
 };
 
     function getFullImageUrl(path) {
-      if (!path) return 'img/default.png';
-      // Jika path sudah diawali http, gunakan langsung
-      if (path.startsWith('http')) return path;
-      // Jika tidak, tambahkan BACKEND_URL di depannya
-      // Contoh: /img/kandidat-1.png menjadi http://localhost:3001/img/kandidat-1.png
-      return `/img/${fileName}`;
-    }
+    if (!path) return 'img/default.png';
+    if (path.startsWith('http')) return path;
+    const fileName = path.split('/').pop();
+    return `/img/${fileName}`;
+}
 
     let countdownInterval = null;
     let currentToken = null;
