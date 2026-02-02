@@ -128,7 +128,7 @@
                         adil.</p>
 
                     <div class="alert alert-info rounded-4 border-0 small py-2 mb-4">
-                        Di alihkan ke dashboard dalam <span id="redirectTimer" class="fw-bold">3</span> detik...
+                        Di alihkan ke dashboard dalam <span id="redirectTimer" class="fw-bold">5</span> detik...
                     </div>
 
                     <div class="d-grid">
@@ -153,11 +153,16 @@
                     </div>
                 </div>
                 <h3 class="fw-bold mb-3">Keamanan Sesi</h3>
-                <p class="text-secondary mb-4" id="concurrentMessage">
+                <p class="text-secondary mb-3" id="concurrentMessage">
                     Sistem mendeteksi NIK ini telah aktif di tab atau perangkat lain. Sesi ini dihentikan untuk melindungi integritas suara Anda.
                 </p>
+
+                <div class="alert alert-danger rounded-4 border-0 small py-2 mb-4">
+                    Di alihkan ke Beranda dalam <span id="concurrentCountdown" class="fw-bold">5</span> detik...
+                </div>
+
                 <button type="button" onclick="clearAndExit()" class="btn btn-primary w-100 py-3 fw-bold rounded-3 shadow-sm">
-                    Kembali ke Beranda
+                    Kembali ke Beranda Sekarang <i class="bi bi-arrow-right ms-2"></i>
                 </button>
             </div>
         </div>
@@ -167,19 +172,46 @@
 <div class="modal fade" id="errorVoteModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
-            <div class="modal-body text-center p-5">
-                <div class="mb-4">
-                    <div class="d-inline-flex align-items-center justify-content-center bg-warning bg-opacity-10 text-warning rounded-circle" style="width: 80px; height: 80px;">
-                        <i class="bi bi-exclamation-octagon-fill" style="font-size: 2.5rem;"></i>
+            <div class="modal-body p-5 text-center">
+                <div class="success-lottie-wrapper mb-4">
+                    <div class="checkmark-circle bg-warning bg-opacity-10 text-warning border-warning">
+                        <i class="bi bi-exclamation-triangle"></i>
                     </div>
                 </div>
-                <h3 class="fw-bold mb-3">Gagal Memilih</h3>
-                <p class="text-secondary mb-4" id="errorVoteMessage">
-                    Terjadi kesalahan saat mengirimkan suara Anda.
-                </p>
-                <button type="button" onclick="clearAndExit()" class="btn btn-secondary w-100 py-3 fw-bold rounded-3 shadow-sm" data-bs-dismiss="modal">
-                    Kembali ke Beranda
-                </button>
+                <h2 class="fw-extrabold mb-2">Suara Ditolak</h2>
+                <p class="text-muted mb-5" id="errorVoteMessage">Terjadi kesalahan pada validasi data NIK Anda.</p>
+
+                <div class="alert alert-danger rounded-4 border-0 small py-2 mb-4">
+                    Kembali ke Beranda dalam <span id="errorCountdown" class="fw-bold">5</span> detik...
+                </div>
+
+                <div class="d-grid">
+                    <button onclick="clearAndExit()" class="btn btn-danger btn-lg rounded-4 fw-bold py-3 shadow-sm">
+                        Keluar Sekarang <i class="bi bi-box-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="networkErrorModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-body p-5 text-center">
+                <div class="success-lottie-wrapper mb-4">
+                    <div class="checkmark-circle bg-primary bg-opacity-10 text-info border-info">
+                        <i class="bi bi-wifi-off"></i>
+                    </div>
+                </div>
+                <h2 class="fw-extrabold mb-2">Masalah Koneksi</h2>
+                <p class="text-muted mb-5">Gagal terhubung ke server. Pastikan internet Anda stabil dan coba lagi.</p>
+
+                <div class="d-grid">
+                    <button type="button" onclick="refreshPage()" class="btn btn-primary text-white btn-lg rounded-4 fw-bold py-3 shadow-sm">
+                        Coba Lagi <i class="bi bi-arrow-clockwise ms-2"></i>
+                    </button>
+                </div>
             </div>
         </div>
     </div>

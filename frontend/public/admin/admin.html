@@ -468,6 +468,34 @@
     </div>
 </div>
 
+<div class="modal fade" id="adminAuthModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
+            <div class="modal-body p-5 text-center">
+                <div class="mb-4">
+                    <div class="d-inline-flex align-items-center justify-content-center bg-danger bg-opacity-10 text-danger rounded-circle" style="width: 80px; height: 80px;">
+                        <i class="bi bi-person-x-fill" style="font-size: 2.5rem;"></i>
+                    </div>
+                </div>
+                <h3 class="fw-bold mb-3">Sesi Berakhir</h3>
+                <p class="text-secondary mb-4">
+                    Akun MetaMask Anda telah diubah atau tidak memiliki akses admin. Anda akan dialihkan ke halaman login.
+                </p>
+
+                <div class="alert alert-danger rounded-4 border-0 small py-2 mb-4">
+                    Keluar otomatis dalam <span id="adminCountdown" class="fw-bold">5</span> detik...
+                </div>
+
+                <div class="d-grid">
+                    <button onclick="executeLogout()" class="btn btn-danger btn-lg rounded-4 fw-bold py-3 shadow-sm">
+                        Keluar Sekarang <i class="bi bi-box-arrow-right ms-2"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.0/ethers.umd.min.js"></script>
     <script src="admin.js"></script>

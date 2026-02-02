@@ -1,7 +1,10 @@
 /**
  * KONFIGURASI GLOBAL
  */
-const BACKEND_URL = 'http://localhost:3001';
+const BACKEND_URL = 'https://96cb9975d28f.ngrok-free.app';
+const NGROK_HEADERS = {
+    "ngrok-skip-browser-warning": "69420"
+};
 let provider, signer, adminAddress;
 let eventSource;
 let AUTHORIZED_ADMIN = "";
@@ -168,26 +171,43 @@ if (btnStart) {
 
 async function checkSession() {
     try {
-        const configRes = await fetch(`${BACKEND_URL}/admin/config`);
+        // 1. Ambil config dari backend
+        const configRes = await fetch(`${BACKEND_URL}/admin/config`, {
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         const configData = await configRes.json();
 
         AUTHORIZED_ADMIN = configData.authorizedAdmin.toLowerCase();
         TOTAL_DPT = configData.totalDPT;
 
         const isAuth = sessionStorage.getItem('adminAuth');
-        if (isAuth === 'true') {
-            const savedAddress = sessionStorage.getItem('adminAddress');
+        
+        // 2. Jika status auth ada, validasi ulang dengan MetaMask aktif
+        if (isAuth === 'true' && window.ethereum) {
+            provider = new ethers.BrowserProvider(window.ethereum);
+            const accounts = await provider.listAccounts(); // Cek akun aktif sekarang
             
-            // TAMBAHKAN INI: Inisialisasi ulang provider agar signer tersedia
-            if (window.ethereum) {
-                provider = new ethers.BrowserProvider(window.ethereum);
-                signer = await provider.getSigner(); // Menyiapkan signer untuk transaksi
+            // Ambil address aktif (jika ada)
+            const currentAddress = accounts.length > 0 ? accounts[0].address.toLowerCase() : null;
+            const savedAddress = sessionStorage.getItem('adminAddress')?.toLowerCase();
+
+            // VALIDASI KRUSIAL: 
+            // Cek apakah MetaMask terkoneksi, akunnya sama dengan session, DAN akunnya adalah admin resmi
+            if (currentAddress && currentAddress === savedAddress && currentAddress === AUTHORIZED_ADMIN) {
+                signer = await provider.getSigner();
+                showDashboard(savedAddress);
+            } else {
+                // Jika akun berubah saat refresh atau bukan admin, langsung tendang
+                executeLogout(); 
             }
-            
-            showDashboard(savedAddress);
+        } else if (isAuth === 'true' && !window.ethereum) {
+            // Jika status auth true tapi MetaMask hilang (extension di-disable)
+            executeLogout();
         }
+
     } catch (err) {
-        console.error("Gagal load config:", err);
+        console.error("Gagal load config atau validasi sesi:", err);
+        // Opsi: Tampilkan modal error koneksi jika gagal fetch config
     }
 }
 
@@ -202,7 +222,9 @@ async function connectWallet() {
     btnConnect.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menghubungkan...';
 
     try {
-        const configRes = await fetch(`${BACKEND_URL}/admin/config`);
+        const configRes = await fetch(`${BACKEND_URL}/admin/config`, {
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         if (!configRes.ok) throw new Error("Gagal mengambil konfigurasi server.");
         const configData = await configRes.json();
         AUTHORIZED_ADMIN = configData.authorizedAdmin.toLowerCase();
@@ -270,8 +292,7 @@ function showDashboard(address) {
         // Jika user ganti akun di MetaMask
         window.ethereum.on('accountsChanged', (accounts) => {
             if (accounts.length === 0 || accounts[0].toLowerCase() !== AUTHORIZED_ADMIN) {
-                alert("Sesi berakhir: Akun MetaMask tidak dikenali.");
-                executeLogout();
+                showAdminAuthModal();
             }
         });
         // Jika user ganti network (misal dari Sepolia ke Mainnet)
@@ -290,6 +311,26 @@ function showDashboard(address) {
     refreshDashboardStatus();
 }
 
+function showAdminAuthModal() {
+    // Tampilkan modal
+    const authModal = new bootstrap.Modal(document.getElementById('adminAuthModal'));
+    authModal.show();
+
+    // Jalankan Countdown 5 detik
+    let timeLeft = 5;
+    const countdownEl = document.getElementById('adminCountdown');
+
+    const timer = setInterval(() => {
+        timeLeft--;
+        if (countdownEl) countdownEl.innerText = timeLeft;
+
+        if (timeLeft <= 0) {
+            clearInterval(timer);
+            executeLogout(); // Pastikan fungsi logout Anda sudah benar
+        }
+    }, 1000);
+}
+
 function startRealtimeStream() {
     if (eventSource) eventSource.close();
     eventSource = new EventSource(`${BACKEND_URL}/results-stream`);
@@ -301,7 +342,9 @@ function startRealtimeStream() {
             updateDashboardUI(candidates);
             
             // 2. Ambil data voter terbaru (Termasuk TxHash & Timestamp) dari Config
-            const configRes = await fetch(`${BACKEND_URL}/admin/config`);
+            const configRes = await fetch(`${BACKEND_URL}/admin/config`, {
+    headers: NGROK_HEADERS // Tambahkan ini
+});
             if (configRes.ok) {
                 const configData = await configRes.json();
                 // Update tabel transaksi di halaman utama
@@ -473,7 +516,9 @@ function renderTransactionTableRows() {
  */
 async function startCountdownTimer() {
     try {
-        const res = await fetch(`${BACKEND_URL}/voting-status`);
+        const res = await fetch(`${BACKEND_URL}/voting-status`, {
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         const data = await res.json();
 
         updateStatusBadge(data.status);
@@ -607,7 +652,9 @@ async function showVoterData() {
     currentPage = 1;
 
     try {
-        const res = await fetch(`${BACKEND_URL}/admin/config`);
+        const res = await fetch(`${BACKEND_URL}/admin/config`, {
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         const data = await res.json();
         allVoters = data.votersList || [];
         filteredVoters = [...allVoters]; // Awalnya filtered sama dengan semua data
@@ -661,7 +708,9 @@ async function showKandidatData() {
     modal.show();
 
     try {
-        const res = await fetch(`${BACKEND_URL}/results`);
+        const res = await fetch(`${BACKEND_URL}/results`, {
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         const data = await res.json();
 
         container.innerHTML = data.map(k => `
@@ -701,7 +750,7 @@ async function showKandidatData() {
 /**
  * KONFIGURASI DURASI OTOMATIS (Dalam Jam)
  */
-const DEFAULT_VOTING_DURATION = 1; 
+const DEFAULT_VOTING_DURATION = 6; 
 
 async function startVotingProcess() {
     const modalEl = document.getElementById('modalConfirmStart');
@@ -754,7 +803,9 @@ async function executeVotingActivation(modalBtn) {
         btnDashboard.disabled = true;
         btnDashboard.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
 
-        const configRes = await fetch(`${BACKEND_URL}/admin/config`);
+        const configRes = await fetch(`${BACKEND_URL}/admin/config`, {
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         const config = await configRes.json();
 
         if (!window.ethereum) throw new Error("MetaMask tidak ditemukan");
@@ -794,7 +845,9 @@ async function executeVotingActivation(modalBtn) {
 
 async function refreshDashboardStatus() {
     try {
-        const res = await fetch(`${BACKEND_URL}/voting-status`);
+        const res = await fetch(`${BACKEND_URL}/voting-status`, {
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         const data = await res.json();
         const btnStart = document.getElementById('btnStartVoting');
 

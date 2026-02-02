@@ -1,4 +1,7 @@
-const BACKEND_URL = 'http://localhost:3001';
+const BACKEND_URL = 'https://96cb9975d28f.ngrok-free.app';
+const NGROK_HEADERS = {
+    "ngrok-skip-browser-warning": "69420"
+};
 let countdownInterval = null;
 
 // --- 1. Security & Access Control ---
@@ -56,7 +59,9 @@ function setupRealtimeUpdate() {
 // --- 4. Core Logic: Fetch Data Awal ---
 async function fetchResults() {
     try {
-        const res = await fetch(`${BACKEND_URL}/results`);
+        const res = await fetch(`${BACKEND_URL}/results`, {
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         if (!res.ok) throw new Error('Gagal mengambil data dari server');
         const data = await res.json();
         if (data && Array.isArray(data)) {
@@ -187,7 +192,9 @@ function logout() {
  */
 async function checkVotingStatus() {
     try {
-        const res = await fetch(`${BACKEND_URL}/voting-status`);
+        const res = await fetch(`${BACKEND_URL}/voting-status`, {
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         const data = await res.json();
         
         const timerLabel = document.getElementById('timerLabel');

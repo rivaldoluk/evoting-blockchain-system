@@ -503,7 +503,10 @@
 
   <script>
     // === KONFIGURASI ===
-    const BACKEND_URL = 'http://localhost:3001';
+    const BACKEND_URL = 'https://96cb9975d28f.ngrok-free.app';
+    const NGROK_HEADERS = {
+    "ngrok-skip-browser-warning": "69420"
+};
 
     function getFullImageUrl(path) {
       if (!path) return 'img/default.png';
@@ -579,7 +582,7 @@
       try {
         const res = await fetch(`${BACKEND_URL}/verify-token`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...NGROK_HEADERS },
           body: JSON.stringify({ token })
         });
 
@@ -632,7 +635,9 @@
     // Fungsi untuk mengecek status voting dari contract melalui backend
     async function checkVotingStatus() {
       try {
-        const res = await fetch(`${BACKEND_URL}/voting-status`);
+        const res = await fetch(`${BACKEND_URL}/voting-status`, {
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         const data = await res.json();
 
         // Cari atau buat container timer di dalam alert
@@ -726,7 +731,7 @@
       try {
         const res = await fetch(`${BACKEND_URL}/verify-nik`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...NGROK_HEADERS },
           body: JSON.stringify({ nik: nik })
         });
 
@@ -759,7 +764,9 @@
     // 1. Ambil data gabungan dari Backend
     async function loadCandidatePreview() {
       try {
-        const res = await fetch(`${BACKEND_URL}/results`);
+        const res = await fetch(`${BACKEND_URL}/results`, {
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         allCandidatesData = await res.json();
 
         const previewList = document.getElementById('candidatePreviewList');

@@ -12,8 +12,9 @@ const port = 3001;
 
 // Middleware CORS - IZINKAN frontend di port 3000
 app.use(cors({
-  origin: 'http://localhost:3000', // izinkan hanya dari frontend di 3000
+  origin: '*', // izinkan hanya dari frontend di 3000
   methods: ['GET', 'POST'], // method yang diizinkan
+  allowedHeaders: ['Content-Type', 'ngrok-skip-browser-warning'],
   credentials: false
 }));
 

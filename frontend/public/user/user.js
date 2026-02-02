@@ -1,4 +1,7 @@
-const BACKEND_URL = 'http://localhost:3001';
+const BACKEND_URL = 'https://96cb9975d28f.ngrok-free.app';
+const NGROK_HEADERS = {
+    "ngrok-skip-browser-warning": "69420"
+};
 let selectedCandidateId = null;
 let countdownInterval = null;
 
@@ -30,7 +33,9 @@ function initAuth() {
  */
 async function loadCandidates() {
     try {
-        const res = await fetch(`${BACKEND_URL}/results`);
+        const res = await fetch(`${BACKEND_URL}/results`, {
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         const data = await res.json();
         const grid = document.getElementById('candidateGrid');
         
@@ -48,11 +53,18 @@ async function loadCandidates() {
         `).join('');
     } catch (e) { 
         console.error("Error loading candidates", e);
-        document.getElementById('candidateGrid').innerHTML = `
-            <div class="text-center py-5">
+    document.getElementById('candidateGrid').innerHTML = `
+        <div class="col-12 text-center py-5" style="animation: fadeIn 0.5s ease;">
+            <div class="mb-4">
                 <i class="bi bi-cloud-slash display-1 text-muted"></i>
-                <p class="mt-3">Gagal terhubung ke server. Silakan muat ulang halaman.</p>
-            </div>`;
+            </div>
+            <h4 class="fw-bold">Gagal Memuat Kandidat</h4>
+            <p class="text-secondary mb-4">Terjadi masalah koneksi ke server. Silakan coba muat ulang halaman.</p>
+            
+            <button onclick="location.reload()" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm">
+                <i class="bi bi-arrow-clockwise me-2"></i> Muat Ulang Halaman
+            </button>
+        </div>`;
     }
 }
 
@@ -164,7 +176,7 @@ async function processVoting() {
     try {
         const res = await fetch(`${BACKEND_URL}/vote`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: { 'Content-Type': 'application/json', ...NGROK_HEADERS },
             body: JSON.stringify({
                 nik: sessionStorage.getItem('voterNIK'),
                 token: sessionStorage.getItem('voterToken'),
@@ -200,7 +212,7 @@ async function processVoting() {
                 successState.style.display = 'block';
 
                 // 3. Jalankan Countdown Redirect
-                startRedirectCountdown(3);
+                startRedirectCountdown(5);
             }, 1000);
 
             // Tambahkan event listener untuk tombol sukses di modal
@@ -215,7 +227,7 @@ document.querySelector('#voteStateSuccess a').addEventListener('click', function
             resetSwipe();
         }
     } catch (e) {
-        showErrorVoteModal("Koneksi gagal. Periksa jaringan Anda.");
+        showNetworkErrorModal();
         resetSwipe();
     }
 }
@@ -224,8 +236,10 @@ document.querySelector('#voteStateSuccess a').addEventListener('click', function
 function showConcurrentAlert(customMessage) {
     // 1. Tutup modal vote jika sedang terbuka
     const voteModalEl = document.getElementById('confirmVoteModal');
-    const voteModalInstance = bootstrap.Modal.getInstance(voteModalEl);
-    if (voteModalInstance) voteModalInstance.hide();
+    if (voteModalEl) {
+        const voteModalInstance = bootstrap.Modal.getInstance(voteModalEl);
+        if (voteModalInstance) voteModalInstance.hide();
+    }
 
     // 2. Update pesan jika ada pesan khusus
     if (customMessage) {
@@ -235,6 +249,20 @@ function showConcurrentAlert(customMessage) {
     // 3. Tampilkan modal keamanan sesi
     const concurrentModal = new bootstrap.Modal(document.getElementById('concurrentModal'));
     concurrentModal.show();
+
+    // 4. Jalankan Countdown (5 detik)
+    let timeLeft = 5;
+    const countdownEl = document.getElementById('concurrentCountdown');
+
+    const timer = setInterval(() => {
+        timeLeft--;
+        if (countdownEl) countdownEl.innerText = timeLeft;
+
+        if (timeLeft <= 0) {
+            clearInterval(timer);
+            clearAndExit(); // Fungsi redirect & clear session yang sudah Anda buat
+        }
+    }, 1000);
 }
 
 function showErrorVoteModal(message) {
@@ -249,12 +277,42 @@ function showErrorVoteModal(message) {
     // Tampilkan modal error
     const errorModal = new bootstrap.Modal(document.getElementById('errorVoteModal'));
     errorModal.show();
+
+    let timeLeft = 5;
+    const countdownEl = document.getElementById('errorCountdown');
+    
+    const timer = setInterval(() => {
+        timeLeft--;
+        if (countdownEl) countdownEl.innerText = timeLeft;
+
+        if (timeLeft <= 0) {
+            clearInterval(timer);
+            clearAndExit(); // Panggil fungsi redirect yang sudah ada
+        }
+    }, 1000);
+}
+
+function showNetworkErrorModal() {
+    // Tutup modal konfirmasi jika masih terbuka
+    const voteModalEl = document.getElementById('confirmVoteModal');
+    const voteModalInstance = bootstrap.Modal.getInstance(voteModalEl);
+    if (voteModalInstance) voteModalInstance.hide();
+
+    // Tampilkan modal koneksi
+    const netModal = new bootstrap.Modal(document.getElementById('networkErrorModal'));
+    netModal.show();
 }
 
 // Fungsi bantu untuk keluar (Tetap sama)
 function clearAndExit() {
     sessionStorage.clear();
     window.location.href = '../index.html';
+}
+
+function refreshPage() {
+    // Memberikan sedikit efek transisi sebelum reload
+    document.body.style.opacity = '0.5';
+    location.reload();
 }
 
 // Fungsi Countdown Baru
@@ -310,7 +368,9 @@ function initTheme() {
  */
 async function checkVotingStatus() {
     try {
-        const res = await fetch(`${BACKEND_URL}/voting-status`);
+        const res = await fetch(`${BACKEND_URL}/voting-status`, {
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         const data = await res.json();
 
         // Ambil elemen dari Navbar user.html
