@@ -18,6 +18,13 @@ let currentPage = 1;      // Pagination Modal DPT
 let txCurrentPage = 1;    // Pagination Tabel Utama
 const rowsPerPage = 10;
 
+function getFullImageUrl(path) {
+    if (!path) return '/img/default.png';
+    if (path.startsWith('http')) return path;
+    const fileName = path.split('/').pop();
+    return `/img/${fileName}`;
+}
+
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Inisialisasi Tema
     themeHandler.init();
@@ -387,7 +394,7 @@ function updateDashboardUI(candidates) {
                 <td class="ps-4 text-muted mono">#${index + 1}</td>
                 <td>
                     <div class="d-flex align-items-center">
-                        <img src="${BACKEND_URL}${cand.foto}" class="rounded-circle me-3 border border-secondary" width="40" height="40" style="object-fit: cover;">
+                        <img src="${getFullImageUrl(cand.foto)}" class="rounded-circle me-3 border border-secondary" width="40" height="40" style="object-fit: cover;">
                         <div>
                             <div class="fw-bold">${cand.nama}</div>
                             <div class="small text-muted">Kandidat No. ${cand.noUrut}</div>
@@ -717,7 +724,7 @@ async function showKandidatData() {
     <div class="col-md-6 col-xl-4">
         <div class="card h-100 card-custom border-0 shadow-lg">
             <div class="position-relative">
-                <img src="${BACKEND_URL}${k.foto}" class="card-img-top" style="height: 250px; object-fit: cover;">
+                <img src="${getFullImageUrl(k.foto)}" class="card-img-top" style="height: 250px; object-fit: cover;">
                 <span class="position-absolute top-0 end-0 m-3 badge rounded-pill bg-primary px-3 shadow">
                     No. Urut ${k.noUrut}
                 </span>

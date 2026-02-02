@@ -4,6 +4,13 @@ const NGROK_HEADERS = {
 };
 let countdownInterval = null;
 
+function getFullImageUrl(path) {
+    if (!path) return '/img/default.png';
+    if (path.startsWith('http')) return path;
+    const fileName = path.split('/').pop();
+    return `/img/${fileName}`;
+}
+
 // --- 1. Security & Access Control ---
 (function () {
     const nik = sessionStorage.getItem('voterNIK');
@@ -110,7 +117,7 @@ function renderStats(candidates) {
         cardsHTML += `
             <div class="col-md-6 col-lg-4 animate-fade-in">
                 <div class="cand-detail-card">
-                    <img src="${BACKEND_URL}${cand.foto}" class="cand-detail-img" onerror="this.src='https://via.placeholder.com/100'">
+                    <img src="${getFullImageUrl(cand.foto)}" class="cand-detail-img" onerror="this.src='/img/default.png'">
                     <div class="overflow-hidden">
                         <h6 class="fw-bold mb-0 text-truncate">${cand.nama}</h6>
                         <small class="text-muted">Kandidat No. ${cand.noUrut}</small>
