@@ -339,17 +339,47 @@ function showAdminAuthModal() {
 }
 
 async function startRealtimeStream() {
-    // --- LANGKAH 1: Ambil Data Awal (Fetch) ---
-    // Ini krusial karena SSE sering tertahan proteksi browser/ngrok di awal
-    try {
-        const res = await fetch(`${BACKEND_URL}/results`, { 
-            headers: NGROK_HEADERS 
-        });
-        if (res.ok) {
-            const initialData = await res.json();
-            updateDashboardUI(initialData); // Tampilkan data segera
+    // 1. Ambil data awal via Fetch (Agar langsung muncul tanpa nunggu SSE)
+    fetchDashboardUpdate();
+
+    // 2. Inisialisasi SSE (Real-time Stream)
+    if (eventSource) eventSource.close();
+    
+    // Note: EventSource tidak bisa kirim header NGROK_HEADERS. 
+    // Pastikan sudah klik 'Visit Site' di browser pada link Ngrok Backend.
+    eventSource = new EventSource(`${BACKEND_URL}/results-stream`);
+
+    eventSource.onmessage = async (event) => {
+        try {
+            const candidates = JSON.parse(event.data);
+            updateDashboardUI(candidates);
             
-            // Ambil data pemilih juga untuk tabel transaksi
+            // Update tabel transaksi
+            const configRes = await fetch(`${BACKEND_URL}/admin/config`, { headers: NGROK_HEADERS });
+            if (configRes.ok) {
+                const configData = await configRes.json();
+                updateTransactionTable(configData.votersList);
+            }
+        } catch (e) {
+            console.error("Gagal sinkronisasi stream:", e);
+        }
+    };
+
+    // 3. Cadangan: Polling setiap 5 detik (Solusi jika Ngrok menahan data SSE)
+    setInterval(() => {
+        fetchDashboardUpdate();
+    }, 5000);
+}
+
+// Fungsi pembantu untuk mengambil data terbaru secara manual
+async function fetchDashboardUpdate() {
+    try {
+        const res = await fetch(`${BACKEND_URL}/results?t=${Date.now()}`, { headers: NGROK_HEADERS });
+        if (res.ok) {
+            const candidates = await res.json();
+            updateDashboardUI(candidates);
+            
+            // Update juga tabel transaksi saat polling
             const configRes = await fetch(`${BACKEND_URL}/admin/config`, { headers: NGROK_HEADERS });
             if (configRes.ok) {
                 const configData = await configRes.json();
@@ -357,72 +387,35 @@ async function startRealtimeStream() {
             }
         }
     } catch (err) {
-        console.error("Gagal mengambil data awal via fetch:", err);
+        console.warn("Polling gagal, backend mungkin offline.");
     }
-
-    // --- LANGKAH 2: Inisialisasi Real-time Stream (SSE) ---
-    if (eventSource) eventSource.close();
-    
-    eventSource = new EventSource(`${BACKEND_URL}/results-stream`);
-
-    eventSource.onmessage = async (event) => {
-        try {
-            // 1. Update Leaderboard & Statistik dari data Stream
-            const candidates = JSON.parse(event.data);
-            updateDashboardUI(candidates);
-            
-            // 2. Ambil ulang config untuk Sinkronisasi Tabel Transaksi
-            const configRes = await fetch(`${BACKEND_URL}/admin/config`, { 
-                headers: NGROK_HEADERS 
-            });
-            if (configRes.ok) {
-                const configData = await configRes.json();
-                updateTransactionTable(configData.votersList);
-            }
-            
-            addLog("Blockchain sync: Node diperbarui.", "info");
-        } catch (e) {
-            console.error("Gagal sinkronisasi via stream:", e);
-        }
-    };
-
-    eventSource.onerror = (err) => {
-        console.warn("Koneksi Stream terputus. Mencoba menyambung kembali...");
-    };
 }
 
 function updateDashboardUI(candidates) {
     if (!candidates || !Array.isArray(candidates)) return;
 
-    // 1. Kalkulasi Total Suara
     const totalVotes = candidates.reduce((sum, c) => sum + (Number(c.votes) || 0), 0);
-
-    // 2. Kalkulasi Partisipasi
     const participation = TOTAL_DPT > 0 ? ((totalVotes / TOTAL_DPT) * 100).toFixed(1) : 0;
 
-    // 3. Update Widget Statistik (Angka Besar)
-    const elTotalVotes = document.getElementById('statTotalVotes');
-    const elTotalVoters = document.getElementById('statTotalVoters');
-    const elParticipation = document.getElementById('statParticipation');
+    // 1. Update Widget Statistik
+    const elVotes = document.getElementById('statTotalVotes');
+    const elVoters = document.getElementById('statTotalVoters');
+    const elPartic = document.getElementById('statParticipation');
 
-    if (elTotalVotes) elTotalVotes.innerText = totalVotes.toLocaleString('id-ID');
-    if (elTotalVoters) elTotalVoters.innerText = TOTAL_DPT.toLocaleString('id-ID');
-    if (elParticipation) elParticipation.innerText = participation + "%";
+    if (elVotes) elVotes.innerText = totalVotes.toLocaleString('id-ID');
+    if (elVoters) elVoters.innerText = TOTAL_DPT.toLocaleString('id-ID');
+    if (elPartic) elPartic.innerText = participation + "%";
 
-    // 4. Update Progress Bars
+    // 2. Update Progress Bars
     const voteBar = document.getElementById('voteProgress');
     const particBar = document.getElementById('particProgress');
-    const dptBar = document.getElementById('dptProgress');
-
     if (voteBar) voteBar.style.width = Math.min(participation, 100) + "%";
     if (particBar) particBar.style.width = Math.min(participation, 100) + "%";
-    if (dptBar) dptBar.style.width = "100%";
 
-    // 5. Update Tabel Leaderboard
+    // 3. Update Tabel Leaderboard
     const tbody = document.getElementById('leaderboardBody');
     if (!tbody) return;
 
-    // Urutkan kandidat berdasarkan suara terbanyak
     const sorted = [...candidates].sort((a, b) => (Number(b.votes) || 0) - (Number(a.votes) || 0));
 
     tbody.innerHTML = sorted.map((cand, index) => {
@@ -434,7 +427,11 @@ function updateDashboardUI(candidates) {
                 <td class="ps-4 text-muted mono">#${index + 1}</td>
                 <td>
                     <div class="d-flex align-items-center">
-                        <img src="${getFullImageUrl(cand.foto)}" class="rounded-circle me-3 border border-secondary" width="40" height="40" style="object-fit: cover;" onerror="this.src='/img/default.png'">
+                        <img src="${getFullImageUrl(cand.foto)}" 
+                             class="rounded-circle me-3 border border-secondary" 
+                             width="40" height="40" 
+                             style="object-fit: cover;"
+                             onerror="this.src='/img/default.png'">
                         <div>
                             <div class="fw-bold">${cand.nama}</div>
                             <div class="small text-muted">Kandidat No. ${cand.noUrut}</div>
