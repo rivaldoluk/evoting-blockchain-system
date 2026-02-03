@@ -339,56 +339,54 @@ function showAdminAuthModal() {
 }
 
 async function startRealtimeStream() {
-    // --- 1. AMBIL DATA AWAL (Penting agar tidak loading terus) ---
-    try {
-        const res = await fetch(`${BACKEND_URL}/results`, { 
-            headers: NGROK_HEADERS 
-        });
-        if (res.ok) {
-            const initialData = await res.json();
-            updateDashboardUI(initialData); // Langsung render data yang ada
-            
-            // Ambil data transaksi awal juga
-            const configRes = await fetch(`${BACKEND_URL}/admin/config`, { headers: NGROK_HEADERS });
-            if (configRes.ok) {
-                const configData = await configRes.json();
-                updateTransactionTable(configData.votersList);
-            }
-        }
-    } catch (err) {
-        console.error("Gagal mengambil data awal:", err);
-    }
+    // 1. Ambil data awal agar tidak "loading" terus
+    await fetchInitialData();
 
-    // --- 2. AKTIFKAN MODE REAL-TIME (SSE) ---
+    // 2. Inisialisasi SSE
     if (eventSource) eventSource.close();
     
+    // Gunakan URL yang bersih
     eventSource = new EventSource(`${BACKEND_URL}/results-stream`);
 
     eventSource.onmessage = async (event) => {
+        console.log("Sinyal diterima dari server!"); // Cek di console (F12)
         try {
             const candidates = JSON.parse(event.data);
             updateDashboardUI(candidates);
             
-            // Ambil data transaksi terbaru saat ada suara masuk
-            const configRes = await fetch(`${BACKEND_URL}/admin/config`, { headers: NGROK_HEADERS });
+            // Ambil config terbaru hanya saat ada pesan masuk
+            const configRes = await fetch(`${BACKEND_URL}/admin/config`, { 
+                headers: NGROK_HEADERS 
+            });
             if (configRes.ok) {
                 const configData = await configRes.json();
                 updateTransactionTable(configData.votersList);
             }
             
-            addLog("Suara baru masuk! Dashboard diperbarui.", "success");
+            addLog("Sinkronisasi: Suara baru terdeteksi.", "success");
         } catch (e) {
-            console.error("Gagal parse data stream:", e);
+            console.error("Gagal olah data stream:", e);
         }
     };
 
-    eventSource.onopen = () => {
-        console.log("Koneksi Real-time aktif.");
+    // Re-koneksi otomatis jika terputus (Ciri khas Ngrok)
+    eventSource.onerror = () => {
+        console.warn("Koneksi tertunda... Mencoba menyambung kembali.");
+        setTimeout(startRealtimeStream, 3000); // Coba lagi dalam 3 detik
     };
+}
 
-    eventSource.onerror = (err) => {
-        console.warn("Stream terputus. Pastikan link Ngrok sudah diklik 'Visit Site'.");
-    };
+// Fungsi bantu untuk fetch awal
+async function fetchInitialData() {
+    try {
+        const res = await fetch(`${BACKEND_URL}/results`, { headers: NGROK_HEADERS });
+        if (res.ok) {
+            const data = await res.json();
+            updateDashboardUI(data);
+        }
+    } catch (err) {
+        console.error("Fetch awal gagal:", err);
+    }
 }
 
 function updateDashboardUI(candidates) {
