@@ -14,7 +14,6 @@ const port = 3001;
 app.use(cors({
   origin: '*', // izinkan hanya dari frontend di 3000
   methods: ['GET', 'POST'], // method yang diizinkan
-  allowedHeaders: ['Content-Type', 'ngrok-skip-browser-warning'],
   credentials: false
 }));
 
@@ -334,7 +333,6 @@ app.get('/results-stream', async (req, res) => {
   res.setHeader('Content-Type', 'text/event-stream');
   res.setHeader('Cache-Control', 'no-cache');
   res.setHeader('Connection', 'keep-alive');
-  res.setHeader('X-Accel-Buffering', 'no');
   res.flushHeaders();
 
   // KIRIM DATA AWAL SEGERA SAAT CLIENT CONNECT

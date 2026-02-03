@@ -503,17 +503,16 @@
 
   <script>
     // === KONFIGURASI ===
-    const BACKEND_URL = 'https://940b416884ad.ngrok-free.app';
-    const NGROK_HEADERS = {
-    "ngrok-skip-browser-warning": "69420"
-};
+    const BACKEND_URL = 'https://146c2c53074d.ngrok-free.app';
 
     function getFullImageUrl(path) {
-    if (!path) return 'img/default.png';
-    if (path.startsWith('http')) return path;
-    const fileName = path.split('/').pop();
-    return `/img/${fileName}`;
-}
+      if (!path) return 'img/default.png';
+      // Jika path sudah diawali http, gunakan langsung
+      if (path.startsWith('http')) return path;
+      // Jika tidak, tambahkan BACKEND_URL di depannya
+      // Contoh: /img/kandidat-1.png menjadi http://localhost:3001/img/kandidat-1.png
+      return `${BACKEND_URL}${path.startsWith('/') ? '' : '/'}${path}`;
+    }
 
     let countdownInterval = null;
     let currentToken = null;
@@ -580,7 +579,7 @@
       try {
         const res = await fetch(`${BACKEND_URL}/verify-token`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...NGROK_HEADERS },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ token })
         });
 
@@ -633,9 +632,7 @@
     // Fungsi untuk mengecek status voting dari contract melalui backend
     async function checkVotingStatus() {
       try {
-        const res = await fetch(`${BACKEND_URL}/voting-status`, {
-    headers: NGROK_HEADERS // Tambahkan ini
-});
+        const res = await fetch(`${BACKEND_URL}/voting-status`);
         const data = await res.json();
 
         // Cari atau buat container timer di dalam alert
@@ -729,7 +726,7 @@
       try {
         const res = await fetch(`${BACKEND_URL}/verify-nik`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...NGROK_HEADERS },
+          headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ nik: nik })
         });
 
@@ -754,7 +751,7 @@
       sessionStorage.setItem('voterToken', currentToken);
 
       // Arahkan ke halaman user.html
-      window.location.href = 'user/user.html';
+      window.location.href = 'public/user/user.html';
     });
 
     let allCandidatesData = [];
@@ -762,9 +759,7 @@
     // 1. Ambil data gabungan dari Backend
     async function loadCandidatePreview() {
       try {
-        const res = await fetch(`${BACKEND_URL}/results`, {
-    headers: NGROK_HEADERS // Tambahkan ini
-});
+        const res = await fetch(`${BACKEND_URL}/results`);
         allCandidatesData = await res.json();
 
         const previewList = document.getElementById('candidatePreviewList');

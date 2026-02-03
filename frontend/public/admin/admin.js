@@ -1,10 +1,7 @@
 /**
  * KONFIGURASI GLOBAL
  */
-const BACKEND_URL = 'https://940b416884ad.ngrok-free.app';
-const NGROK_HEADERS = {
-    "ngrok-skip-browser-warning": "69420"
-};
+const BACKEND_URL = 'https://146c2c53074d.ngrok-free.app';
 let provider, signer, adminAddress;
 let eventSource;
 let AUTHORIZED_ADMIN = "";
@@ -17,13 +14,6 @@ let votedVotersOnly = [];
 let currentPage = 1;      // Pagination Modal DPT
 let txCurrentPage = 1;    // Pagination Tabel Utama
 const rowsPerPage = 10;
-
-function getFullImageUrl(path) {
-    if (!path) return '/img/default.png';
-    if (path.startsWith('http')) return path;
-    const fileName = path.split('/').pop();
-    return `/img/${fileName}`;
-}
 
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Inisialisasi Tema
@@ -179,9 +169,7 @@ if (btnStart) {
 async function checkSession() {
     try {
         // 1. Ambil config dari backend
-        const configRes = await fetch(`${BACKEND_URL}/admin/config`, {
-    headers: NGROK_HEADERS // Tambahkan ini
-});
+        const configRes = await fetch(`${BACKEND_URL}/admin/config`);
         const configData = await configRes.json();
 
         AUTHORIZED_ADMIN = configData.authorizedAdmin.toLowerCase();
@@ -229,9 +217,7 @@ async function connectWallet() {
     btnConnect.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menghubungkan...';
 
     try {
-        const configRes = await fetch(`${BACKEND_URL}/admin/config`, {
-    headers: NGROK_HEADERS // Tambahkan ini
-});
+        const configRes = await fetch(`${BACKEND_URL}/admin/config`);
         if (!configRes.ok) throw new Error("Gagal mengambil konfigurasi server.");
         const configData = await configRes.json();
         AUTHORIZED_ADMIN = configData.authorizedAdmin.toLowerCase();
@@ -338,98 +324,61 @@ function showAdminAuthModal() {
     }, 1000);
 }
 
-async function startRealtimeStream() {
-    // 1. Ambil data awal agar tidak "loading" terus
-    await fetchInitialData();
-
-    // 2. Inisialisasi SSE
+function startRealtimeStream() {
     if (eventSource) eventSource.close();
-    
-    // Gunakan URL yang bersih
     eventSource = new EventSource(`${BACKEND_URL}/results-stream`);
 
     eventSource.onmessage = async (event) => {
-        console.log("Sinyal diterima dari server!"); // Cek di console (F12)
         try {
+            // 1. Update Chart & Leaderboard (Data dari SSE)
             const candidates = JSON.parse(event.data);
             updateDashboardUI(candidates);
             
-            // Ambil config terbaru hanya saat ada pesan masuk
-            const configRes = await fetch(`${BACKEND_URL}/admin/config`, { 
-                headers: NGROK_HEADERS 
-            });
+            // 2. Ambil data voter terbaru (Termasuk TxHash & Timestamp) dari Config
+            const configRes = await fetch(`${BACKEND_URL}/admin/config`);
             if (configRes.ok) {
                 const configData = await configRes.json();
+                // Update tabel transaksi di halaman utama
                 updateTransactionTable(configData.votersList);
             }
             
-            addLog("Sinkronisasi: Suara baru terdeteksi.", "success");
+            addLog("Blockchain sync: Node diperbarui.", "info");
         } catch (e) {
-            console.error("Gagal olah data stream:", e);
+            console.error("Gagal sinkronisasi:", e);
         }
     };
-
-    // Re-koneksi otomatis jika terputus (Ciri khas Ngrok)
-    eventSource.onerror = () => {
-        console.warn("Koneksi tertunda... Mencoba menyambung kembali.");
-        setTimeout(startRealtimeStream, 3000); // Coba lagi dalam 3 detik
-    };
-}
-
-// Fungsi bantu untuk fetch awal
-async function fetchInitialData() {
-    try {
-        const res = await fetch(`${BACKEND_URL}/results`, { headers: NGROK_HEADERS });
-        if (res.ok) {
-            const data = await res.json();
-            updateDashboardUI(data);
-        }
-    } catch (err) {
-        console.error("Fetch awal gagal:", err);
-    }
 }
 
 function updateDashboardUI(candidates) {
-    if (!candidates || !Array.isArray(candidates)) return;
+    const totalVotes = candidates.reduce((sum, c) => sum + c.votes, 0);
 
-    const totalVotes = candidates.reduce((sum, c) => sum + (Number(c.votes) || 0), 0);
     const participation = TOTAL_DPT > 0 ? ((totalVotes / TOTAL_DPT) * 100).toFixed(1) : 0;
 
     // 1. Update Widget Statistik
-    const elVotes = document.getElementById('statTotalVotes');
-    const elVoters = document.getElementById('statTotalVoters');
-    const elPartic = document.getElementById('statParticipation');
-
-    if (elVotes) elVotes.innerText = totalVotes.toLocaleString('id-ID');
-    if (elVoters) elVoters.innerText = TOTAL_DPT.toLocaleString('id-ID');
-    if (elPartic) elPartic.innerText = participation + "%";
+    document.getElementById('statTotalVotes').innerText = totalVotes.toLocaleString('id-ID');
+    document.getElementById('statTotalVoters').innerText = TOTAL_DPT.toLocaleString('id-ID');
+    document.getElementById('statParticipation').innerText = participation + "%";
 
     // 2. Update Progress Bars
     const voteBar = document.getElementById('voteProgress');
     const particBar = document.getElementById('particProgress');
+    const dptBar = document.getElementById('dptProgress');
     if (voteBar) voteBar.style.width = Math.min(participation, 100) + "%";
     if (particBar) particBar.style.width = Math.min(participation, 100) + "%";
+    if (dptBar) dptBar.style.width = "100%";
 
-    // 3. Update Tabel Leaderboard
+    // 3. Update Tabel Leaderboard (Sorted by Votes)
     const tbody = document.getElementById('leaderboardBody');
-    if (!tbody) return;
-
-    const sorted = [...candidates].sort((a, b) => (Number(b.votes) || 0) - (Number(a.votes) || 0));
+    const sorted = [...candidates].sort((a, b) => b.votes - a.votes);
 
     tbody.innerHTML = sorted.map((cand, index) => {
-        const votes = Number(cand.votes) || 0;
-        const pct = totalVotes > 0 ? ((votes / totalVotes) * 100).toFixed(1) : "0.0";
-        
+        const pct = totalVotes > 0 ? ((cand.votes / totalVotes) * 100).toFixed(1) : 0;
         return `
             <tr>
                 <td class="ps-4 text-muted mono">#${index + 1}</td>
                 <td>
                     <div class="d-flex align-items-center">
-                        <img src="${getFullImageUrl(cand.foto)}" 
-                             class="rounded-circle me-3 border border-secondary" 
-                             width="40" height="40" 
-                             style="object-fit: cover;"
-                             onerror="this.src='/img/default.png'">
+                        <img src="${BACKEND_URL}${cand.foto}" class="rounded-circle me-3 border border-secondary" width="40" height="40" style="object-fit: cover;">
                         <div>
                             <div class="fw-bold">${cand.nama}</div>
                             <div class="small text-muted">Kandidat No. ${cand.noUrut}</div>
@@ -445,7 +394,7 @@ function updateDashboardUI(candidates) {
                     </div>
                 </td>
                 <td class="text-end pe-4">
-                    <span class="badge bg-dark border border-secondary px-3 py-2 mono">${votes} Suara</span>
+                    <span class="badge bg-dark border border-secondary px-3 py-2 mono">${cand.votes} Suara</span>
                 </td>
             </tr>
         `;
@@ -558,9 +507,7 @@ function renderTransactionTableRows() {
  */
 async function startCountdownTimer() {
     try {
-        const res = await fetch(`${BACKEND_URL}/voting-status`, {
-    headers: NGROK_HEADERS // Tambahkan ini
-});
+        const res = await fetch(`${BACKEND_URL}/voting-status`);
         const data = await res.json();
 
         updateStatusBadge(data.status);
@@ -694,9 +641,7 @@ async function showVoterData() {
     currentPage = 1;
 
     try {
-        const res = await fetch(`${BACKEND_URL}/admin/config`, {
-    headers: NGROK_HEADERS // Tambahkan ini
-});
+        const res = await fetch(`${BACKEND_URL}/admin/config`);
         const data = await res.json();
         allVoters = data.votersList || [];
         filteredVoters = [...allVoters]; // Awalnya filtered sama dengan semua data
@@ -750,16 +695,14 @@ async function showKandidatData() {
     modal.show();
 
     try {
-        const res = await fetch(`${BACKEND_URL}/results`, {
-    headers: NGROK_HEADERS // Tambahkan ini
-});
+        const res = await fetch(`${BACKEND_URL}/results`);
         const data = await res.json();
 
         container.innerHTML = data.map(k => `
     <div class="col-md-6 col-xl-4">
         <div class="card h-100 card-custom border-0 shadow-lg">
             <div class="position-relative">
-                <img src="${getFullImageUrl(k.foto)}" class="card-img-top" style="height: 250px; object-fit: cover;">
+                <img src="${BACKEND_URL}${k.foto}" class="card-img-top" style="height: 250px; object-fit: cover;">
                 <span class="position-absolute top-0 end-0 m-3 badge rounded-pill bg-primary px-3 shadow">
                     No. Urut ${k.noUrut}
                 </span>
@@ -845,9 +788,7 @@ async function executeVotingActivation(modalBtn) {
         btnDashboard.disabled = true;
         btnDashboard.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
 
-        const configRes = await fetch(`${BACKEND_URL}/admin/config`, {
-    headers: NGROK_HEADERS // Tambahkan ini
-});
+        const configRes = await fetch(`${BACKEND_URL}/admin/config`);
         const config = await configRes.json();
 
         if (!window.ethereum) throw new Error("MetaMask tidak ditemukan");
@@ -887,9 +828,7 @@ async function executeVotingActivation(modalBtn) {
 
 async function refreshDashboardStatus() {
     try {
-        const res = await fetch(`${BACKEND_URL}/voting-status`, {
-    headers: NGROK_HEADERS // Tambahkan ini
-});
+        const res = await fetch(`${BACKEND_URL}/voting-status`);
         const data = await res.json();
         const btnStart = document.getElementById('btnStartVoting');
 

@@ -1,16 +1,6 @@
-const BACKEND_URL = 'https://940b416884ad.ngrok-free.app';
-const NGROK_HEADERS = {
-    "ngrok-skip-browser-warning": "69420"
-};
+const BACKEND_URL = 'https://146c2c53074d.ngrok-free.app';
 let selectedCandidateId = null;
 let countdownInterval = null;
-
-function getFullImageUrl(path) {
-    if (!path) return '/img/default.png';
-    if (path.startsWith('http')) return path;
-    const fileName = path.split('/').pop();
-    return `/img/${fileName}`; // Mengambil langsung dari public Vercel
-}
 
 document.addEventListener('DOMContentLoaded', () => {
     initAuth();
@@ -40,9 +30,7 @@ function initAuth() {
  */
 async function loadCandidates() {
     try {
-        const res = await fetch(`${BACKEND_URL}/results`, {
-    headers: NGROK_HEADERS // Tambahkan ini
-});
+        const res = await fetch(`${BACKEND_URL}/results`);
         const data = await res.json();
         const grid = document.getElementById('candidateGrid');
         
@@ -51,7 +39,7 @@ async function loadCandidates() {
                 <div class="candidate-card" onclick="openVoteModal('${cand.id}', '${cand.nama}', '${cand.noUrut}', '${cand.foto}')">
                     <div class="candidate-number">${cand.noUrut}</div>
                     
-                    <img src="${getFullImageUrl(cand.foto)}" class="img-circle" alt="${cand.nama}" onerror="this.src='/img/default.png'">
+                    <img src="${BACKEND_URL}${cand.foto}" class="img-circle" alt="${cand.nama}" onerror="this.src='https://via.placeholder.com/150'">
                     <h4 class="fw-extrabold mb-1 tracking-tight">${cand.nama}</h4>
                     <p class="text-secondary small mb-4"></p>
                     <button class="btn btn-outline-primary btn-sm rounded-pill px-4 fw-bold">Pilih Calon</button>
@@ -82,7 +70,7 @@ function openVoteModal(id, nama, noUrut, foto) {
     selectedCandidateId = id;
     document.getElementById('confirmNama').innerText = nama;
     document.getElementById('confirmNoUrut').innerText = `Kandidat Nomor ${noUrut}`;
-    document.getElementById('confirmImg').src = getFullImageUrl(foto);
+    document.getElementById('confirmImg').src = BACKEND_URL + foto;
 
     // Reset modal ke state awal (Konfirmasi)
     document.getElementById('voteStateConfirm').style.display = 'block';
@@ -183,7 +171,7 @@ async function processVoting() {
     try {
         const res = await fetch(`${BACKEND_URL}/vote`, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json', ...NGROK_HEADERS },
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 nik: sessionStorage.getItem('voterNIK'),
                 token: sessionStorage.getItem('voterToken'),
@@ -375,9 +363,7 @@ function initTheme() {
  */
 async function checkVotingStatus() {
     try {
-        const res = await fetch(`${BACKEND_URL}/voting-status`, {
-    headers: NGROK_HEADERS // Tambahkan ini
-});
+        const res = await fetch(`${BACKEND_URL}/voting-status`);
         const data = await res.json();
 
         // Ambil elemen dari Navbar user.html
