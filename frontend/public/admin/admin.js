@@ -1,7 +1,7 @@
 /**
  * KONFIGURASI GLOBAL
  */
-const BACKEND_URL = 'https://96cb9975d28f.ngrok-free.app';
+const BACKEND_URL = 'https://940b416884ad.ngrok-free.app';
 const NGROK_HEADERS = {
     "ngrok-skip-browser-warning": "69420"
 };
@@ -339,69 +339,95 @@ function showAdminAuthModal() {
 }
 
 async function startRealtimeStream() {
-    // --- LANGKAH 1: Ambil data awal via FETCH (Solusi paling ampuh) ---
+    // --- LANGKAH 1: Ambil Data Awal (Fetch) ---
+    // Ini krusial karena SSE sering tertahan proteksi browser/ngrok di awal
     try {
         const res = await fetch(`${BACKEND_URL}/results`, { 
             headers: NGROK_HEADERS 
         });
         if (res.ok) {
             const initialData = await res.json();
-            console.log("Data awal diterima:", initialData);
-            updateDashboardUI(initialData); 
+            updateDashboardUI(initialData); // Tampilkan data segera
+            
+            // Ambil data pemilih juga untuk tabel transaksi
+            const configRes = await fetch(`${BACKEND_URL}/admin/config`, { headers: NGROK_HEADERS });
+            if (configRes.ok) {
+                const configData = await configRes.json();
+                updateTransactionTable(configData.votersList);
+            }
         }
     } catch (err) {
-        console.error("Gagal mengambil data awal:", err);
+        console.error("Gagal mengambil data awal via fetch:", err);
     }
 
-    // --- LANGKAH 2: Inisialisasi SSE ---
+    // --- LANGKAH 2: Inisialisasi Real-time Stream (SSE) ---
     if (eventSource) eventSource.close();
     
     eventSource = new EventSource(`${BACKEND_URL}/results-stream`);
 
     eventSource.onmessage = async (event) => {
         try {
+            // 1. Update Leaderboard & Statistik dari data Stream
             const candidates = JSON.parse(event.data);
-            console.log("Update dari Stream:", candidates);
-            
-            // Panggil render tabel
             updateDashboardUI(candidates);
             
-            // Update tabel transaksi pemilih
-            const configRes = await fetch(`${BACKEND_URL}/admin/config`, { headers: NGROK_HEADERS });
+            // 2. Ambil ulang config untuk Sinkronisasi Tabel Transaksi
+            const configRes = await fetch(`${BACKEND_URL}/admin/config`, { 
+                headers: NGROK_HEADERS 
+            });
             if (configRes.ok) {
                 const configData = await configRes.json();
                 updateTransactionTable(configData.votersList);
             }
+            
+            addLog("Blockchain sync: Node diperbarui.", "info");
         } catch (e) {
-            console.error("Gagal parse data stream:", e);
+            console.error("Gagal sinkronisasi via stream:", e);
         }
     };
 
     eventSource.onerror = (err) => {
-        console.warn("Koneksi stream terputus, mencoba reconnect...");
+        console.warn("Koneksi Stream terputus. Mencoba menyambung kembali...");
     };
 }
 
 function updateDashboardUI(candidates) {
     if (!candidates || !Array.isArray(candidates)) return;
 
-    // Hitung total suara
+    // 1. Kalkulasi Total Suara
     const totalVotes = candidates.reduce((sum, c) => sum + (Number(c.votes) || 0), 0);
-    
-    // Update Widget Statistik Atas
-    if(document.getElementById('statTotalVotes')) {
-        document.getElementById('statTotalVotes').innerText = totalVotes.toLocaleString('id-ID');
-    }
 
+    // 2. Kalkulasi Partisipasi
+    const participation = TOTAL_DPT > 0 ? ((totalVotes / TOTAL_DPT) * 100).toFixed(1) : 0;
+
+    // 3. Update Widget Statistik (Angka Besar)
+    const elTotalVotes = document.getElementById('statTotalVotes');
+    const elTotalVoters = document.getElementById('statTotalVoters');
+    const elParticipation = document.getElementById('statParticipation');
+
+    if (elTotalVotes) elTotalVotes.innerText = totalVotes.toLocaleString('id-ID');
+    if (elTotalVoters) elTotalVoters.innerText = TOTAL_DPT.toLocaleString('id-ID');
+    if (elParticipation) elParticipation.innerText = participation + "%";
+
+    // 4. Update Progress Bars
+    const voteBar = document.getElementById('voteProgress');
+    const particBar = document.getElementById('particProgress');
+    const dptBar = document.getElementById('dptProgress');
+
+    if (voteBar) voteBar.style.width = Math.min(participation, 100) + "%";
+    if (particBar) particBar.style.width = Math.min(participation, 100) + "%";
+    if (dptBar) dptBar.style.width = "100%";
+
+    // 5. Update Tabel Leaderboard
     const tbody = document.getElementById('leaderboardBody');
     if (!tbody) return;
 
-    // Urutkan berdasarkan suara terbanyak
+    // Urutkan kandidat berdasarkan suara terbanyak
     const sorted = [...candidates].sort((a, b) => (Number(b.votes) || 0) - (Number(a.votes) || 0));
 
     tbody.innerHTML = sorted.map((cand, index) => {
-        // Jika totalVotes 0, persentase diset ke 0 agar tidak Error
-        const pct = totalVotes > 0 ? ((Number(cand.votes) / totalVotes) * 100).toFixed(1) : "0.0";
+        const votes = Number(cand.votes) || 0;
+        const pct = totalVotes > 0 ? ((votes / totalVotes) * 100).toFixed(1) : "0.0";
         
         return `
             <tr>
@@ -417,14 +443,14 @@ function updateDashboardUI(candidates) {
                 </td>
                 <td style="width: 35%">
                     <div class="d-flex align-items-center gap-2">
-                        <div class="progress flex-grow-1" style="height: 6px; background: rgba(0,0,0,0.1)">
-                            <div class="progress-bar" style="width: ${pct}%; background: ${cand.warna || '#2563eb'}"></div>
+                        <div class="progress flex-grow-1" style="height: 6px; background: var(--border)">
+                            <div class="progress-bar" style="width: ${pct}%; background: ${cand.warna || 'var(--accent-blue)'}"></div>
                         </div>
                         <span class="small fw-bold mono">${pct}%</span>
                     </div>
                 </td>
                 <td class="text-end pe-4">
-                    <span class="badge bg-dark border border-secondary px-3 py-2 mono">${cand.votes} Suara</span>
+                    <span class="badge bg-dark border border-secondary px-3 py-2 mono">${votes} Suara</span>
                 </td>
             </tr>
         `;
