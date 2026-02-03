@@ -2,6 +2,9 @@
  * KONFIGURASI GLOBAL
  */
 const BACKEND_URL = 'https://146c2c53074d.ngrok-free.app';
+const NGROK_HEADERS = {
+    "ngrok-skip-browser-warning": "69420"
+};
 let provider, signer, adminAddress;
 let eventSource;
 let AUTHORIZED_ADMIN = "";
@@ -14,6 +17,13 @@ let votedVotersOnly = [];
 let currentPage = 1;      // Pagination Modal DPT
 let txCurrentPage = 1;    // Pagination Tabel Utama
 const rowsPerPage = 10;
+
+function getFullImageUrl(path) {
+    if (!path) return '/img/default.png';
+    if (path.startsWith('http')) return path;
+    const fileName = path.split('/').pop();
+    return `/img/${fileName}`;
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     // 1. Inisialisasi Tema
@@ -169,7 +179,9 @@ if (btnStart) {
 async function checkSession() {
     try {
         // 1. Ambil config dari backend
-        const configRes = await fetch(`${BACKEND_URL}/admin/config`);
+        const configRes = await fetch(`${BACKEND_URL}/admin/config`, {
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         const configData = await configRes.json();
 
         AUTHORIZED_ADMIN = configData.authorizedAdmin.toLowerCase();
@@ -217,7 +229,9 @@ async function connectWallet() {
     btnConnect.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menghubungkan...';
 
     try {
-        const configRes = await fetch(`${BACKEND_URL}/admin/config`);
+        const configRes = await fetch(`${BACKEND_URL}/admin/config`, {
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         if (!configRes.ok) throw new Error("Gagal mengambil konfigurasi server.");
         const configData = await configRes.json();
         AUTHORIZED_ADMIN = configData.authorizedAdmin.toLowerCase();
@@ -324,61 +338,103 @@ function showAdminAuthModal() {
     }, 1000);
 }
 
-function startRealtimeStream() {
+async function startRealtimeStream() {
+    // --- LANGKAH 1: Ambil Data Awal (Fetch) ---
+    // Ini krusial karena SSE sering tertahan proteksi browser/ngrok di awal
+    try {
+        const res = await fetch(`${BACKEND_URL}/results`, { 
+            headers: NGROK_HEADERS 
+        });
+        if (res.ok) {
+            const initialData = await res.json();
+            updateDashboardUI(initialData); // Tampilkan data segera
+            
+            // Ambil data pemilih juga untuk tabel transaksi
+            const configRes = await fetch(`${BACKEND_URL}/admin/config`, { headers: NGROK_HEADERS });
+            if (configRes.ok) {
+                const configData = await configRes.json();
+                updateTransactionTable(configData.votersList);
+            }
+        }
+    } catch (err) {
+        console.error("Gagal mengambil data awal via fetch:", err);
+    }
+
+    // --- LANGKAH 2: Inisialisasi Real-time Stream (SSE) ---
     if (eventSource) eventSource.close();
+    
     eventSource = new EventSource(`${BACKEND_URL}/results-stream`);
 
     eventSource.onmessage = async (event) => {
         try {
-            // 1. Update Chart & Leaderboard (Data dari SSE)
+            // 1. Update Leaderboard & Statistik dari data Stream
             const candidates = JSON.parse(event.data);
             updateDashboardUI(candidates);
             
-            // 2. Ambil data voter terbaru (Termasuk TxHash & Timestamp) dari Config
-            const configRes = await fetch(`${BACKEND_URL}/admin/config`);
+            // 2. Ambil ulang config untuk Sinkronisasi Tabel Transaksi
+            const configRes = await fetch(`${BACKEND_URL}/admin/config`, { 
+                headers: NGROK_HEADERS 
+            });
             if (configRes.ok) {
                 const configData = await configRes.json();
-                // Update tabel transaksi di halaman utama
                 updateTransactionTable(configData.votersList);
             }
             
             addLog("Blockchain sync: Node diperbarui.", "info");
         } catch (e) {
-            console.error("Gagal sinkronisasi:", e);
+            console.error("Gagal sinkronisasi via stream:", e);
         }
+    };
+
+    eventSource.onerror = (err) => {
+        console.warn("Koneksi Stream terputus. Mencoba menyambung kembali...");
     };
 }
 
 function updateDashboardUI(candidates) {
-    const totalVotes = candidates.reduce((sum, c) => sum + c.votes, 0);
+    if (!candidates || !Array.isArray(candidates)) return;
 
+    // 1. Kalkulasi Total Suara
+    const totalVotes = candidates.reduce((sum, c) => sum + (Number(c.votes) || 0), 0);
+
+    // 2. Kalkulasi Partisipasi
     const participation = TOTAL_DPT > 0 ? ((totalVotes / TOTAL_DPT) * 100).toFixed(1) : 0;
 
-    // 1. Update Widget Statistik
-    document.getElementById('statTotalVotes').innerText = totalVotes.toLocaleString('id-ID');
-    document.getElementById('statTotalVoters').innerText = TOTAL_DPT.toLocaleString('id-ID');
-    document.getElementById('statParticipation').innerText = participation + "%";
+    // 3. Update Widget Statistik (Angka Besar)
+    const elTotalVotes = document.getElementById('statTotalVotes');
+    const elTotalVoters = document.getElementById('statTotalVoters');
+    const elParticipation = document.getElementById('statParticipation');
 
-    // 2. Update Progress Bars
+    if (elTotalVotes) elTotalVotes.innerText = totalVotes.toLocaleString('id-ID');
+    if (elTotalVoters) elTotalVoters.innerText = TOTAL_DPT.toLocaleString('id-ID');
+    if (elParticipation) elParticipation.innerText = participation + "%";
+
+    // 4. Update Progress Bars
     const voteBar = document.getElementById('voteProgress');
     const particBar = document.getElementById('particProgress');
     const dptBar = document.getElementById('dptProgress');
+
     if (voteBar) voteBar.style.width = Math.min(participation, 100) + "%";
     if (particBar) particBar.style.width = Math.min(participation, 100) + "%";
     if (dptBar) dptBar.style.width = "100%";
 
-    // 3. Update Tabel Leaderboard (Sorted by Votes)
+    // 5. Update Tabel Leaderboard
     const tbody = document.getElementById('leaderboardBody');
-    const sorted = [...candidates].sort((a, b) => b.votes - a.votes);
+    if (!tbody) return;
+
+    // Urutkan kandidat berdasarkan suara terbanyak
+    const sorted = [...candidates].sort((a, b) => (Number(b.votes) || 0) - (Number(a.votes) || 0));
 
     tbody.innerHTML = sorted.map((cand, index) => {
-        const pct = totalVotes > 0 ? ((cand.votes / totalVotes) * 100).toFixed(1) : 0;
+        const votes = Number(cand.votes) || 0;
+        const pct = totalVotes > 0 ? ((votes / totalVotes) * 100).toFixed(1) : "0.0";
+        
         return `
             <tr>
                 <td class="ps-4 text-muted mono">#${index + 1}</td>
                 <td>
                     <div class="d-flex align-items-center">
-                        <img src="${BACKEND_URL}${cand.foto}" class="rounded-circle me-3 border border-secondary" width="40" height="40" style="object-fit: cover;">
+                        <img src="${getFullImageUrl(cand.foto)}" class="rounded-circle me-3 border border-secondary" width="40" height="40" style="object-fit: cover;" onerror="this.src='/img/default.png'">
                         <div>
                             <div class="fw-bold">${cand.nama}</div>
                             <div class="small text-muted">Kandidat No. ${cand.noUrut}</div>
@@ -394,7 +450,7 @@ function updateDashboardUI(candidates) {
                     </div>
                 </td>
                 <td class="text-end pe-4">
-                    <span class="badge bg-dark border border-secondary px-3 py-2 mono">${cand.votes} Suara</span>
+                    <span class="badge bg-dark border border-secondary px-3 py-2 mono">${votes} Suara</span>
                 </td>
             </tr>
         `;
@@ -507,7 +563,9 @@ function renderTransactionTableRows() {
  */
 async function startCountdownTimer() {
     try {
-        const res = await fetch(`${BACKEND_URL}/voting-status`);
+        const res = await fetch(`${BACKEND_URL}/voting-status`, {
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         const data = await res.json();
 
         updateStatusBadge(data.status);
@@ -641,7 +699,9 @@ async function showVoterData() {
     currentPage = 1;
 
     try {
-        const res = await fetch(`${BACKEND_URL}/admin/config`);
+        const res = await fetch(`${BACKEND_URL}/admin/config`, {
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         const data = await res.json();
         allVoters = data.votersList || [];
         filteredVoters = [...allVoters]; // Awalnya filtered sama dengan semua data
@@ -695,14 +755,16 @@ async function showKandidatData() {
     modal.show();
 
     try {
-        const res = await fetch(`${BACKEND_URL}/results`);
+        const res = await fetch(`${BACKEND_URL}/results`, {
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         const data = await res.json();
 
         container.innerHTML = data.map(k => `
     <div class="col-md-6 col-xl-4">
         <div class="card h-100 card-custom border-0 shadow-lg">
             <div class="position-relative">
-                <img src="${BACKEND_URL}${k.foto}" class="card-img-top" style="height: 250px; object-fit: cover;">
+                <img src="${getFullImageUrl(k.foto)}" class="card-img-top" style="height: 250px; object-fit: cover;">
                 <span class="position-absolute top-0 end-0 m-3 badge rounded-pill bg-primary px-3 shadow">
                     No. Urut ${k.noUrut}
                 </span>
@@ -788,7 +850,9 @@ async function executeVotingActivation(modalBtn) {
         btnDashboard.disabled = true;
         btnDashboard.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
 
-        const configRes = await fetch(`${BACKEND_URL}/admin/config`);
+        const configRes = await fetch(`${BACKEND_URL}/admin/config`, {
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         const config = await configRes.json();
 
         if (!window.ethereum) throw new Error("MetaMask tidak ditemukan");
@@ -828,7 +892,9 @@ async function executeVotingActivation(modalBtn) {
 
 async function refreshDashboardStatus() {
     try {
-        const res = await fetch(`${BACKEND_URL}/voting-status`);
+        const res = await fetch(`${BACKEND_URL}/voting-status`, {
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         const data = await res.json();
         const btnStart = document.getElementById('btnStartVoting');
 

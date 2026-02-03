@@ -504,15 +504,16 @@
   <script>
     // === KONFIGURASI ===
     const BACKEND_URL = 'https://146c2c53074d.ngrok-free.app';
+    const NGROK_HEADERS = {
+    "ngrok-skip-browser-warning": "69420"
+};
 
     function getFullImageUrl(path) {
-      if (!path) return 'img/default.png';
-      // Jika path sudah diawali http, gunakan langsung
-      if (path.startsWith('http')) return path;
-      // Jika tidak, tambahkan BACKEND_URL di depannya
-      // Contoh: /img/kandidat-1.png menjadi http://localhost:3001/img/kandidat-1.png
-      return `${BACKEND_URL}${path.startsWith('/') ? '' : '/'}${path}`;
-    }
+    if (!path) return 'img/default.png';
+    if (path.startsWith('http')) return path;
+    const fileName = path.split('/').pop();
+    return `/img/${fileName}`;
+}
 
     let countdownInterval = null;
     let currentToken = null;
@@ -579,7 +580,7 @@
       try {
         const res = await fetch(`${BACKEND_URL}/verify-token`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...NGROK_HEADERS },
           body: JSON.stringify({ token })
         });
 
@@ -632,7 +633,9 @@
     // Fungsi untuk mengecek status voting dari contract melalui backend
     async function checkVotingStatus() {
       try {
-        const res = await fetch(`${BACKEND_URL}/voting-status`);
+        const res = await fetch(`${BACKEND_URL}/voting-status`, {
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         const data = await res.json();
 
         // Cari atau buat container timer di dalam alert
@@ -726,7 +729,7 @@
       try {
         const res = await fetch(`${BACKEND_URL}/verify-nik`, {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
+          headers: { 'Content-Type': 'application/json', ...NGROK_HEADERS },
           body: JSON.stringify({ nik: nik })
         });
 
@@ -759,7 +762,9 @@
     // 1. Ambil data gabungan dari Backend
     async function loadCandidatePreview() {
       try {
-        const res = await fetch(`${BACKEND_URL}/results`);
+        const res = await fetch(`${BACKEND_URL}/results`, {
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         allCandidatesData = await res.json();
 
         const previewList = document.getElementById('candidatePreviewList');

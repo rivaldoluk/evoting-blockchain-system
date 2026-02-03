@@ -1,5 +1,15 @@
 const BACKEND_URL = 'https://146c2c53074d.ngrok-free.app';
+const NGROK_HEADERS = {
+    "ngrok-skip-browser-warning": "69420"
+};
 let countdownInterval = null;
+
+function getFullImageUrl(path) {
+    if (!path) return '/img/default.png';
+    if (path.startsWith('http')) return path;
+    const fileName = path.split('/').pop();
+    return `/img/${fileName}`;
+}
 
 // --- 1. Security & Access Control ---
 (function () {
@@ -56,7 +66,9 @@ function setupRealtimeUpdate() {
 // --- 4. Core Logic: Fetch Data Awal ---
 async function fetchResults() {
     try {
-        const res = await fetch(`${BACKEND_URL}/results`);
+        const res = await fetch(`${BACKEND_URL}/results`, {
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         if (!res.ok) throw new Error('Gagal mengambil data dari server');
         const data = await res.json();
         if (data && Array.isArray(data)) {
@@ -105,7 +117,7 @@ function renderStats(candidates) {
         cardsHTML += `
             <div class="col-md-6 col-lg-4 animate-fade-in">
                 <div class="cand-detail-card">
-                    <img src="${BACKEND_URL}${cand.foto}" class="cand-detail-img" onerror="this.src='https://via.placeholder.com/100'">
+                    <img src="${getFullImageUrl(cand.foto)}" class="cand-detail-img" onerror="this.src='/img/default.png'">
                     <div class="overflow-hidden">
                         <h6 class="fw-bold mb-0 text-truncate">${cand.nama}</h6>
                         <small class="text-muted">Kandidat No. ${cand.noUrut}</small>
@@ -187,7 +199,9 @@ function logout() {
  */
 async function checkVotingStatus() {
     try {
-        const res = await fetch(`${BACKEND_URL}/voting-status`);
+        const res = await fetch(`${BACKEND_URL}/voting-status`, {
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         const data = await res.json();
         
         const timerLabel = document.getElementById('timerLabel');

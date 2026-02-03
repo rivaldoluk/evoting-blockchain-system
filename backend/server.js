@@ -14,6 +14,7 @@ const port = 3001;
 app.use(cors({
   origin: '*', // izinkan hanya dari frontend di 3000
   methods: ['GET', 'POST'], // method yang diizinkan
+  allowedHeaders: ['Content-Type', 'ngrok-skip-browser-warning'],
   credentials: false
 }));
 
