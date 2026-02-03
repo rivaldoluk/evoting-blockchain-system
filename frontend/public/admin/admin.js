@@ -338,47 +338,56 @@ function showAdminAuthModal() {
     }, 1000);
 }
 
-function startRealtimeStream() {
+async function startRealtimeStream() {
+    // --- 1. AMBIL DATA AWAL (Penting agar tidak loading terus) ---
+    try {
+        const res = await fetch(`${BACKEND_URL}/results`, { 
+            headers: NGROK_HEADERS 
+        });
+        if (res.ok) {
+            const initialData = await res.json();
+            updateDashboardUI(initialData); // Langsung render data yang ada
+            
+            // Ambil data transaksi awal juga
+            const configRes = await fetch(`${BACKEND_URL}/admin/config`, { headers: NGROK_HEADERS });
+            if (configRes.ok) {
+                const configData = await configRes.json();
+                updateTransactionTable(configData.votersList);
+            }
+        }
+    } catch (err) {
+        console.error("Gagal mengambil data awal:", err);
+    }
+
+    // --- 2. AKTIFKAN MODE REAL-TIME (SSE) ---
     if (eventSource) eventSource.close();
     
-    // Inisialisasi koneksi stream
     eventSource = new EventSource(`${BACKEND_URL}/results-stream`);
 
-    // Event ini HANYA akan terpicu jika Backend mengirim data baru (Push Notification)
     eventSource.onmessage = async (event) => {
         try {
-            // 1. Update Chart & Leaderboard dari data yang dikirim server
             const candidates = JSON.parse(event.data);
             updateDashboardUI(candidates);
             
-            // 2. Karena ada suara masuk, kita juga perlu update data transaksi (votersList)
-            // Kita ambil dari endpoint config
-            const configRes = await fetch(`${BACKEND_URL}/admin/config`, { 
-                headers: NGROK_HEADERS 
-            });
-            
+            // Ambil data transaksi terbaru saat ada suara masuk
+            const configRes = await fetch(`${BACKEND_URL}/admin/config`, { headers: NGROK_HEADERS });
             if (configRes.ok) {
                 const configData = await configRes.json();
-                // Update tabel transaksi di bawah dashboard
                 updateTransactionTable(configData.votersList);
             }
             
-            // 3. Beri notifikasi di log system
-            addLog("Suara baru masuk! Blockchain sync berhasil.", "success");
-
+            addLog("Suara baru masuk! Dashboard diperbarui.", "success");
         } catch (e) {
-            console.error("Gagal sinkronisasi data stream:", e);
+            console.error("Gagal parse data stream:", e);
         }
     };
 
-    // Opsional: Log jika koneksi stream berhasil tersambung
     eventSource.onopen = () => {
-        console.log("Koneksi Real-time terhubung.");
-        addLog("Sistem: Koneksi real-time aktif.", "info");
+        console.log("Koneksi Real-time aktif.");
     };
 
     eventSource.onerror = (err) => {
-        console.warn("Stream terputus atau buffering. Pastikan sudah klik 'Visit Site' di URL Ngrok.");
+        console.warn("Stream terputus. Pastikan link Ngrok sudah diklik 'Visit Site'.");
     };
 }
 
