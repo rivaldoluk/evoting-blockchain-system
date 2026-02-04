@@ -505,15 +505,15 @@
     // === KONFIGURASI ===
     const BACKEND_URL = 'https://9577e98f93a3.ngrok-free.app';
     const NGROK_HEADERS = {
-    "ngrok-skip-browser-warning": "69420"
-};
+      "ngrok-skip-browser-warning": "69420"
+    };
 
     function getFullImageUrl(path) {
-    if (!path) return 'img/default.png';
-    if (path.startsWith('http')) return path;
-    const fileName = path.split('/').pop();
-    return `/img/${fileName}`;
-}
+      if (!path) return 'img/default.png';
+      if (path.startsWith('http')) return path;
+      const fileName = path.split('/').pop();
+      return `/img/${fileName}`;
+    }
 
     let countdownInterval = null;
     let currentToken = null;
@@ -545,40 +545,40 @@
 
     // === SCAN QR FULL SCREEN ===
     async function openScanMode() {
-    showStage('scanPage');
-    
-    // Pastikan reader bersih sebelum mulai
-    document.getElementById('reader').innerHTML = '';
+      showStage('scanPage');
 
-    if (html5QrCode) {
+      // Pastikan reader bersih sebelum mulai
+      document.getElementById('reader').innerHTML = '';
+
+      if (html5QrCode) {
         try {
-            await html5QrCode.stop();
-            html5QrCode = null;
+          await html5QrCode.stop();
+          html5QrCode = null;
         } catch (e) { html5QrCode = null; }
-    }
+      }
 
-    html5QrCode = new Html5Qrcode("reader");
+      html5QrCode = new Html5Qrcode("reader");
 
-    html5QrCode.start(
+      html5QrCode.start(
         { facingMode: "environment" },
         { fps: 10, qrbox: { width: 300, height: 300 } },
         (decodedText) => {
-            html5QrCode.stop().then(() => {
-                html5QrCode = null;
-                processToken(decodedText.trim());
-            });
+          html5QrCode.stop().then(() => {
+            html5QrCode = null;
+            processToken(decodedText.trim());
+          });
         },
         (err) => { /* scanning... */ }
-    ).catch((err) => {
+      ).catch((err) => {
         console.warn("Kamera ditolak/error:", err);
         // PENTING: Jika ditolak, hancurkan objek agar tidak mengunci fitur Galeri
         if (html5QrCode) {
-            html5QrCode.clear(); 
-            html5QrCode = null;
+          html5QrCode.clear();
+          html5QrCode = null;
         }
         showAlert('Akses kamera ditolak. Kamu tetap bisa menggunakan fitur "Pilih dari Galeri".', 'warning');
-    });
-}
+      });
+    }
 
     function closeScanMode() {
       if (html5QrCode) {
@@ -625,29 +625,29 @@
     });
 
     document.getElementById('fileInput').addEventListener('change', async (e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+      const file = e.target.files?.[0];
+      if (!file) return;
 
-    showStage('stageLoading');
+      showStage('stageLoading');
 
-    // Gunakan instance BARU dan BERBEDA khusus untuk file
-    // Ini rahasianya agar tidak bentrok dengan sisa-sisa error kamera
-    const fileScanner = new Html5Qrcode("reader");
+      // Gunakan instance BARU dan BERBEDA khusus untuk file
+      // Ini rahasianya agar tidak bentrok dengan sisa-sisa error kamera
+      const fileScanner = new Html5Qrcode("reader");
 
-    try {
+      try {
         const decodedText = await fileScanner.scanFile(file, true);
         await fileScanner.clear();
         processToken(decodedText.trim());
-    } catch (err) {
+      } catch (err) {
         console.error("Gagal baca file:", err);
         if (fileScanner) await fileScanner.clear();
-        
+
         showAlert('Gagal membaca QR: Pastikan gambar tajam, tidak buram, dan QR Code terlihat jelas.', 'danger');
         showStage('mainPage');
-    } finally {
+      } finally {
         e.target.value = ''; // Reset input agar bisa pilih file yang sama lagi
-    }
-});
+      }
+    });
     // Verifikasi manual
     document.getElementById('btnVerifyToken').addEventListener('click', () => {
       const token = document.getElementById('inputToken').value.trim();
@@ -659,8 +659,8 @@
     async function checkVotingStatus() {
       try {
         const res = await fetch(`${BACKEND_URL}/voting-status`, {
-    headers: NGROK_HEADERS // Tambahkan ini
-});
+          headers: NGROK_HEADERS // Tambahkan ini
+        });
         const data = await res.json();
 
         // Cari atau buat container timer di dalam alert
@@ -788,8 +788,8 @@
     async function loadCandidatePreview() {
       try {
         const res = await fetch(`${BACKEND_URL}/results`, {
-    headers: NGROK_HEADERS // Tambahkan ini
-});
+          headers: NGROK_HEADERS // Tambahkan ini
+        });
         allCandidatesData = await res.json();
 
         const previewList = document.getElementById('candidatePreviewList');
@@ -977,6 +977,18 @@
         touchBtn.style.left = '15px';
       } else {
         touchBtn.style.left = (windowWidth - rect.width - 15) + 'px';
+      }
+    });
+
+    // Cek saat halaman pertama kali dibuka
+    window.addEventListener('load', () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const tokenDariUrl = urlParams.get('token');
+
+      if (tokenDariUrl) {
+        console.log("Token terdeteksi dari URL:", tokenDariUrl);
+        // Langsung jalankan fungsi verifikasi kamu
+        processToken(tokenDariUrl);
       }
     });
   </script>

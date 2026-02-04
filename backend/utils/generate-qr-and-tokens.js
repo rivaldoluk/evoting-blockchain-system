@@ -12,21 +12,21 @@ const VOTERS_CSV = path.join(__dirname, '../data/voters.csv');
 // [TAMBAHAN] Cek dan buat folder data jika belum ada
 const dataDir = path.join(__dirname, '../data');
 if (!fs.existsSync(dataDir)) {
-    fs.mkdirSync(dataDir, { recursive: true });
-    console.log('Folder backend/data berhasil dibuat secara otomatis.');
+  fs.mkdirSync(dataDir, { recursive: true });
+  console.log('Folder backend/data berhasil dibuat secara otomatis.');
 }
 
 // [TAMBAHAN] Fungsi untuk membersihkan folder agar tidak ada QR sisa dari pengujian sebelumnya
 const cleanOldQR = () => {
-    if (fs.existsSync(OUTPUT_DIR)) {
-        const files = fs.readdirSync(OUTPUT_DIR);
-        for (const file of files) {
-            fs.unlinkSync(path.join(OUTPUT_DIR, file));
-        }
-        console.log('Membersihkan file QR lama...');
-    } else {
-        fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+  if (fs.existsSync(OUTPUT_DIR)) {
+    const files = fs.readdirSync(OUTPUT_DIR);
+    for (const file of files) {
+      fs.unlinkSync(path.join(OUTPUT_DIR, file));
     }
+    console.log('Membersihkan file QR lama...');
+  } else {
+    fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+  }
 };
 
 let votersCount = 0;
@@ -52,7 +52,13 @@ fs.createReadStream(VOTERS_CSV)
       const filepath = path.join(OUTPUT_DIR, filename);
 
       try {
-        await QRCode.toFile(filepath, token, {
+        // Ganti dengan domain Vercel kamu nanti
+        const VERCEL_DOMAIN = 'https://evoting-blockchain-system.vercel.app';
+
+        // Gabungkan Domain + Token sebagai parameter URL
+        const qrContent = `${VERCEL_DOMAIN}/index.html?token=${token}`;
+
+        await QRCode.toFile(filepath, qrContent, {
           errorCorrectionLevel: 'H',
           width: 600,
           margin: 4,
@@ -75,12 +81,12 @@ fs.createReadStream(VOTERS_CSV)
 
     // [TAMBAHAN] Validasi akhir sebelum tulis file
     if (tokens.length === votersCount) {
-        fs.writeFileSync(TOKENS_FILE, JSON.stringify(tokens, null, 2));
-        console.log('\n\nSELESAI!');
-        console.log(`QR disimpan di: ${OUTPUT_DIR}`);
-        console.log(`Token list: ${TOKENS_FILE}`);
+      fs.writeFileSync(TOKENS_FILE, JSON.stringify(tokens, null, 2));
+      console.log('\n\nSELESAI!');
+      console.log(`QR disimpan di: ${OUTPUT_DIR}`);
+      console.log(`Token list: ${TOKENS_FILE}`);
     } else {
-        console.error('\n\nPERINGATAN: Jumlah token yang digenerate tidak sesuai dengan jumlah pemilih!');
+      console.error('\n\nPERINGATAN: Jumlah token yang digenerate tidak sesuai dengan jumlah pemilih!');
     }
   })
   .on('error', (error) => {
