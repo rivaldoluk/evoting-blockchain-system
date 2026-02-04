@@ -565,7 +565,11 @@
         (decodedText) => {
           html5QrCode.stop().then(() => {
             html5QrCode = null;
-            processToken(decodedText.trim());
+            // Mengambil token saja jika yang di-scan adalah URL
+            const rawText = decodedText.trim();
+            const tokenOnly = rawText.includes('token=') ? rawText.split('token=')[1].split('&')[0] : rawText;
+
+            processToken(tokenOnly);
           });
         },
         (err) => { /* scanning... */ }
@@ -637,7 +641,11 @@
       try {
         const decodedText = await fileScanner.scanFile(file, true);
         await fileScanner.clear();
-        processToken(decodedText.trim());
+        const rawText = decodedText.trim();
+        // Logika: Jika ada kata 'token=', ambil teks setelahnya. Jika tidak, ambil teks asli.
+        const tokenOnly = rawText.includes('token=') ? rawText.split('token=')[1].split('&')[0] : rawText;
+
+        processToken(tokenOnly);
       } catch (err) {
         console.error("Gagal baca file:", err);
         if (fileScanner) await fileScanner.clear();
