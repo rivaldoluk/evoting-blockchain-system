@@ -59,7 +59,7 @@ fs.createReadStream(VOTERS_CSV)
         const qrContent = `${VERCEL_DOMAIN}/index.html?token=${token}`;
 
         await QRCode.toFile(filepath, qrContent, {
-          errorCorrectionLevel: 'H',
+          errorCorrectionLevel: 'M',
           width: 600,
           margin: 4,
           color: { dark: '#000', light: '#FFF' }
