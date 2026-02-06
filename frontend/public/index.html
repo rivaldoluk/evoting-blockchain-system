@@ -417,52 +417,49 @@
     max-height: 90vh;
   }
 
-  /* Mengatur jarak agar shadow tidak terpotong dan panah pas di pinggir */
   .carousel-item {
-    padding: 15px 40px; 
+    /* Padding atas-bawah tetap, padding samping dikecilkan karena panah sudah hilang */
+    padding: 15px 10px; 
+    transition: transform 0.6s ease-in-out !important;
   }
 
   .candidate-slide-card {
     background-color: var(--bg-item);
     border: 1px solid var(--border-color);
     border-radius: 1.25rem;
-    padding: 1.5rem; /* Dikurangi dari 2rem */
+    padding: 1.5rem;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 240px; /* Dikurangi agar tidak terlalu tinggi */
-    transition: 0.3s ease;
-    /* max-width kita set lebih kecil agar pas di HP dan Desktop */
-    max-width: 280px; 
+    min-height: 240px;
+    max-width: 280px; /* Ukuran ini tetap agar tidak terlalu raksasa */
     margin: 0 auto;
     box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    cursor: grab; /* Memberi petunjuk visual bahwa ini bisa digeser */
   }
 
-  /* Teks Nama yang proporsional */
-  .candidate-name-slide {
-    font-size: 1rem;
-    font-weight: bold;
-    color: var(--text-main);
-    text-align: center;
-    margin-bottom: 0.5rem;
-    /* Jika nama terlalu panjang, tetap rapi */
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
-
-  /* Perkecil ukuran tombol agar tidak dominan */
+  /* Mengatur tombol agar tidak terlalu lebar */
   .btn-view-profile {
-    font-size: 0.75rem;
-    padding: 0.5rem 1.25rem;
-    border-width: 1.5px;
+    font-size: 0.75rem !important;
+    padding: 8px 20px !important;
+    max-width: 180px; /* Batasi lebar maksimal tombol */
+    margin: 0 auto;   /* Pastikan tetap di tengah */
+    border-width: 1.5px !important;
+    white-space: nowrap;
+    display: block;   /* Pastikan margin auto berfungsi */
   }
 
-  .carousel-item {
-    padding: 15px 40px;
-    /* Membuat pergeseran slide lebih mulus */
-    transition: transform 0.8s ease-in-out !important;
+  /* Tambahan: Pastikan pembungkus tombol tidak memaksa stretch */
+  .button-wrapper {
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    margin-top: auto; /* Dorong tombol ke bawah kartu */
+  }
+  
+  .candidate-slide-card:active {
+    cursor: grabbing;
   }
   </style>
 </head>
@@ -573,17 +570,6 @@
         </div>
       </div>
     </div>
-
-    <button class="carousel-control-prev" type="button" data-bs-target="#candidateCarousel" data-bs-slide="prev" style="width: 5%; opacity: 1;">
-      <span class="bg-dark rounded-circle d-flex align-items-center justify-content-center shadow" style="width: 35px; height: 35px;">
-        <i class="bi bi-chevron-left text-white"></i>
-      </span>
-    </button>
-    <button class="carousel-control-next" type="button" data-bs-target="#candidateCarousel" data-bs-slide="next" style="width: 5%; opacity: 1;">
-      <span class="bg-dark rounded-circle d-flex align-items-center justify-content-center shadow" style="width: 35px; height: 35px;">
-        <i class="bi bi-chevron-right text-white"></i>
-      </span>
-    </button>
   </div>
 </div>
 
@@ -1009,16 +995,25 @@
         allCandidatesData = await res.json();
 
         const previewList = document.getElementById('candidatePreviewList');
-  if (!previewList) return;
-  
-  previewList.innerHTML = ''; 
+  const indicators = document.querySelector('.carousel-indicators');
+  previewList.innerHTML = '';
+  if(indicators) indicators.innerHTML = ''; // Reset titik
 
   allCandidatesData.forEach((cand, index) => {
     const isActive = index === 0 ? 'active' : '';
     
+    // Tambah Titik Indikator
+    if(indicators) {
+      indicators.innerHTML += `
+        <button type="button" data-bs-target="#candidateCarousel" data-bs-slide-to="${index}" 
+                class="${isActive}" aria-current="${isActive ? 'true' : 'false'}" 
+                style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--text-muted); border: none; margin: 0 4px;">
+        </button>`;
+    }
+    
     previewList.innerHTML += `
       <div class="carousel-item ${isActive}">
-        <div class="candidate-slide-card" onclick="showCandidateDetail(${index})" style="cursor: pointer;">
+        <div class="candidate-slide-card shadow-sm" onclick="showCandidateDetail(${index})">
           
           <div class="position-relative mb-3 text-center">
             <img src="${getFullImageUrl(cand.foto)}" 
@@ -1031,6 +1026,7 @@
           </div>
 
           <div class="candidate-name-slide">${cand.nama}</div>
+          <p class="text-muted mb-3 text-center" style="font-size: 0.7rem;"></p>
           
           <button class="btn btn-outline-primary btn-view-profile rounded-pill fw-bold">
             Lihat Visi-Misi
