@@ -461,6 +461,20 @@
   .candidate-slide-card:active {
     cursor: grabbing;
   }
+
+  /* Warna titik saat tidak aktif */
+  .carousel-indicators [data-bs-target] {
+    background-color: #6c757d; /* Abu-abu */
+    opacity: 0.5;
+    transition: all 0.3s ease;
+  }
+
+  /* Warna titik saat aktif (sedang dilihat) */
+  .carousel-indicators .active {
+    background-color: var(--bs-primary) !important; /* Mengikuti warna tema (biru) */
+    opacity: 1;
+    transform: scale(1.2); /* Sedikit lebih besar agar menonjol */
+  }
   </style>
 </head>
 
@@ -569,6 +583,8 @@
           <p class="mt-2 small text-muted">Menyiapkan surat suara...</p>
         </div>
       </div>
+    </div>
+    <div class="carousel-indicators" style="position: relative; margin-top: 20px;">
     </div>
   </div>
 </div>
