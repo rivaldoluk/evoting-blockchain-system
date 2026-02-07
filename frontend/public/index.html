@@ -330,151 +330,170 @@
       padding: 20px;
     }
 
-  /* Animasi halus pada tombol */
-  #btnStartVoting:hover {
-    transform: translateY(-0.5px);
-    box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
-  }
+    /* Animasi halus pada tombol */
+    #btnStartVoting:hover {
+      transform: translateY(-0.5px);
+      box-shadow: 0 4px 12px rgba(13, 110, 253, 0.2);
+    }
 
-  /* Titik hijau berkedip kecil */
-  .pulse-dot-small {
-    height: 6px;
-    width: 6px;
-    background-color: #198754;
-    border-radius: 50%;
-    display: inline-block;
-    margin-right: 4px;
-    animation: pulse-green 2s infinite;
-  }
+    /* Titik hijau berkedip kecil */
+    .pulse-dot-small {
+      height: 6px;
+      width: 6px;
+      background-color: #198754;
+      border-radius: 50%;
+      display: inline-block;
+      margin-right: 4px;
+      animation: pulse-green 2s infinite;
+    }
 
-  @keyframes pulse-green {
-    0% { opacity: 1; }
-    50% { opacity: 0.3; }
-    100% { opacity: 1; }
-  }
+    @keyframes pulse-green {
+      0% {
+        opacity: 1;
+      }
 
-  /* Styling khusus link agar terlihat seperti tombol resmi */
-  #etherscanLink {
-    transition: all 0.3s ease;
-    border-width: 2px;
-  }
-  
-  #etherscanLink:hover {
-    background-color: #000;
-    color: #fff;
-    transform: scale(1.02);
-  }
+      50% {
+        opacity: 0.3;
+      }
 
-  .fw-black { font-weight: 900; }
-  
-  /* Container Ikon Kecil */
-  .icon-square-sm {
-    width: 28px;
-    height: 28px;
-    border-radius: 8px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 0.85rem;
-  }
+      100% {
+        opacity: 1;
+      }
+    }
 
-  /* Custom List untuk Misi */
-  .custom-misi-list li {
-    position: relative;
-    padding-left: 1.5rem;
-    margin-bottom: 0.75rem;
-    color: var(--text-main);
-    font-size: 0.9rem;
-    line-height: 1.5;
-  }
+    /* Styling khusus link agar terlihat seperti tombol resmi */
+    #etherscanLink {
+      transition: all 0.3s ease;
+      border-width: 2px;
+    }
 
-  .custom-misi-list li::before {
-    content: "→";
-    position: absolute;
-    left: 0;
-    color: var(--bs-primary);
-    font-weight: bold;
-  }
+    #etherscanLink:hover {
+      background-color: #000;
+      color: #fff;
+      transform: scale(1.02);
+    }
 
-  /* Tombol Tutup Custom */
-  .btn-theme-secondary {
-    background-color: var(--bg-box);
-    color: var(--text-main);
-    border: 1px solid var(--border-color);
-    transition: 0.3s;
-  }
-  
-  .btn-theme-secondary:hover {
-    background-color: #e2e6ea;
-  }
+    .fw-black {
+      font-weight: 900;
+    }
 
-  [data-theme="dark"] .btn-theme-secondary:hover {
-    background-color: #3d3d3d;
-  }
+    /* Container Ikon Kecil */
+    .icon-square-sm {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.85rem;
+    }
 
-  /* Scrollbar halus untuk modal body */
-  .modal-dialog-scrollable .modal-content {
-    max-height: 90vh;
-  }
+    /* Custom List untuk Misi */
+    .custom-misi-list li {
+      position: relative;
+      padding-left: 1.5rem;
+      margin-bottom: 0.75rem;
+      color: var(--text-main);
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
 
-  .carousel-item {
-    /* Padding atas-bawah tetap, padding samping dikecilkan karena panah sudah hilang */
-    padding: 15px 10px; 
-    transition: transform 0.6s ease-in-out !important;
-  }
+    .custom-misi-list li::before {
+      content: "→";
+      position: absolute;
+      left: 0;
+      color: var(--bs-primary);
+      font-weight: bold;
+    }
 
-  .candidate-slide-card {
-    background-color: var(--bg-item);
-    border: 1px solid var(--border-color);
-    border-radius: 1.25rem;
-    padding: 1.5rem;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    min-height: 240px;
-    max-width: 280px; /* Ukuran ini tetap agar tidak terlalu raksasa */
-    margin: 0 auto;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.05);
-    cursor: grab; /* Memberi petunjuk visual bahwa ini bisa digeser */
-  }
+    /* Tombol Tutup Custom */
+    .btn-theme-secondary {
+      background-color: var(--bg-box);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+      transition: 0.3s;
+    }
 
-  /* Mengatur tombol agar tidak terlalu lebar */
-  .btn-view-profile {
-    font-size: 0.75rem !important;
-    padding: 8px 20px !important;
-    max-width: 180px; /* Batasi lebar maksimal tombol */
-    margin: 0 auto;   /* Pastikan tetap di tengah */
-    border-width: 1.5px !important;
-    white-space: nowrap;
-    display: block;   /* Pastikan margin auto berfungsi */
-  }
+    .btn-theme-secondary:hover {
+      background-color: #e2e6ea;
+    }
 
-  /* Tambahan: Pastikan pembungkus tombol tidak memaksa stretch */
-  .button-wrapper {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    margin-top: auto; /* Dorong tombol ke bawah kartu */
-  }
-  
-  .candidate-slide-card:active {
-    cursor: grabbing;
-  }
+    [data-theme="dark"] .btn-theme-secondary:hover {
+      background-color: #3d3d3d;
+    }
 
-  /* Warna titik saat tidak aktif */
-  .carousel-indicators [data-bs-target] {
-    background-color: #6c757d; /* Abu-abu */
-    opacity: 0.5;
-    transition: all 0.3s ease;
-  }
+    /* Scrollbar halus untuk modal body */
+    .modal-dialog-scrollable .modal-content {
+      max-height: 90vh;
+    }
 
-  /* Warna titik saat aktif (sedang dilihat) */
-  .carousel-indicators .active {
-    background-color: var(--bs-primary) !important; /* Mengikuti warna tema (biru) */
-    opacity: 1;
-    transform: scale(1.2); /* Sedikit lebih besar agar menonjol */
-  }
+    .carousel-item {
+      /* Padding atas-bawah tetap, padding samping dikecilkan karena panah sudah hilang */
+      padding: 15px 10px;
+      transition: transform 0.6s ease-in-out !important;
+    }
+
+    .candidate-slide-card {
+      background-color: var(--bg-item);
+      border: 1px solid var(--border-color);
+      border-radius: 1.25rem;
+      padding: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 240px;
+      max-width: 280px;
+      /* Ukuran ini tetap agar tidak terlalu raksasa */
+      margin: 0 auto;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+      cursor: grab;
+      /* Memberi petunjuk visual bahwa ini bisa digeser */
+    }
+
+    /* Mengatur tombol agar tidak terlalu lebar */
+    .btn-view-profile {
+      font-size: 0.75rem !important;
+      padding: 8px 20px !important;
+      max-width: 180px;
+      /* Batasi lebar maksimal tombol */
+      margin: 0 auto;
+      /* Pastikan tetap di tengah */
+      border-width: 1.5px !important;
+      white-space: nowrap;
+      display: block;
+      /* Pastikan margin auto berfungsi */
+    }
+
+    /* Tambahan: Pastikan pembungkus tombol tidak memaksa stretch */
+    .button-wrapper {
+      width: 100%;
+      display: flex;
+      justify-content: center;
+      margin-top: auto;
+      /* Dorong tombol ke bawah kartu */
+    }
+
+    .candidate-slide-card:active {
+      cursor: grabbing;
+    }
+
+    /* Warna titik saat tidak aktif */
+    .carousel-indicators [data-bs-target] {
+      background-color: #6c757d;
+      /* Abu-abu */
+      opacity: 0.5;
+      transition: all 0.3s ease;
+    }
+
+    /* Warna titik saat aktif (sedang dilihat) */
+    .carousel-indicators .active {
+      background-color: var(--bs-primary) !important;
+      /* Mengikuti warna tema (biru) */
+      opacity: 1;
+      transform: scale(1.2);
+      /* Sedikit lebih besar agar menonjol */
+    }
   </style>
 </head>
 
@@ -573,74 +592,79 @@
         </div>
 
         <div class="mb-4">
-  <h5 class="fw-bold mb-3 text-theme-main">Daftar Kandidat Tetap</h5>
-  
-  <div id="candidateCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000">
-    <div id="candidatePreviewList" class="carousel-inner">
-      <div class="carousel-item active">
-        <div class="text-center py-5 bg-theme-box rounded-4">
-          <div class="spinner-border text-primary" role="status"></div>
-          <p class="mt-2 small text-muted">Menyiapkan surat suara...</p>
+          <h5 class="fw-bold mb-3 text-theme-main">Daftar Kandidat Tetap</h5>
+
+          <div id="candidateCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000">
+            <div id="candidatePreviewList" class="carousel-inner">
+              <div class="carousel-item active">
+                <div class="text-center py-5 bg-theme-box rounded-4">
+                  <div class="spinner-border text-primary" role="status"></div>
+                  <p class="mt-2 small text-muted">Menyiapkan surat suara...</p>
+                </div>
+              </div>
+            </div>
+            <div class="carousel-indicators" style="position: relative; margin-top: 20px;">
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-    <div class="carousel-indicators" style="position: relative; margin-top: 20px;">
-    </div>
-  </div>
-</div>
 
         <h5 class="fw-bold mb-3 text-theme-main">Ketentuan & Keamanan</h5>
-<div class="mb-4">
-  <div class="bg-theme-item d-flex align-items-center p-3 mb-2 rounded-4 border shadow-sm" style="border-color: var(--border-color) !important;">
-    <i class="bi bi-1-circle-fill text-primary fs-4 me-3"></i>
-    <span class="text-theme-main">Anda hanya memiliki <strong>1 (satu) kali</strong> kesempatan memilih.</span>
-  </div>
+        <div class="mb-4">
+          <div class="bg-theme-item d-flex align-items-center p-3 mb-2 rounded-4 border shadow-sm"
+            style="border-color: var(--border-color) !important;">
+            <i class="bi bi-1-circle-fill text-primary fs-4 me-3"></i>
+            <span class="text-theme-main">Anda hanya memiliki <strong>1 (satu) kali</strong> kesempatan memilih.</span>
+          </div>
 
-  <div class="bg-theme-item d-flex align-items-center p-3 mb-2 rounded-4 border shadow-sm" style="border-color: var(--border-color) !important;">
-    <i class="bi bi-lock-fill text-danger fs-4 me-3"></i>
-    <span class="text-theme-main">Pilihan bersifat <strong>permanen</strong> (tidak dapat diubah/batal).</span>
-  </div>
+          <div class="bg-theme-item d-flex align-items-center p-3 mb-2 rounded-4 border shadow-sm"
+            style="border-color: var(--border-color) !important;">
+            <i class="bi bi-lock-fill text-danger fs-4 me-3"></i>
+            <span class="text-theme-main">Pilihan bersifat <strong>permanen</strong> (tidak dapat diubah/batal).</span>
+          </div>
 
-  <div class="bg-theme-item d-flex align-items-center p-3 mb-2 rounded-4 border shadow-sm" style="border-color: var(--border-color) !important;">
-    <i class="bi bi-shield-shaded text-success fs-4 me-3"></i>
-    <span class="text-theme-main">Identitas (NIK) dianonimkan via <strong>Blockchain Technology</strong>.</span>
-  </div>
+          <div class="bg-theme-item d-flex align-items-center p-3 mb-2 rounded-4 border shadow-sm"
+            style="border-color: var(--border-color) !important;">
+            <i class="bi bi-shield-shaded text-success fs-4 me-3"></i>
+            <span class="text-theme-main">Identitas (NIK) dianonimkan via <strong>Blockchain Technology</strong>.</span>
+          </div>
 
-  <div class="bg-theme-item d-flex align-items-center p-3 mb-2 rounded-4 border shadow-sm" style="border-color: var(--border-color) !important;">
-    <i class="bi bi-wifi text-warning fs-4 me-3"></i>
-    <span class="text-theme-main small">Pastikan koneksi internet stabil sebelum menekan kirim.</span>
-  </div>
-</div>
+          <div class="bg-theme-item d-flex align-items-center p-3 mb-2 rounded-4 border shadow-sm"
+            style="border-color: var(--border-color) !important;">
+            <i class="bi bi-wifi text-warning fs-4 me-3"></i>
+            <span class="text-theme-main small">Pastikan koneksi internet stabil sebelum menekan kirim.</span>
+          </div>
+        </div>
 
-<div class="text-center mb-4 p-4 rounded-4 bg-theme-box shadow-sm" 
-     style="border: 2px dashed var(--border-color) !important;">
-    
-    <div class="d-flex align-items-center justify-content-center mb-1">
-        <small class="text-muted fw-bold text-uppercase" style="letter-spacing: 1px; font-size: 0.7rem;">
-            Audit Transparansi Digital
-        </small>
-        <i class="bi bi-patch-check-fill text-primary ms-2" style="font-size: 0.9rem;"></i>
-    </div>
-    
-    <p class="small text-muted mb-3">Pantau isi kotak suara secara real-time:</p>
-    
-    <a id="etherscanLink" href="#" target="_blank" 
-       class="btn btn-outline-primary btn-sm rounded-pill px-4 fw-bold shadow-sm mb-3">
-        <i class="bi bi-box-seam me-2"></i> Buka Kotak Suara Digital
-    </a>
+        <div class="text-center mb-4 p-4 rounded-4 bg-theme-box shadow-sm"
+          style="border: 2px dashed var(--border-color) !important;">
 
-    <div>
-        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill" style="font-size: 0.65rem;">
-            <span class="pulse-dot-small"></span> Terhubung ke Jaringan Blockchain
-        </span>
-    </div>
-</div>
+          <div class="d-flex align-items-center justify-content-center mb-1">
+            <small class="text-muted fw-bold text-uppercase" style="letter-spacing: 1px; font-size: 0.7rem;">
+              Audit Transparansi Digital
+            </small>
+            <i class="bi bi-patch-check-fill text-primary ms-2" style="font-size: 0.9rem;"></i>
+          </div>
 
-<div class="d-grid">
-  <button id="btnStartVoting" class="btn btn-primary btn-lg shadow-sm">
-    Mulai Voting Sekarang <i class="bi bi-arrow-right ms-2"></i>
-  </button>
-</div>
+          <p class="small text-muted mb-3">Pantau isi kotak suara secara real-time:</p>
+
+          <a id="etherscanLink" href="#" target="_blank"
+            class="btn btn-outline-primary btn-sm rounded-pill px-4 fw-bold shadow-sm mb-3">
+            <i class="bi bi-box-seam me-2"></i> Buka Kotak Suara Digital
+          </a>
+
+          <div>
+            <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill"
+              style="font-size: 0.65rem;">
+              <span class="pulse-dot-small"></span> Terhubung ke Jaringan Blockchain
+            </span>
+          </div>
+        </div>
+
+        <div class="d-grid">
+          <button id="btnStartVoting" class="btn btn-primary btn-lg shadow-sm">
+            Mulai Voting Sekarang <i class="bi bi-arrow-right ms-2"></i>
+          </button>
+        </div>
       </div>
     </div>
   </div>
@@ -657,62 +681,67 @@
   </div>
 
   <div class="modal fade" id="candidateModal" tabindex="-1" aria-hidden="true">
-  <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
-    <div class="modal-content border-0 shadow-2xl bg-theme-card" style="border-radius: 30px; overflow: hidden;">
-      
-      <div id="modalHeaderColor" class="position-relative" style="height: 140px; transition: 0.5s ease;">
-        <div class="position-absolute w-100 h-100" style="background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0));"></div>
-      </div>
+    <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+      <div class="modal-content border-0 shadow-2xl bg-theme-card" style="border-radius: 30px; overflow: hidden;">
 
-      <div class="modal-body pt-0 px-4 text-center" style="margin-top: -60px;">
-        <div class="position-relative d-inline-block">
-          <img id="modalFoto" src="" class="rounded-circle border border-5 shadow-lg mb-3"
-            style="width: 120px; height: 120px; object-fit: cover; background: white; border-color: var(--bg-card) !important;">
-          <span id="modalNoUrut" class="position-absolute bottom-0 end-0 badge rounded-pill shadow-sm py-2 px-3 fw-bold" 
-                style="font-size: 0.8rem; transform: translate(10%, -20%); border: 3px solid var(--bg-card);"></span>
+        <div id="modalHeaderColor" class="position-relative" style="height: 140px; transition: 0.5s ease;">
+          <div class="position-absolute w-100 h-100"
+            style="background: linear-gradient(to bottom, rgba(0,0,0,0.1), rgba(0,0,0,0));"></div>
         </div>
 
-        <div class="mt-2 mb-4">
-          <h3 id="modalNamaKetua" class="fw-black mb-0 text-theme-main" style="letter-spacing: -1px;"></h3>
-          <div class="d-inline-block px-3 py-1 rounded-pill bg-primary bg-opacity-10 text-primary small fw-bold" id="modalTaglineDisplay">
-             <i class="bi bi-quote me-1"></i><span id="modalTagline"></span>
+        <div class="modal-body pt-0 px-4 text-center" style="margin-top: -60px;">
+          <div class="position-relative d-inline-block">
+            <img id="modalFoto" src="" class="rounded-circle border border-5 shadow-lg mb-3"
+              style="width: 120px; height: 120px; object-fit: cover; background: white; border-color: var(--bg-card) !important;">
+            <span id="modalNoUrut"
+              class="position-absolute bottom-0 end-0 badge rounded-pill shadow-sm py-2 px-3 fw-bold"
+              style="font-size: 0.8rem; transform: translate(10%, -20%); border: 3px solid var(--bg-card);"></span>
+          </div>
+
+          <div class="mt-2 mb-4">
+            <h3 id="modalNamaKetua" class="fw-black mb-0 text-theme-main" style="letter-spacing: -1px;"></h3>
+            <div class="d-inline-block px-3 py-1 rounded-pill bg-primary bg-opacity-10 text-primary small fw-bold"
+              id="modalTaglineDisplay">
+              <i class="bi bi-quote me-1"></i><span id="modalTagline"></span>
+            </div>
+          </div>
+
+          <div class="text-start mb-4">
+            <div class="d-flex align-items-center mb-2">
+              <div class="icon-square-sm bg-primary text-white me-2"><i class="bi bi-eye-fill"></i></div>
+              <label class="fw-bold small text-uppercase text-muted" style="letter-spacing: 1px;">Visi Utama</label>
+            </div>
+            <div class="p-3 rounded-4 bg-theme-box border-0" id="visiContainer">
+              <p id="modalVisi" class="mb-0 text-theme-main" style="line-height: 1.6; font-size: 0.95rem;"></p>
+            </div>
+          </div>
+
+          <div class="text-start mb-2">
+            <div class="d-flex align-items-center mb-2">
+              <div class="icon-square-sm bg-success text-white me-2"><i class="bi bi-list-check"></i></div>
+              <label class="fw-bold small text-uppercase text-muted" style="letter-spacing: 1px;">Misi & Program
+                Kerja</label>
+            </div>
+            <div class="p-1 rounded-4 bg-theme-box" id="misiContainer">
+              <ul id="modalMisi" class="list-unstyled mb-0 p-3 custom-misi-list"></ul>
+            </div>
           </div>
         </div>
 
-        <div class="text-start mb-4">
-          <div class="d-flex align-items-center mb-2">
-            <div class="icon-square-sm bg-primary text-white me-2"><i class="bi bi-eye-fill"></i></div>
-            <label class="fw-bold small text-uppercase text-muted" style="letter-spacing: 1px;">Visi Utama</label>
-          </div>
-          <div class="p-3 rounded-4 bg-theme-box border-0" id="visiContainer">
-            <p id="modalVisi" class="mb-0 text-theme-main" style="line-height: 1.6; font-size: 0.95rem;"></p>
-          </div>
+        <div class="modal-footer border-0 p-4 pt-0">
+          <button type="button" class="btn btn-theme-secondary w-100 rounded-4 py-3 fw-bold shadow-sm"
+            data-bs-dismiss="modal">Tutup Profil</button>
         </div>
-
-        <div class="text-start mb-2">
-          <div class="d-flex align-items-center mb-2">
-            <div class="icon-square-sm bg-success text-white me-2"><i class="bi bi-list-check"></i></div>
-            <label class="fw-bold small text-uppercase text-muted" style="letter-spacing: 1px;">Misi & Program Kerja</label>
-          </div>
-          <div class="p-1 rounded-4 bg-theme-box" id="misiContainer">
-            <ul id="modalMisi" class="list-unstyled mb-0 p-3 custom-misi-list"></ul>
-          </div>
-        </div>
-      </div>
-
-      <div class="modal-footer border-0 p-4 pt-0">
-        <button type="button" class="btn btn-theme-secondary w-100 rounded-4 py-3 fw-bold shadow-sm" data-bs-dismiss="modal">Tutup Profil</button>
       </div>
     </div>
   </div>
-</div>
 
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
   <script>
     // === KONFIGURASI ===
-    const BACKEND_URL = 'https://15ed-103-129-24-34.ngrok-free.app';
+    const BACKEND_URL = 'https://a572-103-129-24-34.ngrok-free.app';
     const NGROK_HEADERS = {
       "ngrok-skip-browser-warning": "69420"
     };
@@ -1011,23 +1040,23 @@
         allCandidatesData = await res.json();
 
         const previewList = document.getElementById('candidatePreviewList');
-  const indicators = document.querySelector('.carousel-indicators');
-  previewList.innerHTML = '';
-  if(indicators) indicators.innerHTML = ''; // Reset titik
+        const indicators = document.querySelector('.carousel-indicators');
+        previewList.innerHTML = '';
+        if (indicators) indicators.innerHTML = ''; // Reset titik
 
-  allCandidatesData.forEach((cand, index) => {
-    const isActive = index === 0 ? 'active' : '';
-    
-    // Tambah Titik Indikator
-    if(indicators) {
-      indicators.innerHTML += `
+        allCandidatesData.forEach((cand, index) => {
+          const isActive = index === 0 ? 'active' : '';
+
+          // Tambah Titik Indikator
+          if (indicators) {
+            indicators.innerHTML += `
         <button type="button" data-bs-target="#candidateCarousel" data-bs-slide-to="${index}" 
                 class="${isActive}" aria-current="${isActive ? 'true' : 'false'}" 
                 style="width: 8px; height: 8px; border-radius: 50%; background-color: var(--text-muted); border: none; margin: 0 4px;">
         </button>`;
-    }
-    
-    previewList.innerHTML += `
+          }
+
+          previewList.innerHTML += `
       <div class="carousel-item ${isActive}">
         <div class="candidate-slide-card shadow-sm" onclick="showCandidateDetail(${index})">
           
@@ -1050,15 +1079,15 @@
         </div>
       </div>
     `;
-  });
+        });
 
-  // PAKSA CAROUSEL JALAN OTOMATIS SETELAH DATA LOAD
-  const myCarousel = document.querySelector('#candidateCarousel');
-  const carousel = new bootstrap.Carousel(myCarousel, {
-    interval: 3000, // Kecepatan (3 detik)
-    ride: 'carousel',
-    pause: 'hover' // Slide akan berhenti jika kursor mouse diletakkan di atas kartu
-  });
+        // PAKSA CAROUSEL JALAN OTOMATIS SETELAH DATA LOAD
+        const myCarousel = document.querySelector('#candidateCarousel');
+        const carousel = new bootstrap.Carousel(myCarousel, {
+          interval: 3000, // Kecepatan (3 detik)
+          ride: 'carousel',
+          pause: 'hover' // Slide akan berhenti jika kursor mouse diletakkan di atas kartu
+        });
       } catch (err) {
         console.error("Gagal load preview:", err);
       }
@@ -1066,34 +1095,34 @@
 
     // 2. Tampilkan Detail ke Modal
     function showCandidateDetail(index) {
-  const cand = allCandidatesData[index];
-  const modal = new bootstrap.Modal(document.getElementById('candidateModal'));
+      const cand = allCandidatesData[index];
+      const modal = new bootstrap.Modal(document.getElementById('candidateModal'));
 
-  // Update Visual Colors
-  document.getElementById('modalHeaderColor').style.background = 
-    `linear-gradient(135deg, ${cand.warna} 0%, ${cand.warna}dd 100%)`;
-  document.getElementById('modalNoUrut').style.backgroundColor = cand.warna;
-  document.getElementById('modalNoUrut').classList.add('text-white');
+      // Update Visual Colors
+      document.getElementById('modalHeaderColor').style.background =
+        `linear-gradient(135deg, ${cand.warna} 0%, ${cand.warna}dd 100%)`;
+      document.getElementById('modalNoUrut').style.backgroundColor = cand.warna;
+      document.getElementById('modalNoUrut').classList.add('text-white');
 
-  // Update Text Data
-  document.getElementById('modalFoto').src = getFullImageUrl(cand.foto);
-  document.getElementById('modalNoUrut').innerText = `No. Urut ${cand.noUrut}`;
-  document.getElementById('modalNamaKetua').innerText = cand.nama;
+      // Update Text Data
+      document.getElementById('modalFoto').src = getFullImageUrl(cand.foto);
+      document.getElementById('modalNoUrut').innerText = `No. Urut ${cand.noUrut}`;
+      document.getElementById('modalNamaKetua').innerText = cand.nama;
 
-  document.getElementById('modalTagline').innerText = cand.tagline;
-  document.getElementById('modalVisi').innerText = cand.visi;
+      document.getElementById('modalTagline').innerText = cand.tagline;
+      document.getElementById('modalVisi').innerText = cand.visi;
 
-  // Render Misi dengan gaya List Baru
-  const misiList = document.getElementById('modalMisi');
-  misiList.innerHTML = '';
-  if (Array.isArray(cand.misi)) {
-    cand.misi.forEach(m => {
-      misiList.innerHTML += `<li>${m}</li>`;
-    });
-  }
+      // Render Misi dengan gaya List Baru
+      const misiList = document.getElementById('modalMisi');
+      misiList.innerHTML = '';
+      if (Array.isArray(cand.misi)) {
+        cand.misi.forEach(m => {
+          misiList.innerHTML += `<li>${m}</li>`;
+        });
+      }
 
-  modal.show();
-}
+      modal.show();
+    }
 
     // === Inisialisasi ===
     showStage('mainPage');
@@ -1240,23 +1269,23 @@
     });
 
     async function updateContractLink() {
-  try {
-    const res = await fetch(`${BACKEND_URL}/contract-info`, {
-      headers: NGROK_HEADERS
-    });
-    const data = await res.json();
-    
-    const linkEl = document.getElementById('etherscanLink');
-    if (data.address && linkEl) {
-      linkEl.href = data.explorerUrl;
-      // Tetap gunakan istilah Kotak Suara Digital
-      linkEl.innerHTML = `<i class="bi bi-box-seam me-2"></i> Buka Kotak Suara Digital`;
+      try {
+        const res = await fetch(`${BACKEND_URL}/contract-info`, {
+          headers: NGROK_HEADERS
+        });
+        const data = await res.json();
+
+        const linkEl = document.getElementById('etherscanLink');
+        if (data.address && linkEl) {
+          linkEl.href = data.explorerUrl;
+          // Tetap gunakan istilah Kotak Suara Digital
+          linkEl.innerHTML = `<i class="bi bi-box-seam me-2"></i> Buka Kotak Suara Digital`;
+        }
+      } catch (err) {
+        console.error("Gagal memuat link:", err);
+        document.getElementById('etherscanLink').innerHTML = `<i class="bi bi-exclamation-triangle me-2"></i> Kotak Suara Sedang Maintenance`;
+      }
     }
-  } catch (err) {
-    console.error("Gagal memuat link:", err);
-    document.getElementById('etherscanLink').innerHTML = `<i class="bi bi-exclamation-triangle me-2"></i> Kotak Suara Sedang Maintenance`;
-  }
-}
   </script>
 </body>
 

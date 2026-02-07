@@ -1,4 +1,4 @@
-const BACKEND_URL = 'https://15ed-103-129-24-34.ngrok-free.app';
+const BACKEND_URL = 'https://a572-103-129-24-34.ngrok-free.app';
 const NGROK_HEADERS = {
     "ngrok-skip-browser-warning": "69420"
 };
@@ -18,7 +18,7 @@ document.addEventListener('DOMContentLoaded', () => {
     loadCandidates();
     initSwipeLogic();
     // Tambahkan pemanggilan status voting
-    checkVotingStatus(); 
+    checkVotingStatus();
 });
 
 /**
@@ -41,11 +41,11 @@ function initAuth() {
 async function loadCandidates() {
     try {
         const res = await fetch(`${BACKEND_URL}/results`, {
-    headers: NGROK_HEADERS // Tambahkan ini
-});
+            headers: NGROK_HEADERS // Tambahkan ini
+        });
         const data = await res.json();
         const grid = document.getElementById('candidateGrid');
-        
+
         grid.innerHTML = data.map((cand, index) => `
             <div class="col-md-6 col-lg-4" style="animation: fadeIn 0.6s ease forwards ${index * 0.1}s; opacity: 0;">
                 <div class="candidate-card" onclick="openVoteModal('${cand.id}', '${cand.nama}', '${cand.noUrut}', '${cand.foto}')">
@@ -58,9 +58,9 @@ async function loadCandidates() {
                 </div>
             </div>
         `).join('');
-    } catch (e) { 
+    } catch (e) {
         console.error("Error loading candidates", e);
-    document.getElementById('candidateGrid').innerHTML = `
+        document.getElementById('candidateGrid').innerHTML = `
         <div class="col-12 text-center py-5" style="animation: fadeIn 0.5s ease;">
             <div class="mb-4">
                 <i class="bi bi-cloud-slash display-1 text-muted"></i>
@@ -114,7 +114,7 @@ function initSwipeLogic() {
         isDragging = true;
         // Ambil posisi kursor/sentuhan awal relatif terhadap handle
         startX = e.clientX;
-        
+
         handle.setPointerCapture(e.pointerId);
         handle.style.transition = 'none';
         handle.classList.add('grabbing');
@@ -122,7 +122,7 @@ function initSwipeLogic() {
 
     handle.addEventListener('pointermove', (e) => {
         if (!isDragging) return;
-        
+
         // Mencegah scroll layar saat jari menggeser tombol
         preventDefaults(e);
 
@@ -134,7 +134,7 @@ function initSwipeLogic() {
         if (deltaX > maxMove) deltaX = maxMove;
 
         handle.style.transform = `translateX(${deltaX}px)`;
-        
+
         // Efek visual teks memudar
         const opacityValue = 1 - (deltaX / maxMove);
         document.querySelector('.swipe-text').style.opacity = Math.max(opacityValue, 0.1);
@@ -175,7 +175,7 @@ function resetSwipe() {
 async function processVoting() {
     const handle = document.getElementById('swipeHandle');
     const swipeText = document.querySelector('.swipe-text');
-    
+
     // 1. State Loading
     handle.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
     handle.style.pointerEvents = 'none';
@@ -214,7 +214,7 @@ async function processVoting() {
             setTimeout(() => {
                 const confirmState = document.getElementById('voteStateConfirm');
                 const successState = document.getElementById('voteStateSuccess');
-                
+
                 confirmState.style.display = 'none';
                 successState.style.display = 'block';
 
@@ -223,11 +223,11 @@ async function processVoting() {
             }, 1000);
 
             // Tambahkan event listener untuk tombol sukses di modal
-document.querySelector('#voteStateSuccess a').addEventListener('click', function(e) {
-    e.preventDefault();
-    // replace tidak meninggalkan jejak di history
-    window.location.replace('../dashboard/dashboard.html'); 
-});
+            document.querySelector('#voteStateSuccess a').addEventListener('click', function (e) {
+                e.preventDefault();
+                // replace tidak meninggalkan jejak di history
+                window.location.replace('../dashboard/dashboard.html');
+            });
 
         } else {
             showErrorVoteModal(data.error);
@@ -287,7 +287,7 @@ function showErrorVoteModal(message) {
 
     let timeLeft = 5;
     const countdownEl = document.getElementById('errorCountdown');
-    
+
     const timer = setInterval(() => {
         timeLeft--;
         if (countdownEl) countdownEl.innerText = timeLeft;
@@ -326,11 +326,11 @@ function refreshPage() {
 function startRedirectCountdown(seconds) {
     let timeLeft = seconds;
     const timerElement = document.getElementById('redirectTimer');
-    
+
     const interval = setInterval(() => {
         timeLeft--;
         if (timerElement) timerElement.innerText = timeLeft;
-        
+
         if (timeLeft <= 0) {
             clearInterval(interval);
             window.location.replace('../dashboard/dashboard.html');
@@ -344,7 +344,7 @@ function startRedirectCountdown(seconds) {
 function initTheme() {
     const html = document.documentElement;
     const themeIcon = document.getElementById('theme-icon');
-    
+
     // Fungsi sinkronisasi ikon
     const syncIcon = (theme) => {
         if (theme === 'dark') {
@@ -360,10 +360,10 @@ function initTheme() {
     document.getElementById('theme-toggle').addEventListener('click', () => {
         const currentTheme = html.getAttribute('data-theme');
         const targetTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        
+
         // Animasi transisi smooth
         html.style.transition = 'background-color 0.5s ease, color 0.5s ease';
-        
+
         localStorage.setItem('theme-preference', targetTheme);
         html.setAttribute('data-theme', targetTheme);
         syncIcon(targetTheme);
@@ -376,8 +376,8 @@ function initTheme() {
 async function checkVotingStatus() {
     try {
         const res = await fetch(`${BACKEND_URL}/voting-status`, {
-    headers: NGROK_HEADERS // Tambahkan ini
-});
+            headers: NGROK_HEADERS // Tambahkan ini
+        });
         const data = await res.json();
 
         // Ambil elemen dari Navbar user.html
@@ -395,12 +395,12 @@ async function checkVotingStatus() {
             statusDot.style.backgroundColor = '#10b981'; // Hijau
             statusText.innerText = 'Berlangsung';
             timerLabel.innerText = 'BERAKHIR DALAM:';
-            
+
             // Aktifkan Card
             grid.style.pointerEvents = 'auto';
             grid.style.opacity = '1';
 
-            if(swipeTrack) {
+            if (swipeTrack) {
                 swipeTrack.style.pointerEvents = 'auto';
                 swipeTrack.style.opacity = '1';
             }
@@ -415,7 +415,7 @@ async function checkVotingStatus() {
                 grid.style.opacity = '0.6';
 
                 // DISABLE TOMBOL SWIPE
-                if(swipeTrack) {
+                if (swipeTrack) {
                     swipeTrack.style.pointerEvents = 'none'; // Mematikan geser
                     swipeTrack.style.opacity = '0.5'; // Ubah warna jadi merah muda (soft red)
                     document.querySelector('.swipe-text').innerText = "VOTING CLOSED";
@@ -429,17 +429,17 @@ async function checkVotingStatus() {
             statusText.innerText = 'Menunggu';
             timerLabel.innerText = 'BELUM DIMULAI';
             timerDisplay.innerText = "--:--:--";
-            
+
             // Disable Card
             grid.style.pointerEvents = '';
             grid.style.opacity = '0.6';
 
             // DISABLE TOMBOL SWIPE (Penting jika user buka modal lewat konsol)
-            if(swipeTrack) {
-                    swipeTrack.style.pointerEvents = 'none'; // Mematikan geser
-                    swipeTrack.style.opacity = '0.6'; // Ubah warna jadi merah muda (soft red)
-                    document.querySelector('.swipe-text').innerText = "VOTING BELUM DIMULAI";
-                }
+            if (swipeTrack) {
+                swipeTrack.style.pointerEvents = 'none'; // Mematikan geser
+                swipeTrack.style.opacity = '0.6'; // Ubah warna jadi merah muda (soft red)
+                document.querySelector('.swipe-text').innerText = "VOTING BELUM DIMULAI";
+            }
 
         } else {
             // UI SELESAI
@@ -447,17 +447,17 @@ async function checkVotingStatus() {
             statusText.innerText = 'Selesai';
             timerLabel.innerText = 'VOTING SELESAI';
             //timerDisplay.innerText = "CLOSED";
-            
+
             // Disable Card
             grid.style.pointerEvents = '';
             grid.style.opacity = '0.6';
 
             // DISABLE TOMBOL SWIPE (Penting jika user buka modal lewat konsol)
-            if(swipeTrack) {
-                    swipeTrack.style.pointerEvents = 'none'; // Mematikan geser
-                    swipeTrack.style.opacity = '0.6'; // Ubah warna jadi merah muda (soft red)
-                    document.querySelector('.swipe-text').innerText = "VOTING SELESAI";
-                }
+            if (swipeTrack) {
+                swipeTrack.style.pointerEvents = 'none'; // Mematikan geser
+                swipeTrack.style.opacity = '0.6'; // Ubah warna jadi merah muda (soft red)
+                document.querySelector('.swipe-text').innerText = "VOTING SELESAI";
+            }
         }
     } catch (err) {
         console.error("Gagal cek status:", err);
@@ -483,7 +483,7 @@ function runTimer(targetTime, displayElement, onFinish) {
         const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const s = Math.floor((diff % (1000 * 60)) / 1000);
 
-        displayElement.innerText = 
+        displayElement.innerText =
             `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     }
 
