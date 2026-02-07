@@ -74,11 +74,11 @@ try {
 }
 
 app.get('/contract-info', (req, res) => {
-  res.json({
-    address: CONTRACT_ADDRESS,
-    // Sesuaikan networknya, misal: 'sepolia' atau 'mainnet'
-    explorerUrl: `https://sepolia.etherscan.io/address/${CONTRACT_ADDRESS}`
-  });
+    res.json({
+        address: CONTRACT_ADDRESS,
+        // Sesuaikan networknya, misal: 'sepolia' atau 'mainnet'
+        explorerUrl: `https://sepolia.etherscan.io/address/${CONTRACT_ADDRESS}` 
+    });
 });
 
 // Endpoint: Halaman utama (serve frontend)
@@ -185,9 +185,9 @@ app.post('/vote', async (req, res) => {
 
   // 1. CEK APAKAH SEDANG PROSES (LOCK)
   if (activeLocks.has(nikHash)) {
-    return res.status(429).json({
-      error: 'concurrent_vote',
-      message: 'NIK ini sedang memproses suara. Sesi akan diamankan.'
+    return res.status(429).json({ 
+      error: 'concurrent_vote', 
+      message: 'NIK ini sedang memproses suara. Sesi akan diamankan.' 
     });
   }
 

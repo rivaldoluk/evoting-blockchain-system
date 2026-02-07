@@ -1,4 +1,4 @@
-const BACKEND_URL = 'https://cbf1-103-129-24-34.ngrok-free.app';
+const BACKEND_URL = 'https://15ed-103-129-24-34.ngrok-free.app';
 const NGROK_HEADERS = {
     "ngrok-skip-browser-warning": "69420"
 };
@@ -16,15 +16,15 @@ function getFullImageUrl(path) {
     const nik = sessionStorage.getItem('voterNIK');
     const hasVoted = localStorage.getItem('hasVoted');
 
-    // if (!nik) {
-    //     window.location.replace('../index.html');
-    //     return;
-    // }
+    if (!nik) {
+        window.location.replace('../index.html');
+        return;
+    }
 
-    // if (hasVoted !== 'true') {
-    //     window.location.replace('../user/user.html');
-    //     return;
-    // }
+    if (hasVoted !== 'true') {
+        window.location.replace('../user/user.html');
+        return;
+    }
 
     window.history.pushState(null, null, window.location.href);
     window.onpopstate = function () {
@@ -67,8 +67,8 @@ function setupRealtimeUpdate() {
 async function fetchResults() {
     try {
         const res = await fetch(`${BACKEND_URL}/results`, {
-            headers: NGROK_HEADERS // Tambahkan ini
-        });
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         if (!res.ok) throw new Error('Gagal mengambil data dari server');
         const data = await res.json();
         if (data && Array.isArray(data)) {
@@ -84,7 +84,7 @@ async function fetchResults() {
 // --- 5. Render Logic ---
 function renderStats(candidates) {
     const totalVotes = candidates.reduce((sum, cand) => sum + (Number(cand.votes) || 0), 0);
-
+    
     // Update total votes dengan animasi angka
     const totalElement = document.getElementById('totalVotes');
     const startVal = parseInt(totalElement.innerText.replace(/\./g, '')) || 0;
@@ -143,7 +143,7 @@ function animateValue(id, start, end, duration) {
     let current = start;
     const increment = end > start ? 1 : -1;
     const stepTime = Math.abs(Math.floor(duration / (range || 1)));
-    const timer = setInterval(function () {
+    const timer = setInterval(function() {
         current += increment;
         obj.innerText = current.toLocaleString('id-ID');
         if (current == end) clearInterval(timer);
@@ -173,7 +173,7 @@ function logout() {
         showCancelButton: true,
         confirmButtonText: 'Ya, Keluar',
         cancelButtonText: 'Batal',
-
+        
         customClass: {
             popup: 'swal2-popup-custom',
             title: 'swal2-title-custom',
@@ -182,7 +182,7 @@ function logout() {
             confirmButton: 'swal2-confirm-custom btn btn-danger shadow-sm',
             cancelButton: 'swal2-cancel-custom btn btn-light border shadow-sm'
         },
-
+        
         background: isDark ? '#0f172a' : '#ffffff',
         buttonsStyling: false,
         reverseButtons: true // Memposisikan Batal di kiri, Keluar di kanan
@@ -200,10 +200,10 @@ function logout() {
 async function checkVotingStatus() {
     try {
         const res = await fetch(`${BACKEND_URL}/voting-status`, {
-            headers: NGROK_HEADERS // Tambahkan ini
-        });
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         const data = await res.json();
-
+        
         const timerLabel = document.getElementById('timerLabel');
         const timerDisplay = document.getElementById('navTimerValue');
         const statusPulse = document.getElementById('statusPulse'); // Dot status
@@ -212,10 +212,10 @@ async function checkVotingStatus() {
 
         if (data.status === 'active') {
             // --- SEDANG BERLANGSUNG (HIJAU) ---
-            statusPulse.style.backgroundColor = '#10b981';
+            statusPulse.style.backgroundColor = '#10b981'; 
             statusPulse.style.boxShadow = '0 0 10px rgba(16, 185, 129, 0.7)';
             timerLabel.innerText = 'BERAKHIR DALAM';
-
+            
             runTimer(data.targetTime, timerDisplay, () => {
                 // Saat waktu habis otomatis jadi merah
                 statusPulse.style.backgroundColor = '#ef4444';
@@ -262,7 +262,7 @@ function runTimer(targetTime, displayElement, onFinish) {
         const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const s = Math.floor((diff % (1000 * 60)) / 1000);
 
-        displayElement.innerText =
+        displayElement.innerText = 
             `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     }
 

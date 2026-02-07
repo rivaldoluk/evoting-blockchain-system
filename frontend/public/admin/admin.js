@@ -1,7 +1,7 @@
 /**
  * KONFIGURASI GLOBAL
  */
-const BACKEND_URL = 'https://cbf1-103-129-24-34.ngrok-free.app';
+const BACKEND_URL = 'https://15ed-103-129-24-34.ngrok-free.app';
 const NGROK_HEADERS = {
     "ngrok-skip-browser-warning": "69420"
 };
@@ -13,7 +13,7 @@ let TOTAL_DPT = 0;
 // State untuk Tabel & Pagination (Pindahkan ke sini agar tidak undefined)
 let allVoters = [];
 let filteredVoters = [];
-let votedVotersOnly = [];
+let votedVotersOnly = []; 
 let currentPage = 1;      // Pagination Modal DPT
 let txCurrentPage = 1;    // Pagination Tabel Utama
 const rowsPerPage = 10;
@@ -104,15 +104,15 @@ function initEventListeners() {
     const logoutBtnNavbar = document.getElementById('btnLogout');
 
     if (btnConnect) btnConnect.addEventListener('click', connectWallet);
-    if (logoutBtnSidebar) logoutBtnSidebar.onclick = (e) => { e.preventDefault(); confirmLogout(); };
-    if (logoutBtnNavbar) logoutBtnNavbar.onclick = (e) => { e.preventDefault(); confirmLogout(); };
+    if(logoutBtnSidebar) logoutBtnSidebar.onclick = (e) => { e.preventDefault(); confirmLogout(); };
+    if(logoutBtnNavbar) logoutBtnNavbar.onclick = (e) => { e.preventDefault(); confirmLogout(); };
 
     // Di dalam fungsi initEventListeners()
-    const btnStart = document.getElementById('btnStartVoting');
-    if (btnStart) {
-        btnStart.onclick = () => startVotingProcess();
-    }
-
+const btnStart = document.getElementById('btnStartVoting');
+if (btnStart) {
+    btnStart.onclick = () => startVotingProcess();
+}
+    
     const btnPemilih = document.getElementById('menuDataPemilih');
     if (btnPemilih) {
         btnPemilih.onclick = (e) => {
@@ -180,20 +180,20 @@ async function checkSession() {
     try {
         // 1. Ambil config dari backend
         const configRes = await fetch(`${BACKEND_URL}/admin/config`, {
-            headers: NGROK_HEADERS // Tambahkan ini
-        });
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         const configData = await configRes.json();
 
         AUTHORIZED_ADMIN = configData.authorizedAdmin.toLowerCase();
         TOTAL_DPT = configData.totalDPT;
 
         const isAuth = sessionStorage.getItem('adminAuth');
-
+        
         // 2. Jika status auth ada, validasi ulang dengan MetaMask aktif
         if (isAuth === 'true' && window.ethereum) {
             provider = new ethers.BrowserProvider(window.ethereum);
             const accounts = await provider.listAccounts(); // Cek akun aktif sekarang
-
+            
             // Ambil address aktif (jika ada)
             const currentAddress = accounts.length > 0 ? accounts[0].address.toLowerCase() : null;
             const savedAddress = sessionStorage.getItem('adminAddress')?.toLowerCase();
@@ -205,7 +205,7 @@ async function checkSession() {
                 showDashboard(savedAddress);
             } else {
                 // Jika akun berubah saat refresh atau bukan admin, langsung tendang
-                executeLogout();
+                executeLogout(); 
             }
         } else if (isAuth === 'true' && !window.ethereum) {
             // Jika status auth true tapi MetaMask hilang (extension di-disable)
@@ -230,8 +230,8 @@ async function connectWallet() {
 
     try {
         const configRes = await fetch(`${BACKEND_URL}/admin/config`, {
-            headers: NGROK_HEADERS // Tambahkan ini
-        });
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         if (!configRes.ok) throw new Error("Gagal mengambil konfigurasi server.");
         const configData = await configRes.json();
         AUTHORIZED_ADMIN = configData.authorizedAdmin.toLowerCase();
@@ -254,7 +254,7 @@ async function connectWallet() {
         // --- BAGIAN SIGNATURE CHALLENGE ---
         status.innerText = "Silakan tanda tangani permintaan masuk di MetaMask...";
         const message = `Login Admin Panel\nTime: ${new Date().toLocaleString()}\nNonce: ${Math.floor(Math.random() * 1000000)}`;
-
+        
         try {
             await signer.signMessage(message);
         } catch (signErr) {
@@ -274,7 +274,7 @@ async function connectWallet() {
 
     } catch (err) {
         console.error("Login Error:", err.code, err.message);
-
+        
         status.className = "mt-3 small text-danger";
         // Menampilkan pesan yang lebih ramah pengguna
         if (err.code === 'ACTION_REJECTED' || err.code === 4001) {
@@ -342,13 +342,13 @@ async function startRealtimeStream() {
     // --- LANGKAH 1: Ambil Data Awal (Fetch) ---
     // Ini krusial karena SSE sering tertahan proteksi browser/ngrok di awal
     try {
-        const res = await fetch(`${BACKEND_URL}/results`, {
-            headers: NGROK_HEADERS
+        const res = await fetch(`${BACKEND_URL}/results`, { 
+            headers: NGROK_HEADERS 
         });
         if (res.ok) {
             const initialData = await res.json();
             updateDashboardUI(initialData); // Tampilkan data segera
-
+            
             // Ambil data pemilih juga untuk tabel transaksi
             const configRes = await fetch(`${BACKEND_URL}/admin/config`, { headers: NGROK_HEADERS });
             if (configRes.ok) {
@@ -362,7 +362,7 @@ async function startRealtimeStream() {
 
     // --- LANGKAH 2: Inisialisasi Real-time Stream (SSE) ---
     if (eventSource) eventSource.close();
-
+    
     eventSource = new EventSource(`${BACKEND_URL}/results-stream`);
 
     eventSource.onmessage = async (event) => {
@@ -370,16 +370,16 @@ async function startRealtimeStream() {
             // 1. Update Leaderboard & Statistik dari data Stream
             const candidates = JSON.parse(event.data);
             updateDashboardUI(candidates);
-
+            
             // 2. Ambil ulang config untuk Sinkronisasi Tabel Transaksi
-            const configRes = await fetch(`${BACKEND_URL}/admin/config`, {
-                headers: NGROK_HEADERS
+            const configRes = await fetch(`${BACKEND_URL}/admin/config`, { 
+                headers: NGROK_HEADERS 
             });
             if (configRes.ok) {
                 const configData = await configRes.json();
                 updateTransactionTable(configData.votersList);
             }
-
+            
             addLog("Blockchain sync: Node diperbarui.", "info");
         } catch (e) {
             console.error("Gagal sinkronisasi via stream:", e);
@@ -428,7 +428,7 @@ function updateDashboardUI(candidates) {
     tbody.innerHTML = sorted.map((cand, index) => {
         const votes = Number(cand.votes) || 0;
         const pct = totalVotes > 0 ? ((votes / totalVotes) * 100).toFixed(1) : "0.0";
-
+        
         return `
             <tr>
                 <td class="ps-4 text-muted mono">#${index + 1}</td>
@@ -461,7 +461,7 @@ function updateTransactionTable(votersList) {
     // 1. Filter hanya yang sudah memilih (voted: true)
     // 2. Urutkan berdasarkan timestamp (Terbesar/Terbaru ke Terkecil)
     votedVotersOnly = votersList
-        .filter(v => v.voted && v.timestamp)
+        .filter(v => v.voted && v.timestamp) 
         .sort((a, b) => b.timestamp - a.timestamp);
 
     // 2. Panggil fungsi render
@@ -474,7 +474,7 @@ function renderTransactionTableRows() {
     const syncText = document.getElementById('lastUpdateText');
     const btnPrevTx = document.getElementById('prevTxPage');
     const btnNextTx = document.getElementById('nextTxPage');
-
+    
     if (!tbody) return;
 
     if (votedVotersOnly.length === 0) {
@@ -495,26 +495,26 @@ function renderTransactionTableRows() {
         const txHash = voter.txHash || "";
         const shortTx = `${txHash.substring(0, 10)}...${txHash.substring(60)}`;
         const shortNik = `${voter.nikHash.substring(0, 10)}...${voter.nikHash.substring(54)}`;
-
+        
         // --- LOGIKA STATUS PENDING ---
         const txTime = parseInt(voter.timestamp);
         const diffInSeconds = Math.floor((now - txTime) / 1000);
-
+        
         let statusHTML = '';
-
+        
         // Jika transaksi baru masuk (kurang dari 8 detik)
         if (diffInSeconds < 5) {
             statusHTML = `
                 <span class="status-pill pending">
                     <i class="bi bi-hourglass-split spinning me-1"></i> PENDING
                 </span>`;
-
+            
             // Atur timer untuk refresh otomatis setelah sisa waktu pending habis
             // Ini agar status berubah jadi MINED tanpa user harus refresh
             setTimeout(() => {
                 renderTransactionTableRows();
             }, (5 - diffInSeconds) * 1000);
-
+            
         } else {
             // Jika sudah lewat 8 detik
             statusHTML = `
@@ -564,8 +564,8 @@ function renderTransactionTableRows() {
 async function startCountdownTimer() {
     try {
         const res = await fetch(`${BACKEND_URL}/voting-status`, {
-            headers: NGROK_HEADERS // Tambahkan ini
-        });
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         const data = await res.json();
 
         updateStatusBadge(data.status);
@@ -578,7 +578,7 @@ async function startCountdownTimer() {
                 if (diff <= 0) {
                     clearInterval(timerInterval);
                     document.getElementById('statTimer').innerText = "ENDED";
-
+                    
                     // --- LOGIKA BARU: Catat ke System Logs saat waktu habis ---
                     // Gunakan flag agar log tidak muncul berulang-ulang saat interval berjalan
                     if (sessionStorage.getItem('log_ended_triggered') !== 'true') {
@@ -610,20 +610,20 @@ async function startCountdownTimer() {
  */
 function timeAgo(timestamp) {
     if (!timestamp) return "-";
-
+    
     const now = new Date();
     const past = new Date(timestamp);
     const diffInSeconds = Math.floor((now - past) / 1000);
 
     if (diffInSeconds < 5) return "Baru saja";
     if (diffInSeconds < 60) return `${diffInSeconds} detik lalu`;
-
+    
     const diffInMinutes = Math.floor(diffInSeconds / 60);
     if (diffInMinutes < 60) return `${diffInMinutes} menit lalu`;
-
+    
     const diffInHours = Math.floor(diffInMinutes / 60);
     if (diffInHours < 24) return `${diffInHours} jam lalu`;
-
+    
     return past.toLocaleDateString('id-ID'); // Jika sudah lewat sehari, tampilkan tanggal
 }
 
@@ -650,7 +650,7 @@ function addLog(message, type = "info") {
 
     // 1. Ambil log lama dari localStorage
     let logs = JSON.parse(localStorage.getItem('admin_logs')) || [];
-
+    
     // 2. Tambahkan log baru ke array
     logs.unshift(logData); // Tambah ke awal array agar yang terbaru di atas
 
@@ -669,7 +669,7 @@ function renderLogs() {
     if (!container) return;
 
     const logs = JSON.parse(localStorage.getItem('admin_logs')) || [];
-
+    
     container.innerHTML = logs.map(log => `
         <div class="log-item ${log.type}">
             <span class="time">[${log.time}]</span> ${log.message}
@@ -681,10 +681,10 @@ function refreshLogs() {
     // Memberi efek putar pada icon saat diklik (opsional)
     const icon = event.currentTarget.querySelector('i');
     icon.classList.add('bi-spin'); // Anda bisa tambahkan CSS animasi putar
-
+    
     // Render ulang dari localStorage
     renderLogs();
-
+    
     // Simulasi loading sebentar
     setTimeout(() => icon.classList.remove('bi-spin'), 500);
 }
@@ -700,8 +700,8 @@ async function showVoterData() {
 
     try {
         const res = await fetch(`${BACKEND_URL}/admin/config`, {
-            headers: NGROK_HEADERS // Tambahkan ini
-        });
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         const data = await res.json();
         allVoters = data.votersList || [];
         filteredVoters = [...allVoters]; // Awalnya filtered sama dengan semua data
@@ -756,8 +756,8 @@ async function showKandidatData() {
 
     try {
         const res = await fetch(`${BACKEND_URL}/results`, {
-            headers: NGROK_HEADERS // Tambahkan ini
-        });
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         const data = await res.json();
 
         container.innerHTML = data.map(k => `
@@ -797,16 +797,16 @@ async function showKandidatData() {
 /**
  * KONFIGURASI DURASI OTOMATIS (Dalam Jam)
  */
-const DEFAULT_VOTING_DURATION = 1;
+const DEFAULT_VOTING_DURATION = 1; 
 
 async function startVotingProcess() {
     const modalEl = document.getElementById('modalConfirmStart');
     const confirmModal = bootstrap.Modal.getOrCreateInstance(modalEl);
     const btnConfirmExecute = document.getElementById('btnConfirmExecute');
-
+    
     // Simpan konten asli tombol modal untuk reset nanti
     const originalModalHTML = btnConfirmExecute.innerHTML;
-
+    
     confirmModal.show();
 
     // Pastikan tombol di-reset setiap kali modal dibuka kembali
@@ -824,14 +824,14 @@ async function startVotingProcess() {
 
             // 3. Jika berhasil sampai tahap kirim, baru tutup modal
             confirmModal.hide();
-
+            
         } catch (err) {
             console.error("Proses terhenti:", err);
-
+            
             // 4. FIX: Reset loading spinner jika user menolak/gagal
             btnConfirmExecute.disabled = false;
             btnConfirmExecute.innerHTML = originalModalHTML;
-
+            
             if (err.code === 'ACTION_REJECTED' || err.code === 4001) {
                 addLog("Transaksi dibatalkan oleh Admin.", "danger");
             } else {
@@ -851,8 +851,8 @@ async function executeVotingActivation(modalBtn) {
         btnDashboard.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
 
         const configRes = await fetch(`${BACKEND_URL}/admin/config`, {
-            headers: NGROK_HEADERS // Tambahkan ini
-        });
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         const config = await configRes.json();
 
         if (!window.ethereum) throw new Error("MetaMask tidak ditemukan");
@@ -862,15 +862,15 @@ async function executeVotingActivation(modalBtn) {
         const contract = new ethers.Contract(config.contractAddress, config.abi, signer);
 
         addLog("Menunggu konfirmasi di MetaMask...", "warning");
-
+        
         // Update teks tombol modal agar user tahu sedang menunggu tanda tangan
         if (modalBtn) modalBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Konfirmasi di MetaMask...';
 
         const durationSeconds = DEFAULT_VOTING_DURATION * 3600;
-        const tx = await contract.startVoting(durationSeconds);
-
-        addLog(`Transaksi dikirim: ${tx.hash.substring(0, 10)}...`, "info");
-
+        const tx = await contract.startVoting(durationSeconds); 
+        
+        addLog(`Transaksi dikirim: ${tx.hash.substring(0,10)}...`, "info");
+        
         // Update teks tombol modal saat menunggu mining
         if (modalBtn) modalBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menunggu Konfirmasi...';
 
@@ -886,15 +886,15 @@ async function executeVotingActivation(modalBtn) {
         // Lempar error ke pemanggil (startVotingProcess) agar spinner di modal bisa di-reset
         btnDashboard.disabled = false;
         btnDashboard.innerHTML = originalDashboardHTML;
-        throw err;
+        throw err; 
     }
 }
 
 async function refreshDashboardStatus() {
     try {
         const res = await fetch(`${BACKEND_URL}/voting-status`, {
-            headers: NGROK_HEADERS // Tambahkan ini
-        });
+    headers: NGROK_HEADERS // Tambahkan ini
+});
         const data = await res.json();
         const btnStart = document.getElementById('btnStartVoting');
 
@@ -967,7 +967,7 @@ function checkMetaMaskAvailability() {
         // JIKA TIDAK TERDETEKSI
         dot.className = 'dot-indicator dot-red';
         text.textContent = 'MetaMask tidak terdeteksi';
-
+        
         // Opsional: Buat tombol tidak bisa diklik dan beri info
         btn.innerHTML = '<i class="bi bi-download me-2"></i>Install MetaMask';
         btn.classList.remove('opacity-50');
