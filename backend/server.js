@@ -73,6 +73,14 @@ try {
   console.error('Error load data:', err.message);
 }
 
+app.get('/contract-info', (req, res) => {
+    res.json({
+        address: CONTRACT_ADDRESS,
+        // Sesuaikan networknya, misal: 'sepolia' atau 'mainnet'
+        explorerUrl: `https://sepolia.etherscan.io/address/${CONTRACT_ADDRESS}` 
+    });
+});
+
 // Endpoint: Halaman utama (serve frontend)
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, '../frontend/public/index.html'));
@@ -373,14 +381,6 @@ async function sendUpdateToAll() {
   const data = `data: ${JSON.stringify(results)}\n\n`;
   clients.forEach(client => client.write(data));
 }
-
-app.get('/contract-info', (req, res) => {
-    res.json({
-        address: CONTRACT_ADDRESS,
-        // Sesuaikan networknya, misal: 'sepolia' atau 'mainnet'
-        explorerUrl: `https://sepolia.etherscan.io/address/${CONTRACT_ADDRESS}` 
-    });
-});
 
 // Start server
 app.listen(port, () => {
