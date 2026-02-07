@@ -1,4 +1,4 @@
-const BACKEND_URL = 'https://a572-103-129-24-34.ngrok-free.app';
+const BACKEND_URL = 'https://cbf1-103-129-24-34.ngrok-free.app';
 const NGROK_HEADERS = {
     "ngrok-skip-browser-warning": "69420"
 };
@@ -16,15 +16,15 @@ function getFullImageUrl(path) {
     const nik = sessionStorage.getItem('voterNIK');
     const hasVoted = localStorage.getItem('hasVoted');
 
-    if (!nik) {
-        window.location.replace('../index.html');
-        return;
-    }
+    // if (!nik) {
+    //     window.location.replace('../index.html');
+    //     return;
+    // }
 
-    if (hasVoted !== 'true') {
-        window.location.replace('../user/user.html');
-        return;
-    }
+    // if (hasVoted !== 'true') {
+    //     window.location.replace('../user/user.html');
+    //     return;
+    // }
 
     window.history.pushState(null, null, window.location.href);
     window.onpopstate = function () {
