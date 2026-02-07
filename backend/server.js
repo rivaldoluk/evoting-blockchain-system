@@ -12,7 +12,7 @@ const port = 3001;
 
 // Middleware CORS - IZINKAN frontend di port 3000
 app.use(cors({
-  origin: '*https://evoting-blockchain-system.vercel.app', // izinkan hanya dari frontend di 3000
+  origin: 'https://evoting-blockchain-system.vercel.app', // izinkan hanya dari frontend di 3000
   methods: ['GET', 'POST'], // method yang diizinkan
   allowedHeaders: ['Content-Type', 'ngrok-skip-browser-warning'],
   credentials: false
