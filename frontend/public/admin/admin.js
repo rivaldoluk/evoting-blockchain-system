@@ -797,7 +797,7 @@ async function showKandidatData() {
 /**
  * KONFIGURASI DURASI OTOMATIS (Dalam Jam)
  */
-const DEFAULT_VOTING_DURATION = 1; 
+const DEFAULT_VOTING_DURATION = 6; 
 
 async function startVotingProcess() {
     const modalEl = document.getElementById('modalConfirmStart');
