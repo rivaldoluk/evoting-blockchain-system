@@ -290,67 +290,68 @@ function copyText(elementId) {
 
 function checkNewVoteReceipt() {
     const isNewVote = sessionStorage.getItem('isNewVote');
+    const hasConfirmed = sessionStorage.getItem('receiptConfirmed'); // Cek status permanen
+    
+    // Ambil data dasar
+    const txHash = sessionStorage.getItem('lastVoteTx');
+    const nik = sessionStorage.getItem('voterNIK');
+    const time = sessionStorage.getItem('lastVoteTime');
+    const userAddress = sessionStorage.getItem('voterAddress');
+
+    // Jika tidak ada data voting sama sekali, jangan jalankan apapun
+    if (!txHash) return;
+
+    // 1. ISI DATA KE MODAL (Agar saat dipanggil kapanpun data sudah siap)
+    if (nik) {
+        document.getElementById('receiptNIK').innerText = nik.substring(0, 4) + "••••" + nik.substring(12);
+    }
+
+    const addrEl = document.getElementById('receiptAddress');
+    if (addrEl && userAddress) {
+        addrEl.innerText = shortenHash(userAddress, 6, 4);
+        addrEl.setAttribute('data-full-hash', userAddress);
+    }
+
+    const hashEl = document.getElementById('receiptTxHash');
+    if (hashEl && txHash) {
+        hashEl.innerText = shortenHash(txHash, 12, 10);
+        hashEl.setAttribute('data-full-hash', txHash);
+        document.getElementById('receiptExplorer').href = `https://sepolia.etherscan.io/tx/${txHash}`;
+    }
+
+    const dateObj = time ? new Date(time) : new Date();
+    document.getElementById('receiptTime').innerText = dateObj.toLocaleString('id-ID', { 
+        day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit'
+    });
+
+    // 2. LOGIKA STATUS (Cek apakah sudah pernah sukses sebelumnya)
+    const statusBadge = document.getElementById('receiptStatus');
+    if (hasConfirmed === 'true') {
+        setReceiptSuccess(statusBadge);
+    } else {
+        // Jika masih pending, pasang timer untuk mengubahnya jadi sukses
+        setTimeout(() => {
+            setReceiptSuccess(statusBadge);
+            sessionStorage.setItem('receiptConfirmed', 'true'); // Simpan status sukses!
+        }, 15000);
+    }
+
+    // 3. LOGIKA MUNCULKAN MODAL (Hanya jika ini voting baru)
     if (isNewVote === 'true') {
-        const txHash = sessionStorage.getItem('lastVoteTx');
-        const nik = sessionStorage.getItem('voterNIK');
-        const time = sessionStorage.getItem('lastVoteTime');
-        
-        // --- PERBAIKAN DI SINI ---
-        // Ambil 'voterAddress' yang seharusnya sudah disimpan oleh user.js
-        const userAddress = sessionStorage.getItem('voterAddress'); 
-
-        // 1. NIK Masking
-        if (nik) {
-            document.getElementById('receiptNIK').innerText = nik.substring(0, 4) + "••••" + nik.substring(12);
-        }
-
-        // 2. Public Address (NIK Hash)
-        const addrEl = document.getElementById('receiptAddress');
-        if (addrEl && userAddress) {
-            addrEl.innerText = shortenHash(userAddress, 6, 4);
-            addrEl.setAttribute('data-full-hash', userAddress);
-        } else if (addrEl) {
-            addrEl.innerText = "Memproses..."; // Jika data belum siap
-        }
-
-        // 3. Tx Hash
-        const hashEl = document.getElementById('receiptTxHash');
-        if (hashEl && txHash) {
-            hashEl.innerText = shortenHash(txHash, 12, 10);
-            hashEl.setAttribute('data-full-hash', txHash);
-            document.getElementById('receiptExplorer').href = `https://sepolia.etherscan.io/tx/${txHash}`;
-        }
-        
-        // 4. Waktu
-        const dateObj = time ? new Date(time) : new Date();
-        document.getElementById('receiptTime').innerText = dateObj.toLocaleString('id-ID', { 
-            day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit'
-        });
-
-        const receiptModal = new bootstrap.Modal(document.getElementById('voteReceiptModal'));
+        const modalEl = document.getElementById('voteReceiptModal');
+        const receiptModal = new bootstrap.Modal(modalEl);
         receiptModal.show();
 
-        // Di akhir fungsi checkNewVoteReceipt()
-setTimeout(() => {
-    const statusBadge = document.getElementById('receiptStatus');
-    if (statusBadge) {
-        statusBadge.classList.remove('bg-warning', 'text-dark');
-        statusBadge.classList.add('bg-success', 'text-white');
-        statusBadge.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Terkonfirmasi';
-    }
-}, 15000); // 15 detik estimasi blok Sepolia
+        // HAPUS FLAG isNewVote agar refresh tidak memunculkan modal lagi
+        sessionStorage.removeItem('isNewVote');
     }
 }
 
-// Di dalam function checkNewVoteReceipt()
-let userAddress = sessionStorage.getItem('voterAddress');
-
-// JIKA ADDRESS KOSONG, KITA HITUNG ULANG (Fallback)
-if (!userAddress || userAddress === "undefined") {
-    const nik = sessionStorage.getItem('voterNIK');
-    if (nik) {
-        // Import library keccak256 jika perlu, atau gunakan cara ini:
-        console.log("Address hilang dari session, mencoba recovery...");
-        // Jika server.js menggunakan keccak256, frontend harus konsisten
+// Fungsi Helper untuk mengubah UI menjadi sukses
+function setReceiptSuccess(element) {
+    if (element) {
+        element.classList.remove('bg-warning', 'text-dark');
+        element.classList.add('bg-success', 'text-white');
+        element.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Terkonfirmasi';
     }
 }
