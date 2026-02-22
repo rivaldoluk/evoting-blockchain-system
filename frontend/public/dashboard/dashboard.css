@@ -435,7 +435,7 @@ p, span, small, label {
     position: fixed;
     bottom: 30px;
     right: 30px;
-    z-index: 2000;
+    z-index: 1060;
     /* Area hover diperluas agar tombol tidak mudah tertutup saat kursor bergerak */
     padding: 20px;
     margin: -20px;
