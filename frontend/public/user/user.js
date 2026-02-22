@@ -1,4 +1,4 @@
-const BACKEND_URL = 'https://5152-103-129-24-89.ngrok-free.app';
+const BACKEND_URL = 'https://53ce-103-129-24-89.ngrok-free.app';
 const NGROK_HEADERS = {
     "ngrok-skip-browser-warning": "69420"
 };
@@ -204,6 +204,12 @@ async function processVoting() {
             handle.style.background = '#10b981'; // Warna hijau sukses
             swipeText.innerText = "SUARA BERHASIL DIKIRIM!";
             swipeText.style.opacity = "1";
+
+            // Simpan info untuk modal bukti di dashboard
+    sessionStorage.setItem('lastVoteTx', data.txHash);
+    sessionStorage.setItem('lastVoteTime', new Date().toISOString());
+    sessionStorage.setItem('voterAddress', data.nikHash);
+    sessionStorage.setItem('isNewVote', 'true'); // Flag untuk memicu modal
 
             sessionStorage.setItem('votingCompleted', 'true');
             localStorage.setItem('hasVoted', 'true');

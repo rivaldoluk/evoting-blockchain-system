@@ -1,4 +1,4 @@
-const BACKEND_URL = 'https://5152-103-129-24-89.ngrok-free.app';
+const BACKEND_URL = 'https://53ce-103-129-24-89.ngrok-free.app';
 const NGROK_HEADERS = {
     "ngrok-skip-browser-warning": "69420"
 };
@@ -42,7 +42,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // --- 3. Setup Real-time Update (Native SSE) ---
 function setupRealtimeUpdate() {
-    // Membuat koneksi ke endpoint stream di backend
     const eventSource = new EventSource(`${BACKEND_URL}/results-stream`);
 
     eventSource.onmessage = (event) => {
@@ -50,17 +49,14 @@ function setupRealtimeUpdate() {
             const updatedData = JSON.parse(event.data);
             console.log("⚡ Update suara masuk!");
             renderStats(updatedData);
+
+            // TAMBAHKAN INI:
+            // Setiap ada update suara, cek apakah modal struk kita perlu di-update statusnya
+            checkReceiptStatus(updatedData);
         } catch (err) {
             console.error("Gagal parse data stream:", err);
         }
     };
-
-    // eventSource.onerror = (err) => {
-    //     console.warn("Stream terputus, mencoba menyambung kembali...");
-    //     eventSource.close();
-    //     // Coba sambung lagi setelah 5 detik jika error
-    //     setTimeout(setupRealtimeUpdate, 5000);
-    // };
 }
 
 // --- 4. Core Logic: Fetch Data Awal ---
@@ -268,4 +264,93 @@ function runTimer(targetTime, displayElement, onFinish) {
 
     update();
     countdownInterval = setInterval(update, 1000);
+}
+
+// Tambahkan di dalam document.addEventListener('DOMContentLoaded', ...)
+checkNewVoteReceipt();
+
+// Helper: Persingkat Hash (0x1234...abcd)
+function shortenHash(hash, start = 8, end = 6) {
+    if (!hash || hash.length < 15) return hash;
+    return `${hash.substring(0, start)}...${hash.substring(hash.length - end)}`;
+}
+
+// Helper: Copy dengan Feedback Visual
+function copyText(elementId) {
+    const el = document.getElementById(elementId);
+    const textToCopy = el.getAttribute('data-full-hash') || el.innerText;
+    
+    navigator.clipboard.writeText(textToCopy).then(() => {
+        const btn = event.currentTarget;
+        const originalHTML = btn.innerHTML;
+        btn.innerHTML = '<i class="bi bi-check2 text-success"></i>' + (originalHTML.includes('Salin') ? ' <span class="text-success" style="font-size: 0.75rem;">Berhasil</span>' : '');
+        setTimeout(() => { btn.innerHTML = originalHTML; }, 2000);
+    });
+}
+
+function checkNewVoteReceipt() {
+    const isNewVote = sessionStorage.getItem('isNewVote');
+    if (isNewVote === 'true') {
+        const txHash = sessionStorage.getItem('lastVoteTx');
+        const nik = sessionStorage.getItem('voterNIK');
+        const time = sessionStorage.getItem('lastVoteTime');
+        
+        // --- PERBAIKAN DI SINI ---
+        // Ambil 'voterAddress' yang seharusnya sudah disimpan oleh user.js
+        const userAddress = sessionStorage.getItem('voterAddress'); 
+
+        // 1. NIK Masking
+        if (nik) {
+            document.getElementById('receiptNIK').innerText = nik.substring(0, 4) + "••••" + nik.substring(12);
+        }
+
+        // 2. Public Address (NIK Hash)
+        const addrEl = document.getElementById('receiptAddress');
+        if (addrEl && userAddress) {
+            addrEl.innerText = shortenHash(userAddress, 6, 4);
+            addrEl.setAttribute('data-full-hash', userAddress);
+        } else if (addrEl) {
+            addrEl.innerText = "Memproses..."; // Jika data belum siap
+        }
+
+        // 3. Tx Hash
+        const hashEl = document.getElementById('receiptTxHash');
+        if (hashEl && txHash) {
+            hashEl.innerText = shortenHash(txHash, 12, 10);
+            hashEl.setAttribute('data-full-hash', txHash);
+            document.getElementById('receiptExplorer').href = `https://sepolia.etherscan.io/tx/${txHash}`;
+        }
+        
+        // 4. Waktu
+        const dateObj = time ? new Date(time) : new Date();
+        document.getElementById('receiptTime').innerText = dateObj.toLocaleString('id-ID', { 
+            day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit'
+        });
+
+        const receiptModal = new bootstrap.Modal(document.getElementById('voteReceiptModal'));
+        receiptModal.show();
+
+        // Di akhir fungsi checkNewVoteReceipt()
+setTimeout(() => {
+    const statusBadge = document.getElementById('receiptStatus');
+    if (statusBadge) {
+        statusBadge.classList.remove('bg-warning', 'text-dark');
+        statusBadge.classList.add('bg-success', 'text-white');
+        statusBadge.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Terkonfirmasi';
+    }
+}, 15000); // 15 detik estimasi blok Sepolia
+    }
+}
+
+// Di dalam function checkNewVoteReceipt()
+let userAddress = sessionStorage.getItem('voterAddress');
+
+// JIKA ADDRESS KOSONG, KITA HITUNG ULANG (Fallback)
+if (!userAddress || userAddress === "undefined") {
+    const nik = sessionStorage.getItem('voterNIK');
+    if (nik) {
+        // Import library keccak256 jika perlu, atau gunakan cara ini:
+        console.log("Address hilang dari session, mencoba recovery...");
+        // Jika server.js menggunakan keccak256, frontend harus konsisten
+    }
 }

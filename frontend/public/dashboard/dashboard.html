@@ -20,6 +20,7 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap"
         rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="dashboard.css">
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -102,6 +103,74 @@
             </div>
         </div>
     </main>
+
+    <div class="modal fade" id="voteReceiptModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg" style="border-radius: 25px; background: var(--glass-bg); backdrop-filter: blur(10px);">
+            <div class="modal-body p-0">
+                <div class="receipt-header p-4 text-center text-white rounded-top-4" style="background: linear-gradient(135deg, #6366f1, #a855f7);">
+                    <div class="mb-3">
+                        <i class="bi bi-shield-check-fill" style="font-size: 3rem;"></i>
+                    </div>
+                    <h4 class="fw-800 mb-1">Suara Diterima!</h4>
+                    <p class="small opacity-75 mb-0">Transaksi Anda sedang diproses oleh Blockchain Sepolia</p>
+                </div>
+                
+                <div class="p-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="text-muted small">ID Pemilih (NIK)</span>
+        <span class="fw-bold small" id="receiptNIK">Memuat...</span>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="text-muted small">Public Address</span>
+        <div class="d-flex align-items-center gap-2">
+            <code class="fw-bold text-primary" id="receiptAddress" style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;">0x...</code>
+            <button class="btn btn-sm p-0 border-0" onclick="copyText('receiptAddress')" title="Salin Address">
+                <i class="bi bi-copy text-muted small"></i>
+            </button>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="text-muted small">Waktu Blok</span>
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi bi-clock-history text-muted" style="font-size: 0.85rem;"></i>
+            <span class="fw-bold small" id="receiptTime">--:--:--</span>
+        </div>
+    </div>
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <span class="text-muted small">Status Transaksi</span>
+        <span class="badge bg-warning text-dark px-3 rounded-pill" id="receiptStatus" style="font-size: 0.75rem;">
+            <span class="spinner-border spinner-border-sm me-1"></span> Pending
+        </span>
+    </div>
+
+    <hr class="border-dashed my-4">
+
+    <div class="p-3 rounded-4" style="background: rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.05);">
+        <label class="text-muted d-block mb-2" style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px;">TRANSACTION HASH</label>
+        <div class="d-flex align-items-center justify-content-between gap-3">
+            <code id="receiptTxHash" class="text-truncate text-primary fw-bold" style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;">-</code>
+            <button class="btn btn-sm btn-white border shadow-xs rounded-3 px-2 py-1 flex-shrink-0" onclick="copyText('receiptTxHash')" style="background: white;">
+                <i class="bi bi-copy me-1 small"></i> <span style="font-size: 0.75rem;">Salin</span>
+            </button>
+        </div>
+    </div>
+
+    <div class="d-grid mt-4">
+        <a id="receiptExplorer" href="#" target="_blank" class="btn btn-primary btn-lg rounded-4 fw-bold py-3 shadow-sm" style="font-size: 1rem; transition: all 0.3s;">
+            <i class="bi bi-box-arrow-up-right me-2"></i>Verifikasi On-Chain
+        </a>
+        <button type="button" class="btn btn-link text-muted mt-2 btn-sm text-decoration-none" data-bs-dismiss="modal">Tutup</button>
+    </div>
+</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 
     <button id="theme-toggle" class="theme-fab" title="Ganti Mode">
         <i class="bi bi-sun-fill" id="theme-icon"></i>

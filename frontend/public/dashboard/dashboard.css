@@ -403,3 +403,29 @@ p, span, small, label {
 .border-end {
     border-color: rgba(255, 255, 255, 0.15) !important;
 }
+
+.fw-800 { font-weight: 800; }
+
+.border-dashed {
+    border-top: 2px dashed var(--border);
+    background: none;
+    opacity: 0.5;
+}
+
+#receiptTxHash, #receiptAddress {
+    letter-spacing: 0.5px;
+}
+
+/* Efek hover pada tombol copy kecil */
+.btn-sm i:hover {
+    color: var(--bs-primary) !important;
+    transform: scale(1.1);
+}
+
+.transaction-hash-section {
+    transition: all 0.2s ease;
+}
+
+.transaction-hash-section:hover {
+    background: rgba(0,0,0,0.06) !important;
+}

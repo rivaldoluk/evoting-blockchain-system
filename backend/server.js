@@ -221,6 +221,7 @@ app.post('/vote', async (req, res) => {
       success: true,
       message: 'Suara Anda sedang diproses oleh Blockchain!',
       txHash: tx.hash,
+      nikHash: nikHash,
       explorerLink: `https://sepolia.etherscan.io/tx/${tx.hash}`
     });
 
