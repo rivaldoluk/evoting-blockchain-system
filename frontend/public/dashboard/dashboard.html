@@ -104,7 +104,7 @@
         </div>
     </main>
 
-    <div class="modal fade" id="voteReceiptModal" tabindex="-1" aria-hidden="true">
+    <div class="modal fade" id="voteReceiptModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg" style="border-radius: 25px; background: var(--glass-bg); backdrop-filter: blur(10px);">
             <div class="modal-body p-0">
@@ -163,7 +163,7 @@
         <a id="receiptExplorer" href="#" target="_blank" class="btn btn-primary btn-lg rounded-4 fw-bold py-3 shadow-sm" style="font-size: 1rem; transition: all 0.3s;">
             <i class="bi bi-box-arrow-up-right me-2"></i>Verifikasi On-Chain
         </a>
-        <button type="button" class="btn btn-link text-muted mt-2 btn-sm text-decoration-none" data-bs-dismiss="modal">Tutup</button>
+        <button type="button" onclick="refreshPage()" class="btn btn-link text-muted mt-2 btn-sm text-decoration-none" data-bs-dismiss="modal">Tutup</button>
     </div>
 </div>
                 </div>

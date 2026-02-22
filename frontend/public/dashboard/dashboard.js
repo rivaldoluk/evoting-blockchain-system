@@ -427,3 +427,9 @@ function checkNewVoteReceipt() {
         sessionStorage.removeItem('isNewVote');
     }
 }
+
+function refreshPage() {
+    // Memberikan sedikit efek transisi sebelum reload
+    document.body.style.opacity = '0.5';
+    location.reload();
+}
