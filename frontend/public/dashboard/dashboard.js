@@ -397,7 +397,7 @@ function fillReceiptData() {
         setTimeout(() => {
             updateStatusToSuccess(statusBadge);
             sessionStorage.setItem('receiptConfirmed', 'true');
-        }, 15000);
+        }, 5000);
     }
 }
 
