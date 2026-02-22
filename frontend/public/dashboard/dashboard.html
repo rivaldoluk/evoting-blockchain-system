@@ -172,9 +172,20 @@
     </div>
 </div>
 
-    <button id="theme-toggle" class="theme-fab" title="Ganti Mode">
-        <i class="bi bi-sun-fill" id="theme-icon"></i>
+    <div class="fab-wrapper">
+    <div class="fab-menu">
+        <button id="view-receipt-fab" class="sub-fab fab-top" onclick="showReceiptModal()" title="Lihat Bukti Suara">
+            <i class="bi bi-receipt-cutoff"></i>
+        </button>
+        <button id="theme-toggle" class="sub-fab fab-left" title="Ganti Mode">
+            <i class="bi bi-sun-fill" id="theme-icon"></i>
+        </button>
+    </div>
+    
+    <button class="main-fab">
+        <i class="bi bi-grid-fill"></i>
     </button>
+</div>
 
     <footer class="container py-5 text-center">
         <div class="divider mx-auto mb-4"

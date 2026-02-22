@@ -34,6 +34,28 @@ function getFullImageUrl(path) {
 
 // --- 2. Initializing Page & Event Stream ---
 document.addEventListener('DOMContentLoaded', () => {
+    const wrapper = document.querySelector('.fab-wrapper');
+    const mainBtn = document.querySelector('.main-fab');
+
+    // Klik tombol utama untuk buka/tutup
+    mainBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        wrapper.classList.toggle('active');
+    });
+
+    // Klik di mana saja di luar menu untuk menutup (Biar gak "kena prank" lagi)
+    document.addEventListener('click', (e) => {
+        if (!wrapper.contains(e.target)) {
+            wrapper.classList.remove('active');
+        }
+    });
+    
+    // // Opsional: Tutup menu setelah klik sub-button
+    // document.querySelectorAll('.sub-fab').forEach(btn => {
+    //     btn.addEventListener('click', () => {
+    //         wrapper.classList.remove('active');
+    //     });
+    // });
     initTheme();
     fetchResults(); // Ambil data awal saat pertama kali buka
     setupRealtimeUpdate();
@@ -288,30 +310,73 @@ function copyText(elementId) {
     });
 }
 
-function checkNewVoteReceipt() {
-    const isNewVote = sessionStorage.getItem('isNewVote');
-    const hasConfirmed = sessionStorage.getItem('receiptConfirmed'); // Cek status permanen
+// Deklarasikan variabel instance di luar fungsi agar bisa dipakai berulang kali
+let receiptModalInstance = null;
+
+function showReceiptModal() {
+    const txHash = sessionStorage.getItem('lastVoteTx');
+    const btn = document.getElementById('view-receipt-fab');
     
-    // Ambil data dasar
+    // Cegah eksekusi jika tombol dalam status 'disabled'
+    if (btn.classList.contains('disabled')) return;
+    
+    if (!txHash) {
+        Swal.fire({
+            icon: 'info',
+            title: 'Data Tidak Ditemukan',
+            text: 'Bukti suara tidak tersedia di sesi ini.',
+            confirmButtonColor: '#6366f1'
+        });
+        return;
+    }
+
+    // 1. Update dulu datanya agar selalu terbaru
+    fillReceiptData();
+    
+    // 2. CEK: Apakah modal sudah pernah dibuat sebelumnya?
+    const modalEl = document.getElementById('voteReceiptModal');
+    
+    if (!receiptModalInstance) {
+        // Jika belum ada, buat instance baru sekali saja
+        receiptModalInstance = new bootstrap.Modal(modalEl);
+    }
+
+    // 3. Tampilkan modal (Bootstrap akan tahu jika modal sudah tampil, tidak akan double)
+    // Cek apakah modal sedang tidak terbuka (mencegah spam klik)
+    if (!modalEl.classList.contains('show')) {
+        receiptModalInstance.show();
+
+        btn.style.opacity = '0.5';
+
+        // Aktifkan kembali setelah modal tertutup sempurna
+        modalEl.addEventListener('hidden.bs.modal', () => {
+            btn.style.pointerEvents = 'auto';
+            btn.style.opacity = '1';
+        }, { once: true });
+    }
+}
+
+// Fungsi khusus untuk mengisi data ke dalam elemen Modal
+function fillReceiptData() {
     const txHash = sessionStorage.getItem('lastVoteTx');
     const nik = sessionStorage.getItem('voterNIK');
     const time = sessionStorage.getItem('lastVoteTime');
     const userAddress = sessionStorage.getItem('voterAddress');
+    const hasConfirmed = sessionStorage.getItem('receiptConfirmed');
 
-    // Jika tidak ada data voting sama sekali, jangan jalankan apapun
-    if (!txHash) return;
-
-    // 1. ISI DATA KE MODAL (Agar saat dipanggil kapanpun data sudah siap)
+    // 1. NIK Masking
     if (nik) {
         document.getElementById('receiptNIK').innerText = nik.substring(0, 4) + "••••" + nik.substring(12);
     }
 
+    // 2. Public Address
     const addrEl = document.getElementById('receiptAddress');
     if (addrEl && userAddress) {
         addrEl.innerText = shortenHash(userAddress, 6, 4);
         addrEl.setAttribute('data-full-hash', userAddress);
     }
 
+    // 3. Tx Hash & Explorer Link
     const hashEl = document.getElementById('receiptTxHash');
     if (hashEl && txHash) {
         hashEl.innerText = shortenHash(txHash, 12, 10);
@@ -319,39 +384,46 @@ function checkNewVoteReceipt() {
         document.getElementById('receiptExplorer').href = `https://sepolia.etherscan.io/tx/${txHash}`;
     }
 
+    // 4. Waktu
     const dateObj = time ? new Date(time) : new Date();
-    document.getElementById('receiptTime').innerText = dateObj.toLocaleString('id-ID', { 
-        day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit'
-    });
+    document.getElementById('receiptTime').innerText = dateObj.toLocaleString('id-ID');
 
-    // 2. LOGIKA STATUS (Cek apakah sudah pernah sukses sebelumnya)
+    // 5. Logika Status
     const statusBadge = document.getElementById('receiptStatus');
     if (hasConfirmed === 'true') {
-        setReceiptSuccess(statusBadge);
+        updateStatusToSuccess(statusBadge);
     } else {
-        // Jika masih pending, pasang timer untuk mengubahnya jadi sukses
+        // Jika belum dikonfirmasi, pasang timer
         setTimeout(() => {
-            setReceiptSuccess(statusBadge);
-            sessionStorage.setItem('receiptConfirmed', 'true'); // Simpan status sukses!
+            updateStatusToSuccess(statusBadge);
+            sessionStorage.setItem('receiptConfirmed', 'true');
         }, 15000);
-    }
-
-    // 3. LOGIKA MUNCULKAN MODAL (Hanya jika ini voting baru)
-    if (isNewVote === 'true') {
-        const modalEl = document.getElementById('voteReceiptModal');
-        const receiptModal = new bootstrap.Modal(modalEl);
-        receiptModal.show();
-
-        // HAPUS FLAG isNewVote agar refresh tidak memunculkan modal lagi
-        sessionStorage.removeItem('isNewVote');
     }
 }
 
-// Fungsi Helper untuk mengubah UI menjadi sukses
-function setReceiptSuccess(element) {
+// Helper untuk ganti UI status jadi sukses
+function updateStatusToSuccess(element) {
     if (element) {
         element.classList.remove('bg-warning', 'text-dark');
         element.classList.add('bg-success', 'text-white');
         element.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Terkonfirmasi';
+    }
+}
+
+// Update fungsi checkNewVoteReceipt agar tidak bentrok
+function checkNewVoteReceipt() {
+    const isNewVote = sessionStorage.getItem('isNewVote');
+    
+    // Apapun kondisinya, siapkan datanya dulu
+    fillReceiptData();
+
+    // Hanya munculkan otomatis jika ini adalah vote baru
+    if (isNewVote === 'true') {
+        const modalEl = document.getElementById('voteReceiptModal');
+        const receiptModal = new bootstrap.Modal(modalEl);
+        receiptModal.show();
+        
+        // Hapus flag agar tidak muncul otomatis lagi saat refresh
+        sessionStorage.removeItem('isNewVote');
     }
 }
