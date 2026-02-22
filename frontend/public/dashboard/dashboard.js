@@ -379,7 +379,7 @@ function fillReceiptData() {
     // 3. Tx Hash & Explorer Link
     const hashEl = document.getElementById('receiptTxHash');
     if (hashEl && txHash) {
-        hashEl.innerText = shortenHash(txHash, 12, 10);
+        hashEl.innerText = shortenHash(txHash, 8, 6);
         hashEl.setAttribute('data-full-hash', txHash);
         document.getElementById('receiptExplorer').href = `https://sepolia.etherscan.io/tx/${txHash}`;
     }
