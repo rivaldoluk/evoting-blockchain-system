@@ -1,8 +1,9 @@
-const BACKEND_URL = 'https://bcc8-103-129-24-89.ngrok-free.app';
+const BACKEND_URL = 'https://a892-103-129-24-89.ngrok-free.app';
 const NGROK_HEADERS = {
     "ngrok-skip-browser-warning": "69420"
 };
 let countdownInterval = null;
+let receiptModalInstance = null;
 
 function getFullImageUrl(path) {
     if (!path) return '/img/default.png';
@@ -34,32 +35,12 @@ function getFullImageUrl(path) {
 
 // --- 2. Initializing Page & Event Stream ---
 document.addEventListener('DOMContentLoaded', () => {
-    const wrapper = document.querySelector('.fab-wrapper');
-    const mainBtn = document.querySelector('.main-fab');
-
-    // Klik tombol utama untuk buka/tutup
-    mainBtn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        wrapper.classList.toggle('active');
-    });
-
-    // Klik di mana saja di luar menu untuk menutup (Biar gak "kena prank" lagi)
-    document.addEventListener('click', (e) => {
-        if (!wrapper.contains(e.target)) {
-            wrapper.classList.remove('active');
-        }
-    });
-    
-    // // Opsional: Tutup menu setelah klik sub-button
-    // document.querySelectorAll('.sub-fab').forEach(btn => {
-    //     btn.addEventListener('click', () => {
-    //         wrapper.classList.remove('active');
-    //     });
-    // });
+    initSmartStatus();
     initTheme();
     fetchResults(); // Ambil data awal saat pertama kali buka
     setupRealtimeUpdate();
     checkVotingStatus();
+    checkNewVoteReceipt();
 });
 
 // --- 3. Setup Real-time Update (Native SSE) ---
@@ -85,8 +66,8 @@ function setupRealtimeUpdate() {
 async function fetchResults() {
     try {
         const res = await fetch(`${BACKEND_URL}/results`, {
-    headers: NGROK_HEADERS // Tambahkan ini
-});
+            headers: NGROK_HEADERS // Tambahkan ini
+        });
         if (!res.ok) throw new Error('Gagal mengambil data dari server');
         const data = await res.json();
         if (data && Array.isArray(data)) {
@@ -102,7 +83,7 @@ async function fetchResults() {
 // --- 5. Render Logic ---
 function renderStats(candidates) {
     const totalVotes = candidates.reduce((sum, cand) => sum + (Number(cand.votes) || 0), 0);
-    
+
     // Update total votes dengan animasi angka
     const totalElement = document.getElementById('totalVotes');
     const startVal = parseInt(totalElement.innerText.replace(/\./g, '')) || 0;
@@ -161,7 +142,7 @@ function animateValue(id, start, end, duration) {
     let current = start;
     const increment = end > start ? 1 : -1;
     const stepTime = Math.abs(Math.floor(duration / (range || 1)));
-    const timer = setInterval(function() {
+    const timer = setInterval(function () {
         current += increment;
         obj.innerText = current.toLocaleString('id-ID');
         if (current == end) clearInterval(timer);
@@ -171,12 +152,29 @@ function animateValue(id, start, end, duration) {
 function initTheme() {
     const html = document.documentElement;
     const themeIcon = document.getElementById('theme-icon');
+
+    // Fungsi sinkronisasi ikon
+    const syncIcon = (theme) => {
+        if (theme === 'dark') {
+            themeIcon.className = 'bi bi-moon-stars-fill';
+        } else {
+            themeIcon.className = 'bi bi-sun-fill';
+        }
+    };
+
+    // Set ikon awal saat load
+    syncIcon(html.getAttribute('data-theme'));
+
     document.getElementById('theme-toggle').addEventListener('click', () => {
-        const isDark = html.getAttribute('data-theme') === 'dark';
-        const target = isDark ? 'light' : 'dark';
-        html.setAttribute('data-theme', target);
-        localStorage.setItem('theme-preference', target);
-        themeIcon.className = target === 'dark' ? 'bi bi-moon-stars-fill' : 'bi bi-sun-fill';
+        const currentTheme = html.getAttribute('data-theme');
+        const targetTheme = currentTheme === 'dark' ? 'light' : 'dark';
+
+        // Animasi transisi smooth
+        html.style.transition = 'background-color 0.5s ease, color 0.5s ease';
+
+        localStorage.setItem('theme-preference', targetTheme);
+        html.setAttribute('data-theme', targetTheme);
+        syncIcon(targetTheme);
     });
 }
 
@@ -191,7 +189,7 @@ function logout() {
         showCancelButton: true,
         confirmButtonText: 'Ya, Keluar',
         cancelButtonText: 'Batal',
-        
+
         customClass: {
             popup: 'swal2-popup-custom',
             title: 'swal2-title-custom',
@@ -200,7 +198,7 @@ function logout() {
             confirmButton: 'swal2-confirm-custom btn btn-danger shadow-sm',
             cancelButton: 'swal2-cancel-custom btn btn-light border shadow-sm'
         },
-        
+
         background: isDark ? '#0f172a' : '#ffffff',
         buttonsStyling: false,
         reverseButtons: true // Memposisikan Batal di kiri, Keluar di kanan
@@ -218,10 +216,10 @@ function logout() {
 async function checkVotingStatus() {
     try {
         const res = await fetch(`${BACKEND_URL}/voting-status`, {
-    headers: NGROK_HEADERS // Tambahkan ini
-});
+            headers: NGROK_HEADERS // Tambahkan ini
+        });
         const data = await res.json();
-        
+
         const timerLabel = document.getElementById('timerLabel');
         const timerDisplay = document.getElementById('navTimerValue');
         const statusPulse = document.getElementById('statusPulse'); // Dot status
@@ -230,10 +228,10 @@ async function checkVotingStatus() {
 
         if (data.status === 'active') {
             // --- SEDANG BERLANGSUNG (HIJAU) ---
-            statusPulse.style.backgroundColor = '#10b981'; 
+            statusPulse.style.backgroundColor = '#10b981';
             statusPulse.style.boxShadow = '0 0 10px rgba(16, 185, 129, 0.7)';
             timerLabel.innerText = 'BERAKHIR DALAM';
-            
+
             runTimer(data.targetTime, timerDisplay, () => {
                 // Saat waktu habis otomatis jadi merah
                 statusPulse.style.backgroundColor = '#ef4444';
@@ -280,7 +278,7 @@ function runTimer(targetTime, displayElement, onFinish) {
         const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const s = Math.floor((diff % (1000 * 60)) / 1000);
 
-        displayElement.innerText = 
+        displayElement.innerText =
             `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
     }
 
@@ -288,8 +286,25 @@ function runTimer(targetTime, displayElement, onFinish) {
     countdownInterval = setInterval(update, 1000);
 }
 
-// Tambahkan di dalam document.addEventListener('DOMContentLoaded', ...)
-checkNewVoteReceipt();
+function initSmartStatus() {
+    const statusArea = document.querySelector('.smart-status-area');
+    const miniAddress = document.getElementById('miniAddress');
+
+    const txHash = sessionStorage.getItem('lastVoteTx');
+    const userAddress = sessionStorage.getItem('voterAddress');
+
+    if (txHash && statusArea) {
+        statusArea.style.display = 'block';
+
+        if (userAddress && miniAddress) {
+            // Format: 0x1234...ABCD
+            const shortAddr = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
+            miniAddress.innerText = shortAddr;
+        }
+    } else {
+        if (statusArea) statusArea.style.display = 'none';
+    }
+}
 
 // Helper: Persingkat Hash (0x1234...abcd)
 function shortenHash(hash, start = 8, end = 6) {
@@ -300,26 +315,46 @@ function shortenHash(hash, start = 8, end = 6) {
 // Helper: Copy dengan Feedback Visual
 function copyText(elementId) {
     const el = document.getElementById(elementId);
+    const btn = event.currentTarget; // Tombol yang diklik
     const textToCopy = el.getAttribute('data-full-hash') || el.innerText;
-    
+
+    if (!textToCopy || textToCopy === '-' || textToCopy === '0x...') return;
+
     navigator.clipboard.writeText(textToCopy).then(() => {
-        const btn = event.currentTarget;
+        // 1. Munculkan Toast Slide Up
+        showCopyToast();
+
+        // 2. Ubah Ikon Tombol Jadi Centang Hijau
         const originalHTML = btn.innerHTML;
-        btn.innerHTML = '<i class="bi bi-check2 text-success"></i>' + (originalHTML.includes('Salin') ? ' <span class="text-success" style="font-size: 0.75rem;">Berhasil</span>' : '');
-        setTimeout(() => { btn.innerHTML = originalHTML; }, 2000);
-    });
+        // Gunakan ikon centang hijau
+        btn.innerHTML = `<i class="bi bi-check2-all text-success"></i> <span>Tersalin</span>`;
+        btn.classList.add('border-success');
+
+        // 3. Kembalikan ke normal setelah 2 detik
+        setTimeout(() => {
+            btn.innerHTML = originalHTML;
+            btn.classList.remove('border-success');
+        }, 2000);
+
+    }).catch(err => console.error('Gagal salin:', err));
 }
 
-// Deklarasikan variabel instance di luar fungsi agar bisa dipakai berulang kali
-let receiptModalInstance = null;
+function showCopyToast() {
+    const toast = document.getElementById('copyToast');
+
+    // Slide Up
+    toast.classList.add('show');
+
+    // Slide Down setelah 2 detik
+    setTimeout(() => {
+        toast.classList.remove('show');
+    }, 2000);
+}
 
 function showReceiptModal() {
     const txHash = sessionStorage.getItem('lastVoteTx');
-    const btn = document.getElementById('view-receipt-fab');
-    
-    // Cegah eksekusi jika tombol dalam status 'disabled'
-    if (btn.classList.contains('disabled')) return;
-    
+    const statusArea = document.querySelector('.glass-widget');
+
     if (!txHash) {
         Swal.fire({
             icon: 'info',
@@ -330,33 +365,24 @@ function showReceiptModal() {
         return;
     }
 
-    // 1. Update dulu datanya agar selalu terbaru
-    fillReceiptData();
-    
-    // 2. CEK: Apakah modal sudah pernah dibuat sebelumnya?
+    fillReceiptData(); // Isi data ke modal
+
     const modalEl = document.getElementById('voteReceiptModal');
-    
     if (!receiptModalInstance) {
-        // Jika belum ada, buat instance baru sekali saja
         receiptModalInstance = new bootstrap.Modal(modalEl);
     }
 
-    // 3. Tampilkan modal (Bootstrap akan tahu jika modal sudah tampil, tidak akan double)
-    // Cek apakah modal sedang tidak terbuka (mencegah spam klik)
     if (!modalEl.classList.contains('show')) {
         receiptModalInstance.show();
 
-        btn.style.opacity = '0.5';
-
-        // Aktifkan kembali setelah modal tertutup sempurna
+        // Feedback visual saat diklik
+        statusArea.style.opacity = '0.7';
         modalEl.addEventListener('hidden.bs.modal', () => {
-            btn.style.pointerEvents = 'auto';
-            btn.style.opacity = '1';
+            statusArea.style.opacity = '1';
         }, { once: true });
     }
 }
 
-// Fungsi khusus untuk mengisi data ke dalam elemen Modal
 function fillReceiptData() {
     const txHash = sessionStorage.getItem('lastVoteTx');
     const nik = sessionStorage.getItem('voterNIK');
@@ -364,19 +390,14 @@ function fillReceiptData() {
     const userAddress = sessionStorage.getItem('voterAddress');
     const hasConfirmed = sessionStorage.getItem('receiptConfirmed');
 
-    // 1. NIK Masking
-    if (nik) {
-        document.getElementById('receiptNIK').innerText = nik.substring(0, 4) + "••••" + nik.substring(12);
-    }
+    if (nik) document.getElementById('receiptNIK').innerText = nik.substring(0, 4) + "••••" + nik.substring(12);
 
-    // 2. Public Address
     const addrEl = document.getElementById('receiptAddress');
     if (addrEl && userAddress) {
         addrEl.innerText = shortenHash(userAddress, 6, 4);
         addrEl.setAttribute('data-full-hash', userAddress);
     }
 
-    // 3. Tx Hash & Explorer Link
     const hashEl = document.getElementById('receiptTxHash');
     if (hashEl && txHash) {
         hashEl.innerText = shortenHash(txHash, 8, 6);
@@ -384,16 +405,13 @@ function fillReceiptData() {
         document.getElementById('receiptExplorer').href = `https://sepolia.etherscan.io/tx/${txHash}`;
     }
 
-    // 4. Waktu
     const dateObj = time ? new Date(time) : new Date();
     document.getElementById('receiptTime').innerText = dateObj.toLocaleString('id-ID');
 
-    // 5. Logika Status
     const statusBadge = document.getElementById('receiptStatus');
     if (hasConfirmed === 'true') {
         updateStatusToSuccess(statusBadge);
     } else {
-        // Jika belum dikonfirmasi, pasang timer
         setTimeout(() => {
             updateStatusToSuccess(statusBadge);
             sessionStorage.setItem('receiptConfirmed', 'true');
@@ -401,30 +419,18 @@ function fillReceiptData() {
     }
 }
 
-// Helper untuk ganti UI status jadi sukses
-function updateStatusToSuccess(element) {
-    if (element) {
-        element.classList.remove('bg-warning', 'text-dark');
-        element.classList.add('bg-success', 'text-white');
-        element.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Terkonfirmasi';
+// --- 7. Helpers & Utilities ---
+function checkNewVoteReceipt() {
+    if (sessionStorage.getItem('isNewVote') === 'true') {
+        showReceiptModal();
+        sessionStorage.removeItem('isNewVote');
     }
 }
 
-// Update fungsi checkNewVoteReceipt agar tidak bentrok
-function checkNewVoteReceipt() {
-    const isNewVote = sessionStorage.getItem('isNewVote');
-    
-    // Apapun kondisinya, siapkan datanya dulu
-    fillReceiptData();
-
-    // Hanya munculkan otomatis jika ini adalah vote baru
-    if (isNewVote === 'true') {
-        const modalEl = document.getElementById('voteReceiptModal');
-        const receiptModal = new bootstrap.Modal(modalEl);
-        receiptModal.show();
-        
-        // Hapus flag agar tidak muncul otomatis lagi saat refresh
-        sessionStorage.removeItem('isNewVote');
+function updateStatusToSuccess(element) {
+    if (element) {
+        element.className = 'badge bg-success text-white';
+        element.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Terkonfirmasi';
     }
 }
 

@@ -430,104 +430,419 @@ p, span, small, label {
     background: rgba(0,0,0,0.06) !important;
 }
 
-/* Container Utama */
-.fab-wrapper {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    z-index: 2000;
-    /* Area hover diperluas agar tombol tidak mudah tertutup saat kursor bergerak */
-    padding: 20px;
-    margin: -20px;
+/* Container Utama untuk Smart Area */
+.smart-status-area {
+    /* Jarak stabil dari Navbar */
+    padding-top: 1.5rem; 
+    /* Jarak ke konten di bawahnya (Main) */
+    margin-bottom: 1.5rem; 
 }
 
-/* Tombol Utama (+) */
-.main-fab {
-    width: 60px;
-    height: 60px;
-    background: var(--accent);
-    color: white;
-    border: none;
-    border-radius: 18px;
+/* KUNCI UTAMA: Main Container */
+main.container {
+    /* Jika Smart Area TIDAK ADA, margin ini yang kasih jarak ke Navbar.
+       Jika Smart Area ADA, margin ini akan 'bertabrakan' secara otomatis 
+       sehingga jaraknya tidak double (tetap rapi).
+    */
+    margin-top: 2rem !important; 
+    padding-top: 0 !important;
+}
+
+/* Card Utama */
+.glass-widget {
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.1), rgba(255, 255, 255, 0.05));
+    backdrop-filter: blur(15px) saturate(180%);
+    -webkit-backdrop-filter: blur(15px) saturate(180%);
+    border: 1px solid rgba(99, 102, 241, 0.2);
+    border-radius: 20px;
+    padding: 14px 24px;
     display: flex;
     align-items: center;
-    justify-content: center;
+    justify-content: space-between;
+    cursor: pointer;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-widget:hover {
+    transform: translateY(-3px);
+    border-color: var(--bs-primary) !important;
+    box-shadow: 0 15px 35px rgba(99, 102, 241, 0.15);
+}
+
+.glass-widget:active {
+    transform: scale(0.98);
+}
+
+/* Bagian Konten (Kiri) */
+.widget-content {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.widget-icon {
     font-size: 1.8rem;
-    cursor: pointer;
-    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    position: relative;
-    z-index: 5;
-}
-
-/* Sub-FAB (Tombol Menu) */
-.sub-fab {
-    width: 50px;
-    height: 50px;
-    border-radius: 15px;
-    border: none;
+    color: var(--bs-primary) !important;
+    filter: drop-shadow(0 0 8px rgba(99, 102, 241, 0.3));
     display: flex;
     align-items: center;
-    justify-content: center;
-    font-size: 1.3rem;
-    cursor: pointer;
-    position: absolute;
-    /* Titik awal tepat di tengah tombol utama */
-    bottom: 25px; 
-    right: 25px;
-    opacity: 0;
-    pointer-events: none;
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.1);
-    z-index: 1;
-    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
 }
 
-/* Warna Khusus */
-.fab-top {
-    background: linear-gradient(135deg, #6366f1, #a855f7);
-    color: white !important;
+.widget-label {
+    display: block;
+    font-size: 0.65rem;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    color: var(--bs-primary) !important;
+    text-transform: uppercase;
+    margin-bottom: 2px;
 }
 
-.fab-left {
-    background: var(--glass-bg);
-    backdrop-filter: blur(10px);
-    border: 1px solid var(--border);
+.widget-title {
+    margin: 0;
+    font-size: 0.9rem;
+    font-weight: 700;
     color: var(--text-main);
 }
 
-/* --- LOGIKA PERGERAKAN (DIBUAT STABIL DENGAN CLASS) --- */
-
-/* Saat class .active ditambahkan (lewat klik) */
-.fab-wrapper.active .main-fab {
-    transform: rotate(135deg);
-    background: #ef4444; /* Jadi tombol close */
+#miniAddress {
+    font-family: 'Courier New', Courier, monospace; /* Gaya blockchain */
+    opacity: 0.8;
 }
 
-.fab-wrapper.active .sub-fab {
+/* Bagian Aksi (Kanan) */
+.widget-action {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    color: var(--bs-primary) !important;
+}
+
+.badge-status {
+    font-size: 0.75rem;
+    font-weight: 700;
+    background: rgba(99, 102, 241, 0.1);
+    padding: 6px 14px;
+    border-radius: 100px;
+    border: 1px solid rgba(99, 102, 241, 0.1);
+}
+
+/* Dark Mode Adaptation */
+[data-theme='dark'] .glass-widget {
+    background: rgba(30, 41, 59, 0.6);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Animasi Muncul */
+.animate-fade-in {
+    animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes fadeInUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+/* Container Action tetap di kanan */
+.widget-action {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+}
+
+/* Tombol Kapsul Gabungan */
+.btn-capsule-action {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--accent-light); /* Warna biru muda transparan */
+    border: 1px solid rgba(37, 99, 235, 0.1);
+    padding: 6px 14px;
+    border-radius: 100px;
+    color: var(--accent) !important;
+    font-size: 0.75rem;
+    font-weight: 700;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    outline: none;
+}
+
+/* Efek Hover pada Tombol */
+.btn-capsule-action:hover {
+    background: var(--accent);
+    color: white !important;
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px var(--accent-light);
+}
+
+.btn-capsule-action i {
+    font-size: 1.1rem;
+    line-height: 1;
+}
+
+/* Pastikan widget utama tidak bertabrakan di layar kecil */
+@media (max-width: 400px) {
+    .btn-capsule-action span {
+        display: none; /* Di HP sangat kecil, hanya munculkan ikon agar tidak lari */
+    }
+    .btn-capsule-action {
+        padding: 8px;
+    }
+}
+
+/* Adaptasi Mode Gelap */
+[data-theme='dark'] .btn-capsule-action {
+    background: rgba(59, 130, 246, 0.2);
+    border-color: rgba(255, 255, 255, 0.1);
+}
+
+/* --- Toast Notification (Bottom Center) --- */
+.copy-toast {
+    position: fixed;
+    bottom: -100px; /* Sembunyi di bawah */
+    left: 50%;
+    transform: translateX(-50%);
+    background: var(--bg-body);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    backdrop-filter: blur(10px);
+    color: white;
+    padding: 12px 24px;
+    border-radius: 50px;
+    z-index: 10000;
+    opacity: 0;
+    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+}
+
+/* Muncul (Slide Up) */
+.copy-toast.show {
+    bottom: 50px; /* Naik ke atas */
     opacity: 1;
-    pointer-events: auto;
 }
 
-/* Receipt ke ATAS */
-.fab-wrapper.active .fab-top {
-    transform: translateY(-80px);
+/* Saat menghilang (Slide Down) */
+.copy-toast.hide-animation {
+    bottom: -100px;
+    opacity: 0;
+    transition: all 0.4s cubic-bezier(0.4, 0, 1, 1);
 }
 
-/* Theme ke KIRI */
-.fab-wrapper.active .fab-left {
-    transform: translateX(-80px);
+.toast-content {
+    display: flex;
+    align-items: center;
+    font-size: 0.9rem;
+    font-weight: 600;
 }
 
-/* --- EFEK KLIK (CEGAH LARI) --- */
-.fab-wrapper.active .fab-top:active {
-    transform: translateY(-80px) scale(0.9);
+/* Centang Hijau di Toast */
+.toast-success-icon {
+    color: #10b981; 
+    font-size: 1.1rem;
 }
 
-.fab-wrapper.active .fab-left:active {
-    transform: translateX(-80px) scale(0.9);
+/* --- Tombol Transaction Hash Premium --- */
+.btn-copy-premium {
+    background: var(--bg-card);
+    border: 1.5px solid var(--border);
+    color: var(--text-primary);
+    border-radius: 12px;
+    padding: 8px 16px;
+    font-size: 0.8rem;
+    font-weight: 700;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    transition: all 0.3s ease;
 }
 
-/* Tambahkan transisi agar smooth saat nutup */
-.sub-fab {
-    transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.2);
+.btn-copy-premium:hover {
+    border-color: var(--accent);
+    background: rgba(37, 99, 235, 0.05);
+    color: var(--accent) !important;
+}
+
+.btn-copy-premium i {
+    transition: transform 0.2s ease;
+}
+
+.btn-copy-premium:active {
+    transform: scale(0.95);
+}
+
+/* Warna Ikon Centang */
+.text-success-copy {
+    color: #10b981 !important;
+}
+
+/* --- Modal Style Refinement --- */
+.receipt-modal-card {
+    border-radius: 28px !important;
+    overflow: hidden;
+    background: var(--bg-card) !important;
+}
+
+.receipt-header {
+    background: linear-gradient(135deg, var(--accent), #1d4ed8);
+    border-radius: 25px 25px 0 0;
+    padding: 2rem 1rem !important;
+}
+
+/* Tambahan: Pastikan teks modal selalu putih di header */
+.receipt-header h4, .receipt-header p {
+    color: #ffffff !important;
+}
+
+.header-icon-wrapper {
+    width: 70px;
+    height: 70px;
+    background: rgba(255, 255, 255, 0.2);
+    margin: 0 auto;
+    border-radius: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2.5rem;
+    backdrop-filter: blur(5px);
+}
+
+.receipt-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.2rem;
+}
+
+.receipt-item .label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+}
+
+.receipt-item .value {
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-primary);
+}
+
+.value-code {
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--accent);
+    font-weight: 700;
+    font-size: 0.85rem;
+}
+
+.btn-copy-icon {
+    background: none;
+    border: none;
+    color: var(--text-muted);
+    transition: 0.2s;
+}
+
+.btn-copy-icon:hover { color: var(--accent); }
+
+/* Hash Box Modern */
+.hash-box {
+    background: var(--bg-body);
+    padding: 16px;
+    border-radius: 18px;
+    border: 1px solid var(--border);
+}
+
+.hash-box label {
+    font-size: 0.65rem;
+    font-weight: 800;
+    color: var(--text-muted);
+    letter-spacing: 1px;
+    display: block;
+    margin-bottom: 8px;
+}
+
+.hash-box code {
+    font-size: 0.8rem;
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+/* Status Badge */
+.badge-status-receipt {
+    padding: 6px 14px;
+    border-radius: 100px;
+    font-size: 0.75rem;
+    font-weight: 700;
+}
+
+.badge-status-receipt.pending { background: #fef3c7; color: #92400e; }
+.badge-status-receipt.success { background: #dcfce7; color: #166534; }
+
+/* Buttons */
+.btn-verify {
+    background: linear-gradient(135deg, var(--accent), #1d4ed8);
+    color: white;
+    border-radius: 16px;
+    padding: 14px;
+    font-weight: 700;
+    transition: 0.3s;
+}
+
+.btn-verify:hover {
+    background: linear-gradient(135deg, var(--accent), #1d4ed8);
+    color: white;
+    transform: translateY(-2px);
+    box-shadow: 0 10px 20px rgba(99, 102, 241, 0.2);
+}
+
+.btn-close-receipt {
+    color: var(--text-muted);
+    font-weight: 600;
+    font-size: 0.85rem;
+}
+
+/* Container Ikon dengan Efek Glow */
+.header-icon-circle-glow {
+    width: 90px;
+    height: 90px;
+    background: rgba(255, 255, 255, 0.15);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 20px auto;
+    position: relative;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    /* Efek cahaya berwarna di belakang */
+    box-shadow: 0 0 30px rgba(168, 85, 247, 0.4), 
+                0 0 60px rgba(37, 99, 235, 0.3);
+    animation: floating 3s ease-in-out infinite;
+}
+
+/* Styling Ikon Material */
+.animated-icon {
+    font-size: 50px !important;
+    color: white;
+    /* Memberikan sedikit efek warna pada ikon */
+    filter: drop-shadow(0 0 5px rgba(255,255,255,0.8));
+}
+
+/* Animasi Melayang (Up & Down) */
+@keyframes floating {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+    100% { transform: translateY(0px); }
+}
+
+/* Tambahan Efek Partikel Halus (Opsional) */
+.header-icon-circle-glow::before {
+    content: '';
+    position: absolute;
+    width: 110%;
+    height: 110%;
+    border-radius: 50%;
+    border: 1px dashed rgba(255,255,255,0.4);
+    animation: rotate-circle 10s linear infinite;
+}
+
+@keyframes rotate-circle {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
 }

@@ -20,7 +20,9 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700;800&display=swap"
         rel="stylesheet">
-        <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@48,400,1,0" />
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="dashboard.css">
 
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -47,6 +49,28 @@
             </button>
         </div>
     </nav>
+
+    <div class="smart-status-area">
+        <div class="container">
+            <div class="glass-widget animate-fade-in" onclick="showReceiptModal()">
+                <div class="widget-content">
+                    <div class="widget-icon">
+                        <i class="bi bi-patch-check-fill"></i>
+                    </div>
+                    <div class="widget-body">
+                        <span class="widget-label">VERIFIKASI ON-CHAIN</span>
+                        <h6 class="widget-title">Suara Anda: <span id="miniAddress">0x...</span></h6>
+                    </div>
+                </div>
+                <div class="widget-action">
+                    <button class="btn-capsule-action" onclick="showReceiptModal()">
+                        <span>Lihat Suara</span>
+                        <i class="bi bi-arrow-up-right-circle-fill"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <main class="container py-5">
         <div class="row align-items-center mb-5 animate-fade-in">
@@ -104,75 +128,85 @@
         </div>
     </main>
 
-    <div class="modal fade" id="voteReceiptModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg" style="border-radius: 25px; background: var(--glass-bg); backdrop-filter: blur(10px);">
-            <div class="modal-body p-0">
-                <div class="receipt-header p-4 text-center text-white rounded-top-4" style="background: linear-gradient(135deg, #6366f1, #a855f7);">
-                    <div class="mb-3">
-                        <i class="bi bi-shield-check-fill" style="font-size: 3rem;"></i>
+    <div id="copyToast" class="copy-toast">
+        <div class="toast-content">
+            <i class="bi bi-check-circle-fill me-2" style="color: #10b981;"></i>
+            <span>Berhasil disalin</span>
+        </div>
+    </div>
+
+    <div class="modal fade" id="voteReceiptModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+        aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow-lg receipt-modal-card">
+                <div class="modal-body p-0">
+                    <div class="receipt-header p-4 text-center">
+                        <div class="header-icon-circle-glow">
+                            <span class="material-symbols-rounded animated-icon">
+                                verified_user
+                            </span>
+                        </div>
+                        <h4 class="fw-800 mb-1 text-white">Suara Diterima!</h4>
+                        <p class="small opacity-75 mb-0 text-white">Transaksi berhasil diverifikasi</p>
                     </div>
-                    <h4 class="fw-800 mb-1">Suara Diterima!</h4>
-                    <p class="small opacity-75 mb-0">Transaksi Anda sedang diproses oleh Blockchain Sepolia</p>
-                </div>
-                
-                <div class="p-4">
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <span class="text-muted small">ID Pemilih (NIK)</span>
-        <span class="fw-bold small" id="receiptNIK">Memuat...</span>
-    </div>
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <span class="text-muted small">Public Address</span>
-        <div class="d-flex align-items-center gap-2">
-            <code class="fw-bold text-primary" id="receiptAddress" style="font-family: 'JetBrains Mono', monospace; font-size: 0.9rem;">0x...</code>
-            <button class="btn btn-sm p-0 border-0" onclick="copyText('receiptAddress')" title="Salin Address">
-                <i class="bi bi-copy text-muted small"></i>
-            </button>
-        </div>
-    </div>
+                    <div class="p-4">
+                        <div class="receipt-item">
+                            <span class="label">ID Pemilih (NIK)</span>
+                            <span class="value" id="receiptNIK">Memuat...</span>
+                        </div>
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <span class="text-muted small">Waktu Blok</span>
-        <div class="d-flex align-items-center gap-2">
-            <i class="bi bi-clock-history text-muted" style="font-size: 0.85rem;"></i>
-            <span class="fw-bold small" id="receiptTime">--:--:--</span>
-        </div>
-    </div>
+                        <div class="receipt-item">
+                            <span class="label">Public Address</span>
+                            <div class="d-flex align-items-center gap-2">
+                                <code class="value-code" id="receiptAddress">0x...</code>
+                                <button class="btn-copy-icon" onclick="copyText('receiptAddress')">
+                                    <i class="bi bi-copy"></i>
+                                </button>
+                            </div>
+                        </div>
 
-    <div class="d-flex justify-content-between align-items-center mb-3">
-        <span class="text-muted small">Status Transaksi</span>
-        <span class="badge bg-warning text-dark px-3 rounded-pill" id="receiptStatus" style="font-size: 0.75rem;">
-            <span class="spinner-border spinner-border-sm me-1"></span> Pending
-        </span>
-    </div>
+                        <div class="receipt-item">
+                            <span class="label">Waktu Blok</span>
+                            <span class="value"><i class="bi bi-clock me-1"></i><span
+                                    id="receiptTime">--:--</span></span>
+                        </div>
 
-    <hr class="border-dashed my-4">
+                        <div class="receipt-item">
+                            <span class="label">Status</span>
+                            <span class="badge-status-receipt pending" id="receiptStatus">
+                                <span class="spinner-border spinner-border-sm me-1"></span> Pending
+                            </span>
+                        </div>
 
-    <div class="p-3 rounded-4" style="background: rgba(0,0,0,0.03); border: 1px solid rgba(0,0,0,0.05);">
-        <label class="text-muted d-block mb-2" style="font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px;">TRANSACTION HASH</label>
-        <div class="d-flex align-items-center justify-content-between gap-3">
-            <code id="receiptTxHash" class="text-truncate text-primary fw-bold" style="font-family: 'JetBrains Mono', monospace; font-size: 0.85rem;">-</code>
-            <button class="btn btn-sm btn-white border shadow-xs rounded-3 px-2 py-1 flex-shrink-0" onclick="copyText('receiptTxHash')" style="background: white;">
-                <i class="bi bi-copy me-1 small"></i> <span style="font-size: 0.75rem;">Salin</span>
-            </button>
-        </div>
-    </div>
+                        <div class="hash-box mt-4">
+                            <label
+                                style="font-size: 0.65rem; font-weight: 800; color: var(--text-muted); letter-spacing: 1px; display: block; margin-bottom: 8px;">
+                                TRANSACTION HASH
+                            </label>
+                            <div class="d-flex align-items-center justify-content-between gap-3">
+                                <code id="receiptTxHash" class="text-truncate fw-bold"
+                                    style="color: var(--text-primary); font-size: 0.85rem;">-</code>
+                                <button class="btn-copy-premium" onclick="copyText('receiptTxHash')">
+                                    <i class="bi bi-copy"></i> <span>Salin</span>
+                                </button>
+                            </div>
+                        </div>
 
-    <div class="d-grid mt-4">
-        <a id="receiptExplorer" href="#" target="_blank" class="btn btn-primary btn-lg rounded-4 fw-bold py-3 shadow-sm" style="font-size: 1rem; transition: all 0.3s;">
-            <i class="bi bi-box-arrow-up-right me-2"></i>Verifikasi On-Chain
-        </a>
-        <button type="button" onclick="refreshPage()" class="btn btn-link text-muted mt-2 btn-sm text-decoration-none" data-bs-dismiss="modal">Tutup</button>
-    </div>
-</div>
+                        <div class="d-grid mt-4 gap-2">
+                            <a id="receiptExplorer" href="#" target="_blank" class="btn btn-verify">
+                                <i class="bi bi-box-arrow-up-right me-2"></i>Verifikasi On-Chain
+                            </a>
+                            <button type="button" onclick="refreshPage()" class="btn btn-close-receipt"
+                                data-bs-dismiss="modal">Tutup</button>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-    <div class="fab-wrapper">
+    <!-- <div class="fab-wrapper">
     <div class="fab-menu">
         <button id="view-receipt-fab" class="sub-fab fab-top" onclick="showReceiptModal()" title="Lihat Bukti Suara">
             <i class="bi bi-receipt-cutoff"></i>
@@ -185,7 +219,13 @@
     <button class="main-fab">
         <i class="bi bi-grid-fill"></i>
     </button>
-</div>
+</div> -->
+
+    <button id="theme-toggle" class="theme-fab" title="Ganti Mode">
+        <div class="fab-content">
+            <i class="bi bi-sun-fill" id="theme-icon"></i>
+        </div>
+    </button>
 
     <footer class="container py-5 text-center">
         <div class="divider mx-auto mb-4"
