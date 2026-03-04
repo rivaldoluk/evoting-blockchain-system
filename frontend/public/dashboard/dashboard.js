@@ -104,7 +104,7 @@ function renderStats(candidates) {
     const syncText = document.getElementById('lastUpdateText');
 
     if (syncText) {
-        syncText.innerText = `Last sync: ${new Date().toLocaleTimeString('id-ID')}`;
+        syncText.innerText = `Last Update: ${new Date().toLocaleTimeString('id-ID')}`;
         
         // Tambahkan efek flash pada parent (sync-badge)
         const badge = syncText.closest('.sync-badge');
