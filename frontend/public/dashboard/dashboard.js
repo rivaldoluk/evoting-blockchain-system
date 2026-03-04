@@ -76,7 +76,17 @@ async function fetchResults() {
     } catch (e) {
         console.error("Dashboard Error:", e);
         const chartContainer = document.getElementById('chartContainer');
-        chartContainer.innerHTML = `<div class="alert alert-danger text-center">Gagal memuat data.</div>`;
+        chartContainer.innerHTML = `<div class="col-12 text-center py-5" style="animation: fadeIn 0.5s ease;">
+            <div class="mb-4">
+                <i class="bi bi-cloud-slash display-1 text-muted"></i>
+            </div>
+            <h4 class="fw-bold">Gagal Memuat Data Perolehan Suara</h4>
+            <p class="text-secondary mb-4">Terjadi masalah koneksi ke server. Silakan coba muat ulang halaman.</p>
+            
+            <button onclick="location.reload()" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm">
+                <i class="bi bi-arrow-clockwise me-2"></i> Muat Ulang Halaman
+            </button>
+        </div>`;
     }
 }
 
