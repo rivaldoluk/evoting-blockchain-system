@@ -212,13 +212,6 @@ p, span, small, label {
     border: 2px solid var(--border);
 }
 
-/* --- Swipe Mechanism (Optimized for Mobile & Theme) --- */
-.swipe-container-wrapper {
-    background: var(--bg-body);
-    padding: 8px;
-    border-radius: 100px;
-}
-
 /* --- Floating Theme Button --- */
 .theme-fab {
     position: fixed; bottom: 25px; right: 25px;
