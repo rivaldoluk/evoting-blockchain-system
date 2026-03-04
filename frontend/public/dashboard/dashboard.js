@@ -101,6 +101,23 @@ function renderStats(candidates) {
 
     const chartContainer = document.getElementById('chartContainer');
     const cardsContainer = document.getElementById('candidateCards');
+    const syncText = document.getElementById('lastUpdateText');
+
+    if (syncText) {
+        syncText.innerText = `Last sync: ${new Date().toLocaleTimeString('id-ID')}`;
+        
+        // Tambahkan efek flash pada parent (sync-badge)
+        const badge = syncText.closest('.sync-badge');
+        if (badge) {
+            badge.style.backgroundColor = "rgba(16, 185, 129, 0.2)"; // Hijau emerald transparan
+            badge.style.transform = "scale(1.05)";
+            
+            setTimeout(() => {
+                badge.style.backgroundColor = ""; // Kembali ke CSS asal
+                badge.style.transform = "";
+            }, 600);
+        }
+    }
 
     let chartHTML = '';
     let cardsHTML = '';

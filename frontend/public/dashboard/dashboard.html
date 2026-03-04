@@ -111,11 +111,28 @@
             <div class="card-header bg-transparent border-0 pt-4 px-4">
                 <h5 class="fw-bold mb-0">Grafik Perolehan Suara</h5>
             </div>
-            <div class="card-body p-4">
+            <div class="card-body p-3">
                 <div id="chartContainer" class="d-flex flex-column gap-4">
                     <div class="text-center py-5">
                         <div class="spinner-border text-primary" role="status"></div>
                         <p class="mt-3 text-muted">Sinkronisasi data...</p>
+                    </div>
+                </div>
+            </div>
+            <div class="card-footer card-footer-custom bg-transparent">
+                <div class="d-flex justify-content-between align-items-center w-100">
+                    <div class="text-muted d-flex align-items-center"
+                        style="font-size: 0.65rem; font-weight: 700; letter-spacing: 0.5px;">
+                        <i class="bi bi-shield-check text-success me-1" style="font-size: 0.8rem;"></i>
+                        <span class="d-none d-sm-inline">Verified by Sepolia</span>
+                        <span class="d-inline d-sm-none">Verified by Sepolia</span>
+                    </div>
+
+                    <div class="ms-auto">
+                        <div class="sync-badge">
+                            <span class="dot-sync"></span>
+                            <span id="lastUpdateText" style="font-size: 0.65rem;">Last sync: Just now</span>
+                        </div>
                     </div>
                 </div>
             </div>

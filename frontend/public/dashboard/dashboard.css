@@ -10,6 +10,8 @@
     --border: #e2e8f0;
     --glass-bg: rgba(255, 255, 255, 0.8);
     --shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.05);
+    --bg-vote-wrapper: rgba(15, 23, 42, 0.04); /* Abu-abu tipis untuk light mode */
+    --border-vote-wrapper: rgba(15, 23, 42, 0.08);
 }
 
 [data-theme="dark"] {
@@ -23,6 +25,8 @@
     --border: #1e293b;
     --glass-bg: rgba(15, 23, 42, 0.9);
     --shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.4);
+    --bg-vote-wrapper: rgba(255, 255, 255, 0.04); /* Putih tipis untuk dark mode */
+    --border-vote-wrapper: rgba(255, 255, 255, 0.1);
 }
 
 /* --- Base Styles --- */
@@ -158,8 +162,16 @@ p, span, small, label {
 }
 
 .vote-bar-wrapper {
-    width: 100%;
-    padding: 10px 0;
+    background: var(--bg-vote-wrapper) !important;
+    padding: 1rem;
+    border-radius: 16px;
+    border: 1px solid var(--border-vote-wrapper) !important;
+    transition: all 0.3s ease;
+}
+
+.vote-bar-wrapper:hover {
+    transform: translateY(-5px);
+    background: var(--accent-light) !important; /* Memberi warna aksen saat hover */
 }
 
 .progress-label {
@@ -177,10 +189,14 @@ p, span, small, label {
 
 .progress {
     height: 12px;
-    background-color: var(--bg-body);
+    background-color: rgba(0,0,0,0.2);
     border-radius: 100px;
     overflow: hidden;
-    border: 1px solid var(--border);
+}
+
+.progress-bar {
+    transition: width 1.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+    border-radius: 100px;
 }
 
 /* --- Candidate Detail Cards --- */
@@ -846,4 +862,44 @@ main.container {
 @keyframes rotate-circle {
     from { transform: rotate(0deg); }
     to { transform: rotate(360deg); }
+}
+
+/* Container footer agar lebih rapi */
+.sync-badge {
+    background: var(--accent-light);
+    color: var(--accent) !important;
+    padding: 5px 14px;
+    border-radius: 100px;
+    font-weight: 700;
+    font-size: 0.72rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid rgba(37, 99, 235, 0.1);
+    /* Transisi agar saat diupdate JS terasa smooth */
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.dot-sync {
+    width: 7px;
+    height: 7px;
+    background-color: #10b981; /* Warna hijau indikator aktif */
+    border-radius: 50%;
+    box-shadow: 0 0 5px rgba(16, 185, 129, 0.5);
+    animation: blink-sync 2s infinite;
+}
+
+.card-footer-custom {
+    border-top: 1px dashed var(--border) !important;
+    padding: 1.25rem !important;
+}
+
+@keyframes blink-sync {
+    0% { opacity: 0.3; }
+    50% { opacity: 1; }
+    100% { opacity: 0.3; }
+}
+
+[data-theme='dark'] .sync-badge {
+    background: rgba(59, 130, 246, 0.15); /* Transparansi untuk mode gelap */
 }
