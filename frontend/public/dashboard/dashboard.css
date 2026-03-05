@@ -587,8 +587,8 @@ main.container {
 
 /* Efek Hover pada Tombol */
 .btn-capsule-action:hover {
-    background: var(--accent);
-    color: white !important;
+    background: var(--accent-light) !important;
+    color: var(--accent) !important;
     transform: scale(1.05);
     box-shadow: 0 4px 12px var(--accent-light);
 }
@@ -787,10 +787,42 @@ main.container {
     border-radius: 100px;
     font-size: 0.75rem;
     font-weight: 700;
+    display: inline-flex;
+    align-items: center;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.badge-status-receipt.pending { background: #fef3c7; color: #92400e; }
-.badge-status-receipt.success { background: #dcfce7; color: #166534; }
+/* Status Pending */
+.badge-status-receipt.pending { 
+    background: #fef3c7; 
+    color: #92400e; 
+    border: 1px solid rgba(146, 64, 14, 0.1);
+}
+
+/* Status Success (Lebih Modern dengan Glow) */
+.badge-status-receipt.success { 
+    background: #dcfce7; 
+    color: #166534; 
+    border: 1px solid rgba(22, 101, 52, 0.2);
+    box-shadow: 0 4px 10px rgba(22, 101, 52, 0.1);
+}
+
+/* Animasi Ikon Pop */
+.animate-pop {
+    animation: iconPop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes iconPop {
+    0% { transform: scale(0.5); }
+    100% { transform: scale(1); }
+}
+
+/* Penyesuaian Spinner agar lebih kecil & pas */
+.spinner-border-sm {
+    width: 0.8rem;
+    height: 0.8rem;
+    border-width: 0.15em;
+}
 
 /* Buttons */
 .btn-verify {
@@ -902,4 +934,52 @@ main.container {
 
 [data-theme='dark'] .sync-badge {
     background: rgba(59, 130, 246, 0.15); /* Transparansi untuk mode gelap */
+}
+
+/* Styling Premium SweetAlert */
+.swal-premium-popup {
+    border-radius: 24px !important;
+    padding: 2rem !important;
+    background: var(--bg-card) !important; /* Mengikuti tema dashboard */
+    border: 1px solid var(--border) !important;
+    backdrop-filter: blur(10px);
+}
+
+.swal-title-custom {
+    font-size: 1.4rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    letter-spacing: -0.5px;
+}
+
+/* Ikon Pencarian yang Animatif */
+.empty-data-icon {
+    font-size: 4rem;
+    color: var(--accent);
+    margin-bottom: 15px;
+    display: inline-block;
+    animation: floating-icon 3s ease-in-out infinite;
+}
+
+@keyframes floating-icon {
+    0%, 100% { transform: translateY(0); opacity: 0.8; }
+    50% { transform: translateY(-10px); opacity: 1; }
+}
+
+/* Tombol Custom Swal */
+.btn-swal-confirm {
+    background: var(--accent) !important;
+    color: white !important;
+    border-radius: 12px !important;
+    padding: 10px 35px !important;
+    font-weight: 700 !important;
+    font-size: 0.9rem !important;
+    border: none !important;
+    box-shadow: 0 4px 15px var(--accent-light) !important;
+    transition: all 0.3s ease;
+}
+
+.btn-swal-confirm:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px var(--accent-light) !important;
 }

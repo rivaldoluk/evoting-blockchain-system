@@ -340,27 +340,38 @@ function shortenHash(hash, start = 8, end = 6) {
 }
 
 // Helper: Copy dengan Feedback Visual
-function copyText(elementId) {
+function copyText(elementId, event) {
+    // Tambahkan parameter event agar lebih stabil dibanding menggunakan window.event
     const el = document.getElementById(elementId);
-    const btn = event.currentTarget; // Tombol yang diklik
+    const btn = event.currentTarget; 
     const textToCopy = el.getAttribute('data-full-hash') || el.innerText;
 
-    if (!textToCopy || textToCopy === '-' || textToCopy === '0x...') return;
+    if (!textToCopy || textToCopy === '-' || textToCopy.includes('0x...')) return;
 
     navigator.clipboard.writeText(textToCopy).then(() => {
-        // 1. Munculkan Toast Slide Up
-        showCopyToast();
+        // 1. Tetap munculkan Toast (Global feedback)
+        if (typeof showCopyToast === "function") showCopyToast();
 
-        // 2. Ubah Ikon Tombol Jadi Centang Hijau
+        // 2. Simpan tampilan asli
         const originalHTML = btn.innerHTML;
-        // Gunakan ikon centang hijau
-        btn.innerHTML = `<i class="bi bi-check2-all text-success"></i> <span>Tersalin</span>`;
-        btn.classList.add('border-success');
+        
+        // 3. Logika Pembeda: Apakah ini tombol premium (dengan teks) atau hanya ikon?
+        if (btn.classList.contains('btn-copy-premium')) {
+            // Untuk Transaction Hash: Ganti ikon + Teks
+            btn.innerHTML = `<i class="bi bi-check2-all text-success"></i> <span class="text-success">Tersalin</span>`;
+            btn.classList.add('border-success');
+        } else {
+            // Untuk Alamat Pemilih: Hanya ganti ikon saja tanpa menambah teks
+            btn.innerHTML = `<i class="bi bi-check2-all text-success"></i>`;
+            // Opsional: tambahkan sedikit scale effect agar terasa kliknya
+            btn.style.transform = "scale(1.2)";
+        }
 
-        // 3. Kembalikan ke normal setelah 2 detik
+        // 4. Kembalikan ke normal setelah 2 detik
         setTimeout(() => {
             btn.innerHTML = originalHTML;
             btn.classList.remove('border-success');
+            btn.style.transform = "";
         }, 2000);
 
     }).catch(err => console.error('Gagal salin:', err));
@@ -384,15 +395,33 @@ function showReceiptModal() {
 
     if (!txHash) {
         Swal.fire({
-            icon: 'info',
-            title: 'Data Tidak Ditemukan',
-            text: 'Bukti suara tidak tersedia di sesi ini.',
-            confirmButtonColor: '#6366f1'
+            title: '<span class="swal-title-custom">Data Tidak Ditemukan</span>',
+            html: `
+                <div class="swal-content-custom">
+                    <div class="empty-data-icon">
+                        <i class="bi bi-search-heart"></i>
+                    </div>
+                    <p class="mt-3 text-muted">Bukti suara digital tidak tersedia atau sesi Anda telah berakhir.</p>
+                </div>
+            `,
+            showConfirmButton: true,
+            confirmButtonText: 'Mengerti',
+            buttonsStyling: false,
+            customClass: {
+                popup: 'swal-premium-popup',
+                confirmButton: 'btn-swal-confirm'
+            },
+            showClass: {
+                popup: 'animate__animated animate__fadeInUp animate__faster'
+            },
+            hideClass: {
+                popup: 'animate__animated animate__fadeOutDown animate__faster'
+            }
         });
         return;
     }
 
-    fillReceiptData(); // Isi data ke modal
+    fillReceiptData();
 
     const modalEl = document.getElementById('voteReceiptModal');
     if (!receiptModalInstance) {
@@ -401,8 +430,6 @@ function showReceiptModal() {
 
     if (!modalEl.classList.contains('show')) {
         receiptModalInstance.show();
-
-        // Feedback visual saat diklik
         statusArea.style.opacity = '0.7';
         modalEl.addEventListener('hidden.bs.modal', () => {
             statusArea.style.opacity = '1';
@@ -456,8 +483,23 @@ function checkNewVoteReceipt() {
 
 function updateStatusToSuccess(element) {
     if (element) {
-        element.className = 'badge bg-success text-white';
-        element.innerHTML = '<i class="bi bi-check-circle-fill me-1"></i> Terkonfirmasi';
+        // 1. Tambahkan efek transisi keluar sebentar (opsional)
+        element.style.opacity = '0';
+        
+        setTimeout(() => {
+            // 2. Ganti class dari pending ke success
+            element.classList.remove('pending');
+            element.classList.add('success');
+            
+            // 3. Update konten dengan ikon yang lebih elegan
+            element.innerHTML = `
+                <i class="bi bi-check-circle-fill me-1 animate-pop"></i> 
+                Terkonfirmasi
+            `;
+            
+            // 4. Munculkan kembali dengan transisi
+            element.style.opacity = '1';
+        }, 200);
     }
 }
 
