@@ -417,7 +417,11 @@ function showReceiptModal() {
             hideClass: {
                 popup: 'animate__animated animate__fadeOutDown animate__faster'
             }
-        });
+        }).then((result) => {
+    if (result.isConfirmed) {
+        window.location.reload(); // Fungsi refresh halaman
+    }
+});
         return;
     }
 
