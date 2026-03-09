@@ -993,3 +993,27 @@ main.container {
 .disabled-btn {
     cursor: not-allowed !important;
 }
+
+/* Efek Berputar 180 derajat secara halus */
+@keyframes hourglass-rotate {
+    0% { transform: rotate(0deg); }
+    50% { transform: rotate(180deg); }
+    100% { transform: rotate(180deg); }
+}
+
+.anim-hourglass {
+    display: inline-block;
+    animation: hourglass-rotate 2s infinite ease-in-out;
+}
+
+/* Atau Efek Berdenyut (Pulse) jika tidak ingin berputar */
+@keyframes pulse-soft {
+    0% { opacity: 1; }
+    50% { opacity: 0.4; }
+    100% { opacity: 1; }
+}
+
+.anim-pulse {
+    display: inline-block;
+    animation: pulse-soft 1.5s infinite ease-in-out;
+}

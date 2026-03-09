@@ -523,6 +523,14 @@ function fillReceiptData() {
             copyBtnHash.style.pointerEvents = "none";
         }
 
+        if (statusBadge) {
+        statusBadge.innerHTML = `
+            <i class="bi bi-hourglass-split me-1 anim-hourglass"></i> 
+            Pending
+        `;
+        statusBadge.className = "badge-status-receipt pending";
+    }
+
         // 3. Matikan Tombol Explorer
         explorerBtn.classList.add('disabled');
         explorerBtn.style.pointerEvents = "none";
@@ -562,7 +570,7 @@ function startPollingStatus() {
                 // Update Tampilan Struk & Widget Smart Status
                 fillReceiptData();
                 initSmartStatus();
-                showCopyToast("Suara Terverifikasi!", "bi-shield-check", "#10b981");
+                showCopyToast("Success", "bi-shield-check", "#10b981");
             }
         } catch (err) {
             console.error("Polling error:", err);
