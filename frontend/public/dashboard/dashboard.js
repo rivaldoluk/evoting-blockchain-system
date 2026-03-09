@@ -341,33 +341,36 @@ function shortenHash(hash, start = 8, end = 6) {
 
 // Helper: Copy dengan Feedback Visual
 function copyText(elementId, event) {
-    // Tambahkan parameter event agar lebih stabil dibanding menggunakan window.event
     const el = document.getElementById(elementId);
     const btn = event.currentTarget; 
+    const txHash = sessionStorage.getItem('lastVoteTx');
+
+    // CEK: Jika yang diklik adalah tombol Tx Hash tapi hash belum ada, JANGAN LANJUT
+    if (elementId === 'receiptTxHash' && (!txHash || txHash === "undefined")) {
+        console.warn("Percobaan salin gagal: Tx Hash belum tersedia.");
+        return; 
+    }
+
     const textToCopy = el.getAttribute('data-full-hash') || el.innerText;
 
-    if (!textToCopy || textToCopy === '-' || textToCopy.includes('0x...')) return;
+    // Tambahan proteksi jika teks masih mengandung spinner atau placeholder
+    if (!textToCopy || textToCopy.includes('Menunggu') || textToCopy.includes('0x...')) {
+        return;
+    }
 
     navigator.clipboard.writeText(textToCopy).then(() => {
-        // 1. Tetap munculkan Toast (Global feedback)
-        if (typeof showCopyToast === "function") showCopyToast();
+        showCopyToast("Berhasil disalin"); // Pakai pesan default
 
-        // 2. Simpan tampilan asli
         const originalHTML = btn.innerHTML;
         
-        // 3. Logika Pembeda: Apakah ini tombol premium (dengan teks) atau hanya ikon?
         if (btn.classList.contains('btn-copy-premium')) {
-            // Untuk Transaction Hash: Ganti ikon + Teks
             btn.innerHTML = `<i class="bi bi-check2-all text-success"></i> <span class="text-success">Tersalin</span>`;
             btn.classList.add('border-success');
         } else {
-            // Untuk Alamat Pemilih: Hanya ganti ikon saja tanpa menambah teks
             btn.innerHTML = `<i class="bi bi-check2-all text-success"></i>`;
-            // Opsional: tambahkan sedikit scale effect agar terasa kliknya
             btn.style.transform = "scale(1.2)";
         }
 
-        // 4. Kembalikan ke normal setelah 2 detik
         setTimeout(() => {
             btn.innerHTML = originalHTML;
             btn.classList.remove('border-success');
@@ -377,8 +380,15 @@ function copyText(elementId, event) {
     }).catch(err => console.error('Gagal salin:', err));
 }
 
-function showCopyToast() {
+function showCopyToast(message = "Berhasil disalin", iconClass = "bi-check-circle-fill", iconColor = "#10b981") {
     const toast = document.getElementById('copyToast');
+    const toastText = document.getElementById('toastText');
+    const toastIcon = document.getElementById('toastIcon');
+
+    // Set pesan dan ikon secara dinamis
+    toastText.innerText = message;
+    toastIcon.className = `bi ${iconClass} me-2`;
+    toastIcon.style.color = iconColor;
 
     // Slide Up
     toast.classList.add('show');
@@ -446,49 +456,79 @@ function fillReceiptData() {
     const txHash = sessionStorage.getItem('lastVoteTx');
     const nik = sessionStorage.getItem('voterNIK');
     const time = sessionStorage.getItem('lastVoteTime');
-    const userAddress = sessionStorage.getItem('voterAddress');
+    const userAddress = sessionStorage.getItem('voterAddress'); // Ini nikHash dari backend
 
-    // 1. Set NIK & Waktu (Selalu ada)
+    // --- SETUP ELEMENT ---
+    const addrEl = document.getElementById('receiptAddress');
+    const hashEl = document.getElementById('receiptTxHash');
+    const statusBadge = document.getElementById('receiptStatus');
+    const explorerBtn = document.getElementById('receiptExplorer');
+    
+    // Ambil tombol copy berdasarkan fungsi onclick-nya
+    const copyBtnAddr = document.querySelector('[onclick="copyText(\'receiptAddress\', event)"]');
+    const copyBtnHash = document.querySelector('[onclick="copyText(\'receiptTxHash\', event)"]');
+
+    // NIK & Time (Selalu tampil karena input user)
     if (nik) document.getElementById('receiptNIK').innerText = nik.substring(0, 4) + "••••" + nik.substring(12);
     const dateObj = time ? new Date(time) : new Date();
     document.getElementById('receiptTime').innerText = dateObj.toLocaleString('id-ID');
 
-    const hashEl = document.getElementById('receiptTxHash');
-    const statusBadge = document.getElementById('receiptStatus');
-    const explorerBtn = document.getElementById('receiptExplorer');
-    const addrEl = document.getElementById('receiptAddress');
-
-    // 2. Jika TX HASH SUDAH ADA (Sudah Berhasil)
+    // --- LOGIKA VALIDASI (SUDAH ADA TX HASH) ---
     if (txHash && txHash !== "undefined" && txHash !== "null") {
-        hashEl.innerText = shortenHash(txHash, 8, 6);
-        hashEl.setAttribute('data-full-hash', txHash);
-        hashEl.style.color = "inherit"; // Reset warna dari loading
         
-        explorerBtn.href = `https://sepolia.etherscan.io/tx/${txHash}`;
-        explorerBtn.classList.remove('disabled');
-        explorerBtn.style.pointerEvents = "auto";
-        explorerBtn.style.opacity = "1";
-
+        // 1. Tampilkan Alamat Pemilih (NIK Hash)
         if (userAddress) {
             addrEl.innerText = shortenHash(userAddress, 6, 4);
             addrEl.setAttribute('data-full-hash', userAddress);
+            if (copyBtnAddr) {
+                copyBtnAddr.classList.remove('disabled-btn');
+                copyBtnAddr.style.opacity = "1";
+                copyBtnAddr.style.pointerEvents = "auto";
+            }
         }
 
-        updateStatusToSuccess(statusBadge);
-    } 
-    // 3. JIKA TX HASH BELUM ADA (Masih Antri di Backend)
-    else {
-        hashEl.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Menunggu Antrean...`;
-        hashEl.style.color = "#64748b";
-        
-        statusBadge.innerHTML = `<i class="bi bi-clock-history me-1"></i> Sedang Diproses`;
-        statusBadge.className = "badge-status-receipt pending";
+        // 2. Tampilkan Transaction Hash
+        hashEl.innerText = shortenHash(txHash, 8, 6);
+        hashEl.setAttribute('data-full-hash', txHash);
+        if (copyBtnHash) {
+            copyBtnHash.classList.remove('disabled-btn');
+            copyBtnHash.style.opacity = "1";
+            copyBtnHash.style.pointerEvents = "auto";
+        }
 
+        // 3. Aktifkan Tombol Explorer & Status
+        explorerBtn.classList.remove('disabled');
+        explorerBtn.style.pointerEvents = "auto";
+        explorerBtn.style.opacity = "1";
+        explorerBtn.href = `https://sepolia.etherscan.io/tx/${txHash}`;
+        
+        updateStatusToSuccess(statusBadge);
+
+    } 
+    // --- LOGIKA LOADING (ANTREAN BATCH) ---
+    else {
+        // 1. Loading Alamat Pemilih
+        addrEl.innerHTML = `<span class="spinner-border spinner-border-sm me-1" style="width: 10px; height: 10px;"></span> Memproses...`;
+        if (copyBtnAddr) {
+            copyBtnAddr.classList.add('disabled-btn');
+            copyBtnAddr.style.opacity = "0.3";
+            copyBtnAddr.style.pointerEvents = "none";
+        }
+
+        // 2. Loading Transaction Hash
+        hashEl.innerHTML = `<span class="spinner-border spinner-border-sm me-1" style="width: 10px; height: 10px;"></span> Memproses...`;
+        if (copyBtnHash) {
+            copyBtnHash.classList.add('disabled-btn');
+            copyBtnHash.style.opacity = "0.3";
+            copyBtnHash.style.pointerEvents = "none";
+        }
+
+        // 3. Matikan Tombol Explorer
         explorerBtn.classList.add('disabled');
         explorerBtn.style.pointerEvents = "none";
         explorerBtn.style.opacity = "0.5";
 
-        // Jalankan polling untuk bertanya ke server kapan selesainya
+        // Jalankan detektif polling
         startPollingStatus();
     }
 }
@@ -522,7 +562,7 @@ function startPollingStatus() {
                 // Update Tampilan Struk & Widget Smart Status
                 fillReceiptData();
                 initSmartStatus();
-                showCopyToast("Blockchain Terverifikasi!");
+                showCopyToast("Suara Terverifikasi!", "bi-shield-check", "#10b981");
             }
         } catch (err) {
             console.error("Polling error:", err);

@@ -983,3 +983,13 @@ main.container {
     transform: translateY(-2px);
     box-shadow: 0 6px 20px var(--accent-light) !important;
 }
+
+/* Membuat spinner tidak merusak layout code */
+.spinner-border-sm {
+    border-width: 0.15em;
+    vertical-align: middle;
+}
+
+.disabled-btn {
+    cursor: not-allowed !important;
+}

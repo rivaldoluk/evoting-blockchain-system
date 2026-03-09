@@ -145,12 +145,11 @@
         </div>
     </main>
 
-    <div id="copyToast" class="copy-toast">
-        <div class="toast-content">
-            <i class="bi bi-check-circle-fill me-2" style="color: #10b981;"></i>
-            <span>Berhasil disalin</span>
-        </div>
-    </div>
+<div id="copyToast" class="copy-toast">
+    <div class="toast-content">
+        <i id="toastIcon" class="bi bi-check-circle-fill me-2" style="color: #10b981;"></i>
+        <span id="toastText">Berhasil disalin</span> </div>
+</div>
 
     <div class="modal fade" id="voteReceiptModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-hidden="true">
@@ -203,7 +202,7 @@
                             </label>
                             <div class="d-flex align-items-center justify-content-between gap-3">
                                 <code id="receiptTxHash" class="text-truncate fw-bold"
-                                    style="color: var(--text-primary); font-size: 0.85rem;">-</code>
+                                    style="color: var(--text-primary); font-size: 0.85rem;">0x...</code>
                                 <button class="btn-copy-premium" onclick="copyText('receiptTxHash', event)">
     <i class="bi bi-copy"></i> <span>Salin</span>
 </button>
