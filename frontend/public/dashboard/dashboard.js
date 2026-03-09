@@ -441,40 +441,93 @@ function showReceiptModal() {
     }
 }
 
+// Ganti fungsi fillReceiptData Anda dengan ini
 function fillReceiptData() {
     const txHash = sessionStorage.getItem('lastVoteTx');
     const nik = sessionStorage.getItem('voterNIK');
     const time = sessionStorage.getItem('lastVoteTime');
     const userAddress = sessionStorage.getItem('voterAddress');
-    const hasConfirmed = sessionStorage.getItem('receiptConfirmed');
 
+    // 1. Set NIK & Waktu (Selalu ada)
     if (nik) document.getElementById('receiptNIK').innerText = nik.substring(0, 4) + "••••" + nik.substring(12);
-
-    const addrEl = document.getElementById('receiptAddress');
-    if (addrEl && userAddress) {
-        addrEl.innerText = shortenHash(userAddress, 6, 4);
-        addrEl.setAttribute('data-full-hash', userAddress);
-    }
-
-    const hashEl = document.getElementById('receiptTxHash');
-    if (hashEl && txHash) {
-        hashEl.innerText = shortenHash(txHash, 8, 6);
-        hashEl.setAttribute('data-full-hash', txHash);
-        document.getElementById('receiptExplorer').href = `https://sepolia.etherscan.io/tx/${txHash}`;
-    }
-
     const dateObj = time ? new Date(time) : new Date();
     document.getElementById('receiptTime').innerText = dateObj.toLocaleString('id-ID');
 
+    const hashEl = document.getElementById('receiptTxHash');
     const statusBadge = document.getElementById('receiptStatus');
-    if (hasConfirmed === 'true') {
+    const explorerBtn = document.getElementById('receiptExplorer');
+    const addrEl = document.getElementById('receiptAddress');
+
+    // 2. Jika TX HASH SUDAH ADA (Sudah Berhasil)
+    if (txHash && txHash !== "undefined" && txHash !== "null") {
+        hashEl.innerText = shortenHash(txHash, 8, 6);
+        hashEl.setAttribute('data-full-hash', txHash);
+        hashEl.style.color = "inherit"; // Reset warna dari loading
+        
+        explorerBtn.href = `https://sepolia.etherscan.io/tx/${txHash}`;
+        explorerBtn.classList.remove('disabled');
+        explorerBtn.style.pointerEvents = "auto";
+        explorerBtn.style.opacity = "1";
+
+        if (userAddress) {
+            addrEl.innerText = shortenHash(userAddress, 6, 4);
+            addrEl.setAttribute('data-full-hash', userAddress);
+        }
+
         updateStatusToSuccess(statusBadge);
-    } else {
-        setTimeout(() => {
-            updateStatusToSuccess(statusBadge);
-            sessionStorage.setItem('receiptConfirmed', 'true');
-        }, 5000);
+    } 
+    // 3. JIKA TX HASH BELUM ADA (Masih Antri di Backend)
+    else {
+        hashEl.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>Menunggu Antrean...`;
+        hashEl.style.color = "#64748b";
+        
+        statusBadge.innerHTML = `<i class="bi bi-clock-history me-1"></i> Sedang Diproses`;
+        statusBadge.className = "badge-status-receipt pending";
+
+        explorerBtn.classList.add('disabled');
+        explorerBtn.style.pointerEvents = "none";
+        explorerBtn.style.opacity = "0.5";
+
+        // Jalankan polling untuk bertanya ke server kapan selesainya
+        startPollingStatus();
     }
+}
+
+// Fungsi "Detektif" untuk bertanya ke server
+let pollInterval = null;
+function startPollingStatus() {
+    if (pollInterval) return; // Jangan jalankan dua kali
+
+    const nik = sessionStorage.getItem('voterNIK');
+    if (!nik) return;
+
+    pollInterval = setInterval(async () => {
+        try {
+            const res = await fetch(`${BACKEND_URL}/check-vote-status/${nik}`, {
+                headers: NGROK_HEADERS
+            });
+            const data = await res.json();
+
+            if (data.status === 'confirmed') {
+                console.log("🚀 Tx Hash ditemukan! Mengupdate UI...");
+                
+                // Simpan ke session
+                sessionStorage.setItem('lastVoteTx', data.txHash);
+                sessionStorage.setItem('voterAddress', data.nikHash);
+                
+                // Stop Polling
+                clearInterval(pollInterval);
+                pollInterval = null;
+
+                // Update Tampilan Struk & Widget Smart Status
+                fillReceiptData();
+                initSmartStatus();
+                showCopyToast("Blockchain Terverifikasi!");
+            }
+        } catch (err) {
+            console.error("Polling error:", err);
+        }
+    }, 4000); // Tanya setiap 4 detik (Aman untuk Ngrok)
 }
 
 // --- 7. Helpers & Utilities ---

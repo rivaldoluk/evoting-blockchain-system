@@ -56,6 +56,8 @@ let proofs = {};
 let voted = {};
 let tokens = {}; // kalau pakai mapping token → hashNIK
 let activeLocks = new Set();
+let voteQueue = [];
+let isProcessingQueue = false;
 
 try {
   proofs = JSON.parse(fs.readFileSync(PROOFS_PATH, 'utf8'));
@@ -174,93 +176,106 @@ app.get('/voting-status', async (req, res) => {
 
 // Endpoint: Vote (verifikasi NIK + proof + kirim tx ke contract)
 app.post('/vote', async (req, res) => {
-  const { nik, candidateId, token } = req.body;
+    const { nik, candidateId, token } = req.body;
 
-  if (!nik || !candidateId) {
-    return res.status(400).json({ error: 'NIK dan candidateId wajib diisi' });
-  }
+    if (!nik || !candidateId) return res.status(400).json({ error: 'Data tidak lengkap' });
 
-  const cleanNik = nik.trim();
-  const nikHash = '0x' + keccak256(cleanNik).toString('hex');
+    const cleanNik = nik.trim();
+    const nikHash = '0x' + keccak256(cleanNik).toString('hex');
 
-  // 1. CEK APAKAH SEDANG PROSES (LOCK)
-  if (activeLocks.has(nikHash)) {
-    return res.status(429).json({ 
-      error: 'concurrent_vote', 
-      message: 'NIK ini sedang memproses suara. Sesi akan diamankan.' 
-    });
-  }
-
-  // 2. CEK APAKAH SUDAH MEMILIH
-  if (voted[nikHash] && (voted[nikHash] === true || voted[nikHash].voted === true)) {
-    return res.status(403).json({ error: 'NIK ini sudah memberikan suara' });
-  }
-
-  try {
-    // AKTIFKAN KUNCI (LOCK)
-    activeLocks.add(nikHash);
-
-    const proofData = proofs.find(p => p.nikHash === nikHash);
-    if (!proofData) {
-      activeLocks.delete(nikHash); // Lepas kunci jika gagal
-      return res.status(403).json({ error: 'NIK tidak terdaftar' });
+    // Cek Double Voting di Memori (Database JSON)
+    if (voted[nikHash] && (voted[nikHash] === true || voted[nikHash].voted === true)) {
+        return res.status(403).json({ error: 'NIK ini sudah memberikan suara' });
     }
 
-    // 2. Ambil data gas terbaru agar transaksi tidak nyangkut (Async)
-    const feeData = await provider.getFeeData();
-    const tx = await contract.vote(nikHash, proofData.proof, candidateId, {
-      gasLimit: 350000,
-      maxPriorityFeePerGas: (feeData.maxPriorityFeePerGas * 3n),
-      maxFeePerGas: (feeData.maxFeePerGas * 3n)
-    });
+    // Cek apakah sedang ada dalam antrean aktif
+    if (activeLocks.has(nikHash)) {
+        return res.status(429).json({ error: 'NIK ini sedang dalam proses antrean.' });
+    }
 
-    console.log(`Mengirim transaksi ke blockchain untuk: ${nikHash}`);
+    // Ambil data proof
+    const proofData = proofs.find(p => p.nikHash === nikHash);
+    if (!proofData) return res.status(403).json({ error: 'NIK tidak terdaftar' });
 
-    // 4. SEGERA kirim respon ke Frontend (User tidak perlu menunggu konfirmasi blok)
+    // MASUKKAN KE ANTREAN
+    activeLocks.add(nikHash);
+    
+    // Kirim response "Pending" ke UI agar user tidak menunggu lama
+    // Kita berikan janji bahwa suara sedang diproses
     res.json({
-      success: true,
-      message: 'Suara Anda sedang diproses oleh Blockchain!',
-      txHash: tx.hash,
-      nikHash: nikHash,
-      explorerLink: `https://sepolia.etherscan.io/tx/${tx.hash}`
+        success: true,
+        message: 'Suara Anda telah masuk antrean blockchain. Mohon tunggu konfirmasi.',
+        nikHash: nikHash
     });
 
-    // 5. Proses Background: Tunggu konfirmasi dan update database JSON
-    tx.wait().then(async () => {
-      console.log(`✅ Transaksi Terkonfirmasi: ${tx.hash}`);
-
-      // Tandai token sebagai used
-      if (token) {
-        const tokenIdx = tokens.findIndex(t => t.qrToken === token);
-        if (tokenIdx !== -1) {
-          tokens[tokenIdx].used = true;
-          fs.writeFileSync(TOKENS_PATH, JSON.stringify(tokens, null, 2));
-        }
-      }
-
-      // Tandai NIK sudah memilih dengan metadata lengkap
-      voted[nikHash] = {
-        voted: true,
-        txHash: tx.hash,
-        timestamp: Date.now() // Simpan waktu konfirmasi
-      };
-
-      fs.writeFileSync(VOTED_PATH, JSON.stringify(voted, null, 2));
-
-      activeLocks.delete(nikHash);
-      await sendUpdateToAll();
-
-    }).catch(err => {
-      activeLocks.delete(nikHash);
-      console.error(`❌ Transaksi Gagal di Blockchain: ${tx.hash}`, err.message);
-    });
-
-  } catch (err) {
-    activeLocks.delete(nikHash);
-    console.error('Error saat inisiasi vote:', err.message);
-    res.status(500).json({ error: 'Gagal memulai proses vote: ' + err.message });
-  }
+    // Tambahkan ke array antrean untuk diproses satu per satu
+    voteQueue.push({ nikHash, proofData, candidateId, token });
+    
+    // Jalankan pemroses antrean (jika belum jalan)
+    processVoteQueue();
 });
+
+async function processVoteQueue() {
+    if (isProcessingQueue || voteQueue.length === 0) return;
+
+    isProcessingQueue = true;
+    const currentVote = voteQueue[0]; // Ambil antrean pertama
+    const { nikHash, proofData, candidateId, token } = currentVote;
+
+    try {
+        console.log(`[Queue] Memproses vote untuk: ${nikHash}. Sisa antrean: ${voteQueue.length - 1}`);
+
+        const feeData = await provider.getFeeData();
+        
+        // Kirim transaksi dan TUNGGU (await) sampai terkirim
+        // Ethers akan otomatis mengambil Nonce terbaru yang valid
+        const tx = await contract.vote(nikHash, proofData.proof, candidateId, {
+            gasLimit: 350000,
+            maxPriorityFeePerGas: (feeData.maxPriorityFeePerGas * 2n),
+            maxFeePerGas: (feeData.maxFeePerGas * 2n)
+        });
+
+        console.log(`[Queue] Tx Terkirim: ${tx.hash}. Menunggu konfirmasi blok...`);
+
+        // TUNGGU sampai transaksi benar-benar masuk blok (Confirmed)
+        // Ini kunci agar transaksi berikutnya mendapatkan Nonce + 1
+        const receipt = await tx.wait();
+        
+        console.log(`✅ [Queue] Berhasil! NIK: ${nikHash} | Block: ${receipt.blockNumber}`);
+
+        // UPDATE DATABASE
+        if (token) {
+            const tokenIdx = tokens.findIndex(t => t.qrToken === token);
+            if (tokenIdx !== -1) {
+                tokens[tokenIdx].used = true;
+                fs.writeFileSync(TOKENS_PATH, JSON.stringify(tokens, null, 2));
+            }
+        }
+
+        voted[nikHash] = {
+            voted: true,
+            txHash: tx.hash,
+            timestamp: Date.now()
+        };
+        fs.writeFileSync(VOTED_PATH, JSON.stringify(voted, null, 2));
+
+        // Update dashboard via SSE
+        await sendUpdateToAll();
+
+    } catch (err) {
+        console.error(`❌ [Queue] Gagal memproses NIK ${nikHash}:`, err.message);
+        // Jika gagal karena gas atau network, NIK bisa dilepas agar bisa coba lagi
+    } finally {
+        activeLocks.delete(nikHash);
+        voteQueue.shift(); // Hapus yang sudah diproses dari antrean
+        isProcessingQueue = false;
+        
+        // Jalankan lagi untuk antrean berikutnya jika ada
+        if (voteQueue.length > 0) {
+            processVoteQueue();
+        }
+    }
+}
 
 // Path ke file JSON kandidat baru
 const KANDIDAT_JSON_PATH = path.join(__dirname, 'data/kandidat.json');
@@ -356,6 +371,27 @@ app.get('/results-stream', async (req, res) => {
     clients = clients.filter(client => client !== res);
     res.end();
   });
+});
+
+// Tambahkan di backend/server.js
+app.get('/check-vote-status/:nik', (req, res) => {
+    const cleanNik = req.params.nik.trim();
+    const nikHash = '0x' + keccak256(cleanNik).toString('hex');
+
+    // Cek di objek 'voted' yang sudah Anda buat di server.js
+    const voteData = voted[nikHash];
+
+    if (voteData && voteData.txHash) {
+        return res.json({
+            success: true,
+            status: 'confirmed',
+            txHash: voteData.txHash,
+            nikHash: nikHash
+        });
+    }
+
+    // Jika belum ada txHash, berarti masih di queue
+    res.json({ success: true, status: 'pending' });
 });
 
 let cachedResults = null;
