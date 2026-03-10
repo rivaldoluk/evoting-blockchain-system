@@ -628,7 +628,7 @@ function startPollingStatus() {
                 // Update Tampilan Struk & Widget Smart Status
                 fillReceiptData();
                 initSmartStatus();
-                showCopyToast("Success", "bi-shield-check", "#10b981");
+                showCopyToast("Suara Diterima", "bi-shield-check", "#10b981");
             }
         } catch (err) {
             console.error("Polling error:", err);
