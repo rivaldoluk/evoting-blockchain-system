@@ -52,23 +52,23 @@
 
     <div class="smart-status-area">
         <div class="container">
-            <div class="glass-widget animate-fade-in" onclick="showReceiptModal()">
-                <div class="widget-content">
-                    <div class="widget-icon">
-                        <i class="bi bi-patch-check-fill"></i>
-                    </div>
-                    <div class="widget-body">
-                        <span class="widget-label">VERIFIKASI ON-CHAIN</span>
-                        <h6 class="widget-title">Suara Anda: <span id="miniAddress">0x...</span></h6>
-                    </div>
-                </div>
-                <div class="widget-action">
-                    <button class="btn-capsule-action" onclick="showReceiptModal()">
-                        <span>Lihat Suara</span>
-                        <i class="bi bi-arrow-up-right-circle-fill"></i>
-                    </button>
-                </div>
-            </div>
+            <div class="glass-widget animate-fade-in" id="statusWidget" onclick="showReceiptModal()">
+    <div class="widget-content">
+        <div class="widget-icon" id="widgetIconContainer">
+            <i class="bi bi-patch-check-fill" id="widgetIcon"></i>
+        </div>
+        <div class="widget-body">
+            <span class="widget-label" id="widgetLabel">VERIFIKASI ON-CHAIN</span>
+            <h6 class="widget-title">Suara Anda: <span id="miniAddress">0x...</span></h6>
+        </div>
+    </div>
+    <div class="widget-action">
+        <button class="btn-capsule-action">
+            <span id="widgetBtnText">Lihat Suara</span>
+            <i class="bi bi-arrow-up-right-circle-fill"></i>
+        </button>
+    </div>
+</div>
         </div>
     </div>
 
@@ -157,15 +157,15 @@
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg receipt-modal-card">
                 <div class="modal-body p-0">
-                    <div class="receipt-header p-4 text-center">
-                        <div class="header-icon-circle-glow">
-                            <span class="material-symbols-rounded animated-icon">
-                                verified_user
-                            </span>
-                        </div>
-                        <h4 class="fw-800 mb-1 text-white">Suara Diterima!</h4>
-                        <p class="small opacity-75 mb-0 text-white">Transaksi berhasil diverifikasi</p>
-                    </div>
+                    <div class="receipt-header p-4 text-center" id="receiptHeaderContainer">
+    <div class="header-icon-circle-glow" id="headerIconCircle">
+        <span class="material-symbols-rounded animated-icon" id="headerIcon">
+            verified_user
+        </span>
+    </div>
+    <h4 class="fw-800 mb-1 text-white" id="headerTitle">Suara Diterima!</h4>
+    <p class="small opacity-75 mb-0 text-white" id="headerSubTitle">Transaksi berhasil diverifikasi</p>
+</div>
 
                     <div class="p-4">
                         <div class="receipt-item">

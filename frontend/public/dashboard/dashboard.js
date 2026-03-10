@@ -316,20 +316,55 @@ function runTimer(targetTime, displayElement, onFinish) {
 function initSmartStatus() {
     const statusArea = document.querySelector('.smart-status-area');
     const miniAddress = document.getElementById('miniAddress');
+    const widgetLabel = document.getElementById('widgetLabel');
+    const widgetIcon = document.getElementById('widgetIcon');
+    const widgetIconContainer = document.getElementById('widgetIconContainer');
+    const widgetBtnText = document.getElementById('widgetBtnText');
+    const statusWidget = document.getElementById('statusWidget');
 
     const txHash = sessionStorage.getItem('lastVoteTx');
     const userAddress = sessionStorage.getItem('voterAddress');
 
-    if (txHash && statusArea) {
+    // Jika user sudah pernah vote (NIK ada di session)
+    if (sessionStorage.getItem('voterNIK')) {
         statusArea.style.display = 'block';
 
-        if (userAddress && miniAddress) {
-            // Format: 0x1234...ABCD
-            const shortAddr = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
-            miniAddress.innerText = shortAddr;
+        if (txHash && txHash !== "undefined") {
+            // --- MODE SUKSES (VERIFIED) ---
+            widgetLabel.innerText = "VERIFIKASI ON-CHAIN";
+            widgetLabel.style.color = "#10b981"; // Hijau Emerald
+            
+            widgetIcon.className = "bi bi-patch-check-fill";
+            // widgetIconContainer.style.background = "rgba(16, 185, 129, 0.2)";
+            widgetIconContainer.style.color = "#10b981";
+            
+            widgetBtnText.innerText = "Lihat Suara";
+            
+            if (userAddress) {
+                const shortAddr = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
+                miniAddress.innerText = shortAddr;
+            }
+            
+            // Hapus animasi pulse jika ada
+            statusWidget.classList.remove('widget-pending');
+
+        } else {
+            // --- MODE PENDING (ANTREAN) ---
+            widgetLabel.innerText = "SEDANG DIPROSES...";
+            widgetLabel.style.color = "#f59e0b"; // Oranye Amber
+            
+            widgetIcon.className = "bi bi-hourglass-split anim-hourglass";
+            // widgetIconContainer.style.background = "rgba(245, 158, 11, 0.2)";
+            widgetIconContainer.style.color = "#f59e0b";
+            
+            widgetBtnText.innerText = "Cek Status";
+            miniAddress.innerText = "Memproses...";
+            
+            // Tambahkan efek berdenyut pada seluruh widget agar user tahu ini sedang aktif
+            statusWidget.classList.add('widget-pending');
         }
     } else {
-        if (statusArea) statusArea.style.display = 'none';
+        statusArea.style.display = 'none';
     }
 }
 
@@ -468,6 +503,11 @@ function fillReceiptData() {
     const copyBtnAddr = document.querySelector('[onclick="copyText(\'receiptAddress\', event)"]');
     const copyBtnHash = document.querySelector('[onclick="copyText(\'receiptTxHash\', event)"]');
 
+    const headerTitle = document.getElementById('headerTitle');
+    const headerSubTitle = document.getElementById('headerSubTitle');
+    const headerIcon = document.getElementById('headerIcon');
+    const headerCircle = document.getElementById('headerIconCircle');
+
     // NIK & Time (Selalu tampil karena input user)
     if (nik) document.getElementById('receiptNIK').innerText = nik.substring(0, 4) + "••••" + nik.substring(12);
     const dateObj = time ? new Date(time) : new Date();
@@ -495,6 +535,15 @@ function fillReceiptData() {
             copyBtnHash.style.opacity = "1";
             copyBtnHash.style.pointerEvents = "auto";
         }
+
+        // --- MODE SUKSES (SELEBRASI) ---
+        headerTitle.innerText = "Suara Diterima!";
+        headerSubTitle.innerText = "Suara berhasil diverifikasi";
+        headerIcon.innerText = "verified_user";
+        
+        // Kembalikan warna ke hijau/biru sukses Anda
+        headerCircle.style.background = "linear-gradient(135deg, #10b981, #059669)";
+        headerCircle.style.boxShadow = "0 0 20px rgba(16, 185, 129, 0.5)";
 
         // 3. Aktifkan Tombol Explorer & Status
         explorerBtn.classList.remove('disabled');
@@ -530,6 +579,15 @@ function fillReceiptData() {
         `;
         statusBadge.className = "badge-status-receipt pending";
     }
+
+        // --- MODE PENDING (MENUNGGU) ---
+        headerTitle.innerText = "Suara Diverifikasi...";
+        headerSubTitle.innerText = "Sedang memverifikasi suara Anda ke Blockchain";
+        headerIcon.innerText = "hourglass_empty"; // Ikon Google Material untuk jam pasir
+        
+        // Ubah warna ke Oranye/Kuning (Amber) agar user waspada tapi tenang
+        headerCircle.style.background = "linear-gradient(135deg, #f59e0b, #d97706)";
+        headerCircle.style.boxShadow = "0 0 20px rgba(245, 158, 11, 0.4)";
 
         // 3. Matikan Tombol Explorer
         explorerBtn.classList.add('disabled');

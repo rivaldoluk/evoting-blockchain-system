@@ -1017,3 +1017,42 @@ main.container {
     display: inline-block;
     animation: pulse-soft 1.5s infinite ease-in-out;
 }
+
+/* Animasi khusus untuk ikon jam pasir di header */
+.animated-icon:contains('hourglass_empty') {
+    animation: rotateHourglass 2s infinite linear;
+}
+
+@keyframes rotateHourglass {
+    0% { transform: rotate(0deg); }
+    50% { transform: rotate(180deg); }
+    100% { transform: rotate(180deg); }
+}
+
+/* Biar transisi warna header halus saat berubah dari oranye ke hijau */
+.header-icon-circle-glow {
+    transition: all 0.5s ease-in-out;
+}
+
+/* Efek pulse pada seluruh widget saat pending */
+.widget-pending {
+    border: 1px solid rgba(245, 158, 11, 0.3) !important;
+    animation: pulse-widget 2s infinite ease-in-out;
+}
+
+@keyframes pulse-widget {
+    0% { box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37); }
+    50% { box-shadow: 0 8px 32px 0 rgba(245, 158, 11, 0.2); }
+    100% { box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.37); }
+}
+
+/* Pastikan ikon hourglass berputar jika belum ada di CSS Anda */
+.anim-hourglass {
+    display: inline-block;
+    animation: rotate-hf 2s infinite linear;
+}
+
+@keyframes rotate-hf {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
