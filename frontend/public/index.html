@@ -916,13 +916,13 @@
 
         } else if (data.status === 'upcoming') {
           badgeContainer.innerHTML = '<span class="badge-status bg-warning-subtle text-warning border border-warning">BELUM DIMULAI</span>';
-          btnStart.disabled = false;
+          btnStart.disabled = true;
           timerDisplay.innerText = "--:--:--";
           document.getElementById('timerLabel').innerText = "Menunggu pembukaan oleh panitia.";
 
         } else {
           badgeContainer.innerHTML = '<span class="badge-status bg-secondary-subtle text-secondary border border-secondary">VOTING SELESAI</span>';
-          btnStart.disabled = false;
+          btnStart.disabled = true;
           timerDisplay.innerText = "CLOSED";
           document.getElementById('timerLabel').innerText = "Penerimaan suara telah ditutup.";
         }
