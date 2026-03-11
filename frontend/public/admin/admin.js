@@ -483,7 +483,7 @@ function renderTransactionTableRows() {
         return;
     }
 
-    if (syncText) syncText.innerText = `Last sync: ${new Date().toLocaleTimeString('id-ID')}`;
+    if (syncText) syncText.innerText = `Last Update: ${new Date().toLocaleTimeString('id-ID')}`;
 
     const limit = 10;
     const start = (txCurrentPage - 1) * limit;
@@ -787,13 +787,21 @@ async function showKandidatData() {
     </div>
 `).join('');
     } catch (err) {
-        container.innerHTML = '<p class="text-danger text-center">Gagal memuat data kandidat.</p>';
+        container.innerHTML = `
+        <div class="col-12 text-center py-5" style="animation: fadeIn 0.5s ease;">
+            <div class="mb-4">
+                <i class="bi bi-cloud-slash display-1 text-muted"></i>
+            </div>
+            <h4 class="fw-bold">Gagal Memuat Kandidat</h4>
+            <p class="text-secondary mb-4">Terjadi masalah koneksi ke server. Silakan coba muat ulang halaman.</p>
+            
+            <button onclick="location.reload()" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm">
+                <i class="bi bi-arrow-clockwise me-2"></i> Muat Ulang Halaman
+            </button>
+        </div>`;
     }
 }
 
-/**
- * FUNGSI BARU: Memulai Sesi Voting
- */
 /**
  * KONFIGURASI DURASI OTOMATIS (Dalam Jam)
  */
