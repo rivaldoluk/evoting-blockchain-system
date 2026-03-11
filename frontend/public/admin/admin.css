@@ -928,3 +928,88 @@ h6,
     background-color: #3b82f6 !important;
     box-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
 }
+
+/* Header Modal agar tidak kaku */
+    #modalHeaderColor {
+      height: 100px;
+      transition: 0.3s;
+      /* Memberikan efek gradasi agar warna solid dari JSON lebih berdimensi */
+      background-image: linear-gradient(to bottom right, rgba(255, 255, 255, 0.2), rgba(0, 0, 0, 0.1));
+    }
+
+    /* Tambahkan ini di CSS Anda */
+#modalNamaKetua {
+  font-weight: 800; /* Lebih tebal dari bold biasa (700) */
+  letter-spacing: -0.02em; /* Merapatkan huruf agar terlihat modern */
+  color: var(--text-main);
+}
+
+    /* Container Visi & Misi dengan warna latar yang sangat lembut */
+    #visiContainer,
+    #misiContainer {
+      border-left-width: 4px !important;
+      /* Menggunakan background transparan agar mengikuti warna tema (Dark/Light) */
+      background-color: rgba(128, 128, 128, 0.05) !important;
+      border-radius: 12px;
+    }
+
+    #modalVisi, #modalMisi li {
+  font-weight: 500; /* Medium, tidak terlalu tipis */
+  color: var(--text-main);
+  opacity: 0.9;
+}
+
+    /* Khusus Dark Mode: Kita turunkan saturasi warna agar tidak menusuk */
+    [data-theme="dark"] #modalHeaderColor {
+      filter: saturate(0.7) brightness(0.9);
+    }
+
+/* Container Ikon Kecil */
+  .icon-square-sm {
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.85rem;
+  }
+
+  /* Custom List untuk Misi */
+  .custom-misi-list li {
+    position: relative;
+    padding-left: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--text-main);
+    font-size: 0.9rem;
+    line-height: 1.5;
+  }
+
+  .custom-misi-list li::before {
+    content: "→";
+    position: absolute;
+    left: 0;
+    color: var(--bs-primary);
+    font-weight: bold;
+  }
+
+  /* Tombol Tutup Custom */
+  .btn-theme-secondary {
+    background-color: var(--bg-box);
+    color: var(--text-main);
+    border: 1px solid var(--border);
+    transition: 0.3s;
+  }
+  
+  .btn-theme-secondary:hover {
+    background-color: #e2e6ea;
+  }
+
+  [data-theme="dark"] .btn-theme-secondary:hover {
+    background-color: #6c757d;
+  }
+
+  /* Scrollbar halus untuk modal body */
+  .modal-dialog-scrollable .modal-content {
+    max-height: 90vh;
+  }

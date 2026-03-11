@@ -747,45 +747,50 @@ function renderVoterTable() {
     document.getElementById('nextPage').disabled = (end >= filteredVoters.length);
 }
 
+let allCandidatesData = []; 
+
 async function showKandidatData() {
     const container = document.getElementById('kandidatContainer');
-    const modal = new bootstrap.Modal(document.getElementById('modalKandidat'));
+    const modalElement = document.getElementById('modalKandidat');
+    const modal = new bootstrap.Modal(modalElement);
 
     container.innerHTML = '<div class="text-center p-5 w-100"><div class="spinner-border text-primary"></div></div>';
     modal.show();
 
     try {
         const res = await fetch(`${BACKEND_URL}/results`, {
-    headers: NGROK_HEADERS // Tambahkan ini
-});
+            headers: NGROK_HEADERS
+        });
         const data = await res.json();
+        
+        // Simpan data ke variabel global agar showCandidateDetail bisa menemukannya
+        allCandidatesData = data; 
 
-        container.innerHTML = data.map(k => `
-    <div class="col-md-6 col-xl-4">
-        <div class="card h-100 card-custom border-0 shadow-lg">
-            <div class="position-relative">
-                <img src="${getFullImageUrl(k.foto)}" class="card-img-top" style="height: 250px; object-fit: cover;">
-                <span class="position-absolute top-0 end-0 m-3 badge rounded-pill bg-primary px-3 shadow">
-                    No. Urut ${k.noUrut}
-                </span>
-            </div>
-            <div class="card-body p-4">
-                <h5 class="fw-bold mb-1" style="color: var(--text-main);">${k.nama}</h5>
-                <p class="text-muted small mb-3"></p>
-                
-                <div class="p-3 rounded-3 mb-3" style="background: var(--input-bg); border: 1px solid var(--border);">
-                    <h6 class="small fw-bold text-uppercase opacity-50" style="color: var(--text-muted);">Visi</h6>
-                    <p class="small mb-0 text-truncate-3" style="color: var(--text-main);">${k.visi}</p>
+        container.innerHTML = data.map((k, index) => `
+            <div class="col-md-6 col-xl-4">
+                <div class="card h-100 card-custom border-0 shadow-lg">
+                    <div class="position-relative">
+                        <img src="${getFullImageUrl(k.foto)}" class="card-img-top" style="height: 250px; object-fit: cover;">
+                        <span class="position-absolute top-0 end-0 m-3 badge rounded-pill bg-primary px-3 shadow">
+                            No. Urut ${k.noUrut}
+                        </span>
+                    </div>
+                    <div class="card-body p-4">
+                        <h5 class="fw-bold mb-1" style="color: var(--text-main);">${k.nama}</h5>
+                        <div class="p-3 rounded-3 mb-3" style="background: var(--input-bg); border: 1px solid var(--border);">
+                            <h6 class="small fw-bold text-uppercase opacity-50" style="color: var(--text-muted);">Visi</h6>
+                            <p class="small mb-0 text-truncate-3" style="color: var(--text-main);">${k.visi}</p>
+                        </div>
+                        <div class="d-flex justify-content-between align-items-center">
+                            <span class="status-pill">${k.votes} Suara Sah</span>
+                            <button onclick="showCandidateDetail(${index})" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                Detail Profil
+                            </button>
+                        </div>
+                    </div>
                 </div>
-                
-                <div class="d-flex justify-content-between align-items-center">
-                    <span class="status-pill">${k.votes} Suara Sah</span>
-                    <button class="btn btn-sm btn-outline-primary rounded-pill px-3">Detail Profil</button>
-                </div>
             </div>
-        </div>
-    </div>
-`).join('');
+        `).join('');
     } catch (err) {
         container.innerHTML = `
         <div class="col-12 text-center py-5" style="animation: fadeIn 0.5s ease;">
@@ -800,6 +805,36 @@ async function showKandidatData() {
             </button>
         </div>`;
     }
+}
+
+function showCandidateDetail(index) {
+  const cand = allCandidatesData[index];
+  const modal = new bootstrap.Modal(document.getElementById('candidateModal'));
+
+  // Update Visual Colors
+  document.getElementById('modalHeaderColor').style.background = 
+    `linear-gradient(135deg, ${cand.warna} 0%, ${cand.warna}dd 100%)`;
+  document.getElementById('modalNoUrut').style.backgroundColor = cand.warna;
+  document.getElementById('modalNoUrut').classList.add('text-white');
+
+  // Update Text Data
+  document.getElementById('modalFoto').src = getFullImageUrl(cand.foto);
+  document.getElementById('modalNoUrut').innerText = `No. Urut ${cand.noUrut}`;
+  document.getElementById('modalNamaKetua').innerText = cand.nama;
+
+  document.getElementById('modalTagline').innerText = cand.tagline;
+  document.getElementById('modalVisi').innerText = cand.visi;
+
+  // Render Misi dengan gaya List Baru
+  const misiList = document.getElementById('modalMisi');
+  misiList.innerHTML = '';
+  if (Array.isArray(cand.misi)) {
+    cand.misi.forEach(m => {
+      misiList.innerHTML += `<li>${m}</li>`;
+    });
+  }
+
+  modal.show();
 }
 
 /**
