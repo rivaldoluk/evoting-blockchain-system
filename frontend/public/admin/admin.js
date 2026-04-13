@@ -1,7 +1,7 @@
 /**
  * KONFIGURASI GLOBAL
  */
-const BACKEND_URL = 'https://9c01-103-129-24-83.ngrok-free.app';
+const BACKEND_URL = 'https://3ff8-93-185-162-8.ngrok-free.app';
 const NGROK_HEADERS = {
     "ngrok-skip-browser-warning": "69420"
 };
