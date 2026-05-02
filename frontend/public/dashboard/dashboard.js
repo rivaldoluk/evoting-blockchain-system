@@ -34,7 +34,12 @@ function getFullImageUrl(path) {
 })();
 
 // --- 2. Initializing Page & Event Stream ---
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    if (sessionStorage.getItem('isRechecking') === 'true') {
+        await reSyncVoteStatus();
+        sessionStorage.removeItem('isRechecking');
+    }
+
     initSmartStatus();
     initTheme();
     fetchResults(); // Ambil data awal saat pertama kali buka
@@ -42,6 +47,28 @@ document.addEventListener('DOMContentLoaded', () => {
     checkVotingStatus();
     checkNewVoteReceipt();
 });
+
+async function reSyncVoteStatus() {
+    const nik = sessionStorage.getItem('voterNIK');
+    if (!nik) return;
+
+    try {
+        const res = await fetch(`${BACKEND_URL}/check-vote-status/${nik}`, {
+            headers: NGROK_HEADERS
+        });
+        const data = await res.json();
+
+        if (data.status === 'confirmed' && data.txHash) {
+            sessionStorage.setItem('lastVoteTx', data.txHash);
+            sessionStorage.setItem('voterAddress', data.nikHash);
+            // SIMPAN TIMESTAMP DARI SERVER
+            sessionStorage.setItem('lastVoteTime', data.timestamp); 
+            console.log("✅ Data transaksi & waktu disinkronkan.");
+        }
+    } catch (err) {
+        console.error("Gagal sinkronisasi:", err);
+    }
+}
 
 // --- 3. Setup Real-time Update (Native SSE) ---
 function setupRealtimeUpdate() {
@@ -508,10 +535,32 @@ function fillReceiptData() {
     const headerIcon = document.getElementById('headerIcon');
     const headerCircle = document.getElementById('headerIconCircle');
 
-    // NIK & Time (Selalu tampil karena input user)
+    // PERBAIKAN LOGIKA WAKTU:
     if (nik) document.getElementById('receiptNIK').innerText = nik.substring(0, 4) + "••••" + nik.substring(12);
-    const dateObj = time ? new Date(time) : new Date();
-    document.getElementById('receiptTime').innerText = dateObj.toLocaleString('id-ID');
+    
+    if (time && time !== "undefined" && time !== "null") {
+        // Pastikan dikonversi ke Number dengan parseInt atau Number()
+        const timestamp = Number(time); 
+        const dateObj = new Date(timestamp); 
+
+        // Cek apakah dateObj valid
+        if (!isNaN(dateObj.getTime())) {
+            document.getElementById('receiptTime').innerText = dateObj.toLocaleString('id-ID', {
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            }) + " WIB";
+        } else {
+            document.getElementById('receiptTime').innerText = "Sinkronisasi...";
+        }
+    } else {
+        // Jika session kosong, jalankan ulang sinkronisasi
+        document.getElementById('receiptTime').innerText = "Sinkronisasi waktu...";
+        reSyncVoteStatus().then(() => fillReceiptData()); 
+    }
 
     // --- LOGIKA VALIDASI (SUDAH ADA TX HASH) ---
     if (txHash && txHash !== "undefined" && txHash !== "null") {
@@ -615,11 +664,9 @@ function startPollingStatus() {
             const data = await res.json();
 
             if (data.status === 'confirmed') {
-                console.log("🚀 Tx Hash ditemukan! Mengupdate UI...");
-                
-                // Simpan ke session
                 sessionStorage.setItem('lastVoteTx', data.txHash);
-                sessionStorage.setItem('voterAddress', data.nikHash);
+            sessionStorage.setItem('voterAddress', data.nikHash);
+            sessionStorage.setItem('lastVoteTime', data.timestamp);
                 
                 // Stop Polling
                 clearInterval(pollInterval);

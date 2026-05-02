@@ -415,7 +415,8 @@ app.get('/check-vote-status/:nik', (req, res) => {
             success: true,
             status: 'confirmed',
             txHash: voteData.txHash,
-            nikHash: nikHash
+            nikHash: nikHash,
+            timestamp: voteData.timestamp
         });
     }
 
