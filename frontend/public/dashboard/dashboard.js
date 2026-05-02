@@ -34,7 +34,12 @@ function getFullImageUrl(path) {
 })();
 
 // --- 2. Initializing Page & Event Stream ---
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    if (sessionStorage.getItem('isRechecking') === 'true') {
+        await reSyncVoteStatus();
+        sessionStorage.removeItem('isRechecking');
+    }
+
     initSmartStatus();
     initTheme();
     fetchResults(); // Ambil data awal saat pertama kali buka
@@ -254,12 +259,16 @@ async function checkVotingStatus() {
         if (countdownInterval) clearInterval(countdownInterval);
 
         if (data.status === 'active') {
+
+            const serverTime = data.serverTime;
+    const localTime = Date.now();
+    const timeOffset = serverTime - localTime;
             // --- SEDANG BERLANGSUNG (HIJAU) ---
             statusPulse.style.backgroundColor = '#10b981';
             statusPulse.style.boxShadow = '0 0 10px rgba(16, 185, 129, 0.7)';
             timerLabel.innerText = 'BERAKHIR DALAM';
 
-            runTimer(data.targetTime, timerDisplay, () => {
+            runTimer(data.targetTime, timeOffset, timerDisplay, () => {
                 // Saat waktu habis otomatis jadi merah
                 statusPulse.style.backgroundColor = '#ef4444';
                 statusPulse.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.7)';
@@ -289,10 +298,10 @@ async function checkVotingStatus() {
 /**
  * Mesin Timer
  */
-function runTimer(targetTime, displayElement, onFinish) {
+function runTimer(targetTime, timeOffset, displayElement, onFinish) {
     function update() {
-        const now = new Date().getTime();
-        const diff = targetTime - now;
+        const adjustedNow = Date.now() + timeOffset;
+        const diff = targetTime - adjustedNow;
 
         if (diff <= 0) {
             clearInterval(countdownInterval);
@@ -663,6 +672,26 @@ function updateStatusToSuccess(element) {
             // 4. Munculkan kembali dengan transisi
             element.style.opacity = '1';
         }, 200);
+    }
+}
+
+async function reSyncVoteStatus() {
+    const nik = sessionStorage.getItem('voterNIK');
+    if (!nik) return;
+
+    try {
+        const res = await fetch(`${BACKEND_URL}/check-vote-status/${nik}`, {
+            headers: NGROK_HEADERS
+        });
+        const data = await res.json();
+
+        if (data.status === 'confirmed' && data.txHash) {
+            sessionStorage.setItem('lastVoteTx', data.txHash);
+            sessionStorage.setItem('voterAddress', data.nikHash);
+            console.log("✅ Data transaksi disinkronkan.");
+        }
+    } catch (err) {
+        console.error("Gagal sinkronisasi data transaksi:", err);
     }
 }
 

@@ -543,6 +543,17 @@
         <h4 class="mb-0">Langkah 2 : Masukkan NIK</h4>
       </div>
       <div class="card-body p-4">
+        <!-- TAMBAHKAN INI: Info Status Token -->
+      <div id="tokenStatusInfo" class="mb-4" style="display:none;">
+          <div class="alert alert-warning border-0 shadow-sm rounded-4 d-flex align-items-center">
+              <i class="bi bi-exclamation-triangle-fill fs-4 me-3 text-warning"></i>
+              <div>
+                  <div class="fw-bold">Token Sudah Terpakai</div>
+                  <div class="small text-muted">Masukkan NIK yang tertaut untuk melihat bukti suara.</div>
+              </div>
+          </div>
+      </div>
+
         <form id="formNIK">
           <div class="mb-4">
             <label for="nikInput" class="form-label fw-bold">Nomor Induk Kependudukan (NIK)</label>
@@ -728,6 +739,7 @@
     let currentToken = null;
     let currentNIK = null;
     let html5QrCode = null;
+    let isTokenAlreadyUsed = false;
 
     // === HELPER ===
     function showStage(stageId) {
@@ -820,6 +832,16 @@
         if (!data.success) throw new Error(data.error || 'Token tidak valid');
 
         currentToken = token;
+        isTokenAlreadyUsed = data.isUsed; // Simpan flag dari backend
+
+    // Tampilkan/Sembunyikan pesan di Stage 2
+    const infoBox = document.getElementById('tokenStatusInfo');
+    if (isTokenAlreadyUsed) {
+        infoBox.style.display = 'block';
+    } else {
+        infoBox.style.display = 'none';
+    }
+
         showStage('stage2');
         document.getElementById('nikInput').focus();
 
@@ -956,39 +978,56 @@
     }
 
     // === INPUT NIK + VALIDASI NIK HASH ===
-    document.getElementById('formNIK').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const nik = document.getElementById('nikInput').value.trim();
+document.getElementById('formNIK').addEventListener('submit', async (e) => {
+  e.preventDefault();
+  const nik = document.getElementById('nikInput').value.trim();
 
-      if (!/^\d{16}$/.test(nik)) {
-        showAlert('NIK harus tepat 16 digit angka!');
-        return;
-      }
+  if (!/^\d{16}$/.test(nik)) {
+    showAlert('NIK harus tepat 16 digit angka!');
+    return;
+  }
 
-      currentNIK = nik;
-      showStage('stageLoading');
+  currentNIK = nik;
+  showStage('stageLoading');
 
-      try {
-        const res = await fetch(`${BACKEND_URL}/verify-nik`, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json', ...NGROK_HEADERS },
-          body: JSON.stringify({ nik: nik })
-        });
-
-        const data = await res.json();
-        if (!data.success) throw new Error(data.error);
-
-        // BERHASIL: Munculkan Panduan terlebih dahulu
-        showStage('stagePanduan');
-        checkVotingStatus();
-        loadCandidatePreview();
-        updateContractLink();
-
-      } catch (err) {
-        showAlert(err.message);
-        showStage('stage2');
-      }
+  try {
+    const res = await fetch(`${BACKEND_URL}/verify-nik`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', ...NGROK_HEADERS },
+      body: JSON.stringify({ 
+        nik: nik, 
+        token: currentToken // Pastikan token dikirim ke backend
+      })
     });
+
+    const data = await res.json();
+    if (!data.success) throw new Error(data.error);
+
+    // --- LOGIKA REDIRECT OTOMATIS ---
+    // Jika backend mendeteksi NIK ini sudah vote (alreadyVoted: true)
+    if (data.alreadyVoted) {
+      // Simpan data ke SessionStorage agar dashboard bisa membukanya
+      sessionStorage.setItem('voterNIK', currentNIK);
+      sessionStorage.setItem('voterToken', currentToken);
+      localStorage.setItem('hasVoted', 'true'); // Flag untuk bypass guard dashboard.js
+      sessionStorage.setItem('isRechecking', 'true');
+
+      // Langsung arahkan ke dashboard
+      window.location.href = 'dashboard/dashboard.html'; 
+      return; // Berhenti di sini, jangan lanjut ke Panduan
+    }
+
+    // Jika BELUM VOTE, lanjut ke alur normal (Panduan -> Bilik Suara)
+    showStage('stagePanduan');
+    checkVotingStatus();
+    loadCandidatePreview();
+    updateContractLink();
+
+  } catch (err) {
+    showAlert(err.message);
+    showStage('stage2');
+  }
+});
 
     // === BARU: Navigasi ke user.html ===
     document.getElementById('btnStartVoting').addEventListener('click', () => {
