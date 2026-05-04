@@ -1,4 +1,4 @@
-const BACKEND_URL = 'https://9cdc-103-129-25-41.ngrok-free.app';
+const BACKEND_URL = 'https://a552-103-129-24-154.ngrok-free.app';
 const NGROK_HEADERS = {
     "ngrok-skip-browser-warning": "69420"
 };
