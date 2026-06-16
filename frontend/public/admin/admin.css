@@ -899,11 +899,21 @@ h6,
     box-shadow: 0 8px 15px rgba(220, 53, 69, 0.3) !important;
 }
 
-/* Membuat bar lebih tebal dan menyala */
+/* ============================================================
+   MODIFIKASI PROGRESS BAR ADAPTIF (LIGHT & DARK MODE)
+   ============================================================ */
+   
+/* Default / Light Mode Theme */
 .progress {
-    background-color: rgba(255, 255, 255, 0.1) !important; /* Background sisa bar agar kontras */
-    height: 8px !important; /* Sedikit lebih tebal dari 5px */
-    overflow: visible; /* Agar efek glow tidak terpotong */
+    background-color: rgba(0, 0, 0, 0.08) !important; /* Menggunakan hitam transparan di mode terang */
+    height: 8px !important; 
+    overflow: visible; 
+    border-radius: 10px;
+}
+
+/* Override Khusus untuk Dark Mode */
+[data-theme="dark"] .progress {
+    background-color: rgba(255, 255, 255, 0.12) !important; /* Menggunakan putih transparan di mode gelap */
 }
 
 .progress-bar {
@@ -913,20 +923,20 @@ h6,
 
 /* Warna Hijau (Suara Masuk) */
 .progress-bar.bg-green {
-    background-color: #10b981 !important;
-    box-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+    background-color: var(--accent-green) !important; /* Menggunakan variabel yang sudah Anda buat */
+    box-shadow: 0 0 10px rgba(16, 185, 129, 0.4);
 }
 
 /* Warna Oranye (Partisipasi) */
 .progress-bar.bg-orange {
-    background-color: #f59e0b !important;
-    box-shadow: 0 0 10px rgba(255, 159, 67, 0.5);
+    background-color: var(--accent-orange) !important;
+    box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
 }
 
 /* Warna Biru (DPT) */
 .progress-bar.bg-blue {
-    background-color: #3b82f6 !important;
-    box-shadow: 0 0 10px rgba(0, 210, 255, 0.5);
+    background-color: var(--accent-blue) !important;
+    box-shadow: 0 0 10px rgba(59, 130, 246, 0.4);
 }
 
 /* Header Modal agar tidak kaku */
