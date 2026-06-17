@@ -237,7 +237,7 @@ function logout() {
 
     Swal.fire({
         title: 'Konfirmasi Keluar',
-        html: `Setelah keluar, Anda tidak dapat masuk kembali ke dashboard ini untuk menjaga integritas data. Anda yakin?`,
+        html: `Demi keamanan, keluar dari halaman ini akan mengakhiri sesi Anda. Anda memerlukan QR Code dan NIK Anda kembali untuk mengakses dashboard ini di lain waktu.`,
         icon: 'warning',
         iconColor: '#ef4444',
         showCancelButton: true,
@@ -554,7 +554,7 @@ function fillReceiptData() {
                 second: '2-digit'
             }) + " WIB";
         } else {
-            document.getElementById('receiptTime').innerText = "Sinkronisasi...";
+            document.getElementById('receiptTime').innerText = "Sekarang";
         }
     } else {
         // Jika session kosong, jalankan ulang sinkronisasi

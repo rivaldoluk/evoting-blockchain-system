@@ -309,7 +309,7 @@ function showErrorVoteModal(message, isDoubleVote, txHash) {
     errorModal.show();
 
     // Berikan waktu countdown sedikit lebih panjang (15 detik) agar pemilih sempat memeriksa Etherscan
-    let timeLeft = 100;
+    let timeLeft = 5;
     const countdownEl = document.getElementById('errorCountdown');
     if (countdownEl) countdownEl.innerText = timeLeft;
     
