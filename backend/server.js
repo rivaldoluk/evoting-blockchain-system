@@ -202,7 +202,7 @@ app.get('/voting-status', async (req, res) => {
   }
 });
 
-// Endpoint: Vote (verifikasi NIK + proof + kirim tx ke contract)
+// Endpoint: Vote (server.js)
 app.post('/vote', async (req, res) => {
     const { nik, candidateId, token } = req.body;
 
@@ -211,35 +211,61 @@ app.post('/vote', async (req, res) => {
     const cleanNik = nik.trim();
     const nikHash = '0x' + keccak256(cleanNik).toString('hex');
 
-    // Cek Double Voting di Memori (Database JSON)
-    if (voted[nikHash] && (voted[nikHash] === true || voted[nikHash].voted === true)) {
-        return res.status(403).json({ error: 'NIK ini sudah memberikan suara' });
+    // =========================================================================
+// DETEKSI DOUBLE VOTING: TUNGGU TX HASH LALU KIRIM KE FRONTEND VIA STATUS 200
+// =========================================================================
+if (voted[nikHash] && (voted[nikHash] === true || voted[nikHash].voted === true)) {
+    
+    const proofData = proofs.find(p => p.nikHash === nikHash);
+    let errorTxHash = null;
+    
+    if (proofData) {
+        try {
+            const feeData = await provider.getFeeData();
+            
+            // Kita gunakan 'await' hanya sampai transaksi terkirim ke memori pool (mendapatkan hash), 
+            // kita TIDAK menggunakan tx.wait() agar tidak menyumbat antrean utama.
+            const tx = await contract.vote(nikHash, proofData.proof, candidateId, {
+                gasLimit: 250000,
+                maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
+                maxFeePerGas: feeData.maxFeePerGas
+            });
+            
+            errorTxHash = tx.hash;
+            console.log(`[⚠️ Audit Kecurangan] Transaksi double vote terkirim ke Etherscan: ${errorTxHash}`);
+            
+        } catch (err) {
+            // Jika langsung gagal di level provider sebelum dapat hash
+            console.error(`[❌ Audit Gagal] Gagal menyiarkan transaksi kecurangan:`, err.message);
+        }
     }
 
-    // Cek apakah sedang ada dalam antrean aktif
+    // Kembalikan hash transaksi kecurangan tersebut langsung ke frontend
+    return res.status(200).json({ 
+        success: false,
+        isDoubleVote: true,
+        error: 'NIK ini sudah memberikan suara',
+        txHash: errorTxHash // Kirim hash spesifik ke frontend
+    });
+}
+
+    // Jalur normal untuk pemilih asli pertama kali
     if (activeLocks.has(nikHash)) {
         return res.status(429).json({ error: 'NIK ini sedang dalam proses antrean.' });
     }
 
-    // Ambil data proof
     const proofData = proofs.find(p => p.nikHash === nikHash);
-    if (!proofData) return res.status(403).json({ error: 'NIK tidak terdaftar' });
+    if (!proofData) return res.status(200).json({ success: false, error: 'NIK tidak terdaftar' });
 
-    // MASUKKAN KE ANTREAN
     activeLocks.add(nikHash);
     
-    // Kirim response "Pending" ke UI agar user tidak menunggu lama
-    // Kita berikan janji bahwa suara sedang diproses
     res.json({
         success: true,
         message: 'Suara Anda telah masuk antrean blockchain. Mohon tunggu konfirmasi.',
         nikHash: nikHash
     });
 
-    // Tambahkan ke array antrean untuk diproses satu per satu
     voteQueue.push({ nikHash, proofData, candidateId, token });
-    
-    // Jalankan pemroses antrean (jika belum jalan)
     processVoteQueue();
 });
 

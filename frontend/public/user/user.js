@@ -176,7 +176,6 @@ async function processVoting() {
     const handle = document.getElementById('swipeHandle');
     const swipeText = document.querySelector('.swipe-text');
     
-    // 1. State Loading
     handle.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
     handle.style.pointerEvents = 'none';
 
@@ -191,55 +190,48 @@ async function processVoting() {
             })
         });
 
-        const data = await res.json();
-
         if (res.status === 429) {
             showConcurrentAlert();
             return;
         }
 
+        const data = await res.json();
+
         if (data.success) {
-            // 2. State Berhasil (Ubah jadi Centang)
+            // JALUR VALID / PEMILIH PERTAMA
             handle.innerHTML = '<i class="bi bi-check-lg"></i>';
-            handle.style.background = '#10b981'; // Warna hijau sukses
+            handle.style.background = '#10b981'; 
             swipeText.innerText = "SUARA BERHASIL DIKIRIM!";
             swipeText.style.opacity = "1";
 
-            // Simpan info untuk modal bukti di dashboard
-    sessionStorage.setItem('lastVoteTx', data.txHash);
-    sessionStorage.setItem('lastVoteTime', new Date().toISOString());
-    sessionStorage.setItem('voterAddress', data.nikHash);
-    sessionStorage.setItem('isNewVote', 'true'); // Flag untuk memicu modal
-
+            sessionStorage.setItem('lastVoteTx', data.txHash);
+            sessionStorage.setItem('lastVoteTime', new Date().toISOString());
+            sessionStorage.setItem('voterAddress', data.nikHash);
+            sessionStorage.setItem('isNewVote', 'true'); 
             sessionStorage.setItem('votingCompleted', 'true');
             localStorage.setItem('hasVoted', 'true');
 
             window.history.replaceState(null, null, '../dashboard/dashboard.html');
 
-            // Tunggu sebentar agar user lihat centangnya, baru pindah state modal
             setTimeout(() => {
-                const confirmState = document.getElementById('voteStateConfirm');
-                const successState = document.getElementById('voteStateSuccess');
-                
-                confirmState.style.display = 'none';
-                successState.style.display = 'block';
-
-                // 3. Jalankan Countdown Redirect
+                document.getElementById('voteStateConfirm').style.display = 'none';
+                document.getElementById('voteStateSuccess').style.display = 'block';
                 startRedirectCountdown(5);
             }, 1000);
 
-            // Tambahkan event listener untuk tombol sukses di modal
-document.querySelector('#voteStateSuccess a').addEventListener('click', function(e) {
-    e.preventDefault();
-    // replace tidak meninggalkan jejak di history
-    window.location.replace('../dashboard/dashboard.html'); 
-});
-
         } else {
-            showErrorVoteModal(data.error);
+            // JALUR DOUBLE VOTING / DATA DITOLAK
+            if (data.isDoubleVote) {
+                // Berikan data.txHash yang dikirim langsung dari backend
+                showErrorVoteModal(data.error, true, data.txHash);
+            } else {
+                showErrorVoteModal(data.error || "Pilihan Anda ditolak oleh sistem.", false, null);
+            }
             resetSwipe();
         }
+
     } catch (e) {
+        console.error("Koneksi gagal:", e);
         showNetworkErrorModal();
         resetSwipe();
     }
@@ -278,29 +270,58 @@ function showConcurrentAlert(customMessage) {
     }, 1000);
 }
 
-function showErrorVoteModal(message) {
-    // Tutup modal konfirmasi jika masih terbuka
+/**
+ * Menampilkan Modal Error dengan Tombol Dinamis ke Tx Hash Etherscan
+ */
+function showErrorVoteModal(message, isDoubleVote, txHash) {
+    // 1. Tutup modal konfirmasi
     const voteModalEl = document.getElementById('confirmVoteModal');
-    const voteModalInstance = bootstrap.Modal.getInstance(voteModalEl);
-    if (voteModalInstance) voteModalInstance.hide();
+    if (voteModalEl) {
+        const voteModalInstance = bootstrap.Modal.getInstance(voteModalEl);
+        if (voteModalInstance) voteModalInstance.hide();
+    }
 
-    // Isi pesan errornya
     document.getElementById('errorVoteMessage').innerText = message;
+    const btnEtherscan = document.getElementById('btnErrorEtherscan');
+
+    if (isDoubleVote) {
+        btnEtherscan.style.setProperty('display', 'inline-flex', 'important');
+        
+        if (txHash) {
+            // JIKA TX HASH SUDAH ADA: Aktifkan tombol dan pasang link langsung ke /tx/
+            btnEtherscan.classList.remove('disabled');
+            btnEtherscan.style.pointerEvents = 'auto';
+            btnEtherscan.innerHTML = `<i class="bi bi-box-arrow-up-right"></i> Periksa Audit di Etherscan`;
+            btnEtherscan.setAttribute('href', `https://sepolia.etherscan.io/tx/${txHash}`);
+        } else {
+            // JIKA TX HASH BELUM ADA/SEDANG DIPROSES: Masuk mode Loading
+            btnEtherscan.classList.add('disabled');
+            btnEtherscan.style.pointerEvents = 'none';
+            btnEtherscan.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Menghubungkan ke Blockchain...`;
+            btnEtherscan.setAttribute('href', '#');
+        }
+    } else {
+        btnEtherscan.style.setProperty('display', 'none', 'important');
+    }
 
     // Tampilkan modal error
     const errorModal = new bootstrap.Modal(document.getElementById('errorVoteModal'));
     errorModal.show();
 
-    let timeLeft = 5;
+    // Berikan waktu countdown sedikit lebih panjang (15 detik) agar pemilih sempat memeriksa Etherscan
+    let timeLeft = 100;
     const countdownEl = document.getElementById('errorCountdown');
+    if (countdownEl) countdownEl.innerText = timeLeft;
     
-    const timer = setInterval(() => {
+    if (window.errorTimer) clearInterval(window.errorTimer);
+    
+    window.errorTimer = setInterval(() => {
         timeLeft--;
         if (countdownEl) countdownEl.innerText = timeLeft;
 
         if (timeLeft <= 0) {
-            clearInterval(timer);
-            clearAndExit(); // Panggil fungsi redirect yang sudah ada
+            clearInterval(window.errorTimer);
+            clearAndExit(); 
         }
     }, 1000);
 }

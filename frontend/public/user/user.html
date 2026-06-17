@@ -173,6 +173,7 @@
         </div>
     </div>
 
+    <!-- MODAL ERROR VOTE (SUARA DITOLAK / DOUBLE VOTING) -->
     <div class="modal fade" id="errorVoteModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
         aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
@@ -184,7 +185,14 @@
                         </div>
                     </div>
                     <h2 class="fw-extrabold mb-2">Suara Ditolak</h2>
-                    <p class="text-muted mb-5" id="errorVoteMessage">Terjadi kesalahan pada validasi data NIK Anda.</p>
+                    <p class="text-muted mb-4" id="errorVoteMessage">Terjadi kesalahan pada validasi data NIK Anda.</p>
+
+                    <!-- TOMBOL LIHAT AUDIT CONTRACT INTERACTION -->
+                    <div class="mb-4">
+                        <a id="btnErrorEtherscan" href="#" target="_blank" style="display: none;" class="btn btn-outline-secondary w-100 py-2.5 fw-bold rounded-3 small text-decoration-none align-items-center justify-content-center gap-2">
+                            <i class="bi bi-box-arrow-up-right"></i> Periksa Audit di Etherscan
+                        </a>
+                    </div>
 
                     <div class="alert alert-danger rounded-4 border-0 small py-2 mb-4">
                         Kembali ke Beranda dalam <span id="errorCountdown" class="fw-bold">5</span> detik...
