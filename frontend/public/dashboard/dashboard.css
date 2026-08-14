@@ -614,43 +614,75 @@ main.container {
     border-color: rgba(255, 255, 255, 0.1);
 }
 
-/* --- Toast Notification (Bottom Center) --- */
+/* --- Toast Notification (Bottom Center - Fully Responsive) --- */
 .copy-toast {
     position: fixed;
-    bottom: -100px; /* Sembunyi di bawah */
+    bottom: -100px; /* Sembunyi di luar layar bawah */
     left: 50%;
     transform: translateX(-50%);
-    background: var(--bg-body);
-    color: var(--text-muted);
-    border: 1px solid var(--border);
-    backdrop-filter: blur(10px);
-    color: white;
-    padding: 12px 24px;
+    
+    /* Gunakan Glassmorphism agar adaptif dengan Light/Dark Mode */
+    background: var(--bg-card, #ffffff);
+    color: var(--text-primary, #0f172a) !important;
+    border: 1px solid var(--border, #e2e8f0);
+    backdrop-filter: blur(12px) saturate(180%);
+    -webkit-backdrop-filter: blur(12px) saturate(180%);
+    
+    padding: 10px 20px;
     border-radius: 50px;
-    z-index: 10000;
+    
+    /* Proteksi Responsif untuk HP Kecil */
+    width: max-content;
+    max-width: calc(100vw - 32px); /* Mencegah toast meluber keluar layar */
+    white-space: nowrap;
+    
+    z-index: 10000; /* Di atas segalanya, termasuk modal */
     opacity: 0;
-    transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+    pointer-events: none; /* Mencegah toast menghalangi klik saat tersembunyi */
+    transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275), 
+                opacity 0.4s ease, 
+                bottom 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.15);
 }
 
-/* Muncul (Slide Up) */
+/* State Saat Toast Muncul */
 .copy-toast.show {
-    bottom: 50px; /* Naik ke atas */
+    bottom: 40px; /* Jarak aman di atas gesture bar HP */
     opacity: 1;
+    pointer-events: auto;
 }
 
-/* Saat menghilang (Slide Down) */
-.copy-toast.hide-animation {
-    bottom: -100px;
-    opacity: 0;
-    transition: all 0.4s cubic-bezier(0.4, 0, 1, 1);
-}
-
+/* Khusus Teks & Ikon di Dalam Toast */
 .toast-content {
     display: flex;
     align-items: center;
-    font-size: 0.9rem;
-    font-weight: 600;
+    justify-content: center;
+    font-size: 0.85rem;
+    font-weight: 700;
+    color: var(--text-primary, #0f172a) !important;
+}
+
+/* Penyesuaian khusus Dark Mode */
+[data-theme="dark"] .copy-toast {
+    background: rgba(15, 23, 42, 0.85); /* Navy Kaca Transparan */
+    border-color: rgba(255, 255, 255, 0.15);
+    color: #f8fafc !important;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+[data-theme="dark"] .toast-content {
+    color: #f8fafc !important;
+}
+
+/* RESPONSIVE: Penyesuaian Posisi di Layar Kecil (HP) */
+@media (max-width: 576px) {
+    .copy-toast.show {
+        bottom: 24px; /* Sedikit lebih rendah di HP agar tidak menutupi konten utama */
+    }
+    
+    .toast-content {
+        font-size: 0.8rem; /* Font sedikit disesuaikan untuk layar seluler */
+    }
 }
 
 /* Centang Hijau di Toast */
