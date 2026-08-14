@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Surat Suara Digital | E-Voting System</title>
+    <title data-i18n="doc_title_user">Surat Suara Digital | E-Voting System</title>
 
     <script>
         (function () {
@@ -29,26 +29,37 @@
 
     <nav class="navbar sticky-top glass-effect">
         <div class="container d-flex align-items-center justify-content-between">
+            <!-- Sisi Kiri: Logo & Status -->
             <div class="d-flex align-items-center">
                 <div class="brand-logo-container me-2 me-sm-3">
                     <i class="bi bi-shield-lock-fill"></i>
                 </div>
                 <div>
-                    <h6 class="mb-0 fw-extrabold tracking-tight" style="font-size: 0.9rem;">E-VOTING</h6>
+                    <h6 class="mb-0 fw-extrabold tracking-tight" style="font-size: 0.9rem;" data-i18n="brand_name">E-VOTING</h6>
                     <span class="status-indicator d-flex align-items-center gap-1">
                         <span id="statusDot" class="dot"></span>
-                        <span id="statusText" class="status-text">Memuat...</span>
+                        <span id="statusText" class="status-text" data-i18n="status_loading">Memuat...</span>
                     </span>
                 </div>
             </div>
 
-            <div class="user-profile-chip">
-                <div class="chip-avatar d-none d-sm-flex">
-                    <i class="bi bi-person-fill"></i>
+            <!-- Sisi Kanan: Language Switcher + Profile Chip -->
+            <div class="d-flex align-items-center gap-2 gap-sm-3">
+                <!-- Tombol Switcher Bahasa Mini -->
+                <div class="btn-group btn-group-sm rounded-pill overflow-hidden border shadow-sm" style="background: rgba(255,255,255,0.2);">
+                    <button type="button" class="btn btn-sm fw-bold px-2 py-1" id="btn-lang-id" onclick="changeLanguage('id')" style="font-size: 0.7rem;">ID</button>
+                    <button type="button" class="btn btn-sm fw-bold px-2 py-1" id="btn-lang-en" onclick="changeLanguage('en')" style="font-size: 0.7rem;">EN</button>
                 </div>
-                <div class="chip-text text-end text-sm-start">
-                    <small class="text-muted d-block" style="font-size: 0.6rem; line-height: 1;">PEMILIH SAH</small>
-                    <span id="displayNIK" class="fw-bold" style="font-size: 0.75rem;">NIK: ************</span>
+
+                <!-- Profile Chip -->
+                <div class="user-profile-chip">
+                    <div class="chip-avatar d-none d-sm-flex">
+                        <i class="bi bi-person-fill"></i>
+                    </div>
+                    <div class="chip-text text-end text-sm-start">
+                        <small class="text-muted d-block" style="font-size: 0.6rem; line-height: 1;" data-i18n="valid_voter">PEMILIH SAH</small>
+                        <span id="displayNIK" class="fw-bold" style="font-size: 0.75rem;">NIK: ************</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -58,16 +69,15 @@
         <div class="text-center mb-4 animate-fade-in">
             <div class="glass-countdown d-inline-flex align-items-center gap-2 px-4 py-2 rounded-pill">
                 <i class="bi bi-clock-history icon-timer"></i>
-                <span class="timer-label">LOADING...</span>
+                <span class="timer-label" data-i18n="timer_label">Memuat...</span>
                 <span id="navTimerValue" class="timer-digits"></span>
             </div>
         </div>
 
         <div class="row justify-content-center mb-5 animate-fade-in">
             <div class="col-lg-8 text-center">
-                <h1 class="display-5 fw-extrabold mb-3">Pilih Kepala Desa</h1>
-                <p class="text-secondary fs-5">Suara Anda adalah masa depan desa. Silakan pilih satu kandidat di bawah
-                    ini.</p>
+                <h1 class="display-5 fw-extrabold mb-3" data-i18n="user_title">Pilih Kepala Desa</h1>
+                <p class="text-secondary fs-5" data-i18n="user_subtitle">Suara Anda adalah masa depan desa. Silakan pilih satu kandidat di bawah ini.</p>
                 <div class="divider mx-auto"></div>
             </div>
         </div>
@@ -75,11 +85,12 @@
         <div id="candidateGrid" class="row g-4 animate-staggered">
             <div class="col-12 text-center py-5">
                 <div class="custom-loader mx-auto"></div>
-                <p class="mt-3 text-muted fw-medium">Menyiapkan Surat Suara...</p>
+                <p class="mt-3 text-muted fw-medium" data-i18n="preparing_ballot">Menyiapkan Surat Suara...</p>
             </div>
         </div>
     </main>
 
+    <!-- Modal Konfirmasi Vote -->
     <div class="modal fade" id="confirmVoteModal" tabindex="-1" data-bs-backdrop="static" data-bs-keyboard="false">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg rounded-5 overflow-hidden">
@@ -88,7 +99,7 @@
                     <div class="modal-header-icon mb-3" style="font-size: 2.5rem; color: var(--accent);">
                         <i class="bi bi-patch-check-fill"></i>
                     </div>
-                    <h4 class="fw-extrabold mb-4">Konfirmasi Pilihan</h4>
+                    <h4 class="fw-extrabold mb-4" data-i18n="confirm_title">Konfirmasi Pilihan</h4>
 
                     <div class="selection-preview-card mb-4">
                         <div class="avatar-ring">
@@ -100,11 +111,11 @@
                         <span class="badge bg-primary rounded-pill px-3 py-2" id="confirmNoUrut"></span>
                     </div>
 
-                    <p class="text-muted small mb-4">Geser tombol biru ke kanan untuk memvalidasi pilihan Anda</p>
+                    <p class="text-muted small mb-4" data-i18n="swipe_desc">Geser tombol biru ke kanan untuk memvalidasi pilihan Anda</p>
 
                     <div class="swipe-container-wrapper">
                         <div class="swipe-container" id="swipeTrack">
-                            <div class="swipe-text">GESER UNTUK VOTE</div>
+                            <div class="swipe-text" data-i18n="swipe_text">GESER UNTUK VOTE</div>
                             <div class="swipe-handle" id="swipeHandle">
                                 <i class="bi bi-chevron-double-right"></i>
                             </div>
@@ -112,28 +123,28 @@
                     </div>
 
                     <button class="btn btn-link text-muted mt-3 text-decoration-none fw-semibold btn-sm"
-                        data-bs-dismiss="modal">
+                        data-bs-dismiss="modal" data-i18n="btn_cancel_reselect">
                         Batal, Pilih Kembali
                     </button>
                 </div>
 
+                <!-- Modal Berhasil Vote -->
                 <div id="voteStateSuccess" class="modal-body p-5 text-center" style="display: none;">
                     <div class="success-lottie-wrapper mb-4">
                         <div class="checkmark-circle">
                             <i class="bi bi-check-lg"></i>
                         </div>
                     </div>
-                    <h2 class="fw-extrabold mb-2">Suara Terkirim!</h2>
-                    <p class="text-muted mb-5">Terima kasih telah berpartisipasi dalam demokrasi desa yang jujur dan
-                        adil.</p>
+                    <h2 class="fw-extrabold mb-2" data-i18n="success_title">Suara Terkirim!</h2>
+                    <p class="text-muted mb-5" data-i18n="success_desc">Terima kasih telah berpartisipasi dalam demokrasi desa yang jujur dan adil.</p>
 
                     <div class="alert alert-info rounded-4 border-0 small py-2 mb-4">
-                        Di alihkan ke dashboard dalam <span id="redirectTimer" class="fw-bold">5</span> detik...
+                        <span data-i18n="redirect_prefix">Di alihkan ke dashboard dalam</span> <span id="redirectTimer" class="fw-bold">5</span> <span data-i18n="seconds">detik...</span>
                     </div>
 
                     <div class="d-grid">
                         <a href="../dashboard/dashboard.html"
-                            class="btn btn-primary btn-lg rounded-4 fw-bold py-3 shadow-sm btn-hover-effect">
+                            class="btn btn-primary btn-lg rounded-4 fw-bold py-3 shadow-sm btn-hover-effect" data-i18n="btn_view_temp_results">
                             Lihat Hasil Sementara <i class="bi bi-arrow-right ms-2"></i>
                         </a>
                     </div>
@@ -143,8 +154,8 @@
         </div>
     </div>
 
-    <div class="modal fade" id="concurrentModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-        aria-hidden="true">
+    <!-- Modal Keamanan Sesi (Concurrent) -->
+    <div class="modal fade" id="concurrentModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
                 <div class="modal-body text-center p-5">
@@ -154,18 +165,18 @@
                             <i class="bi bi-shield-lock-fill" style="font-size: 2.5rem;"></i>
                         </div>
                     </div>
-                    <h3 class="fw-bold mb-3">Keamanan Sesi</h3>
-                    <p class="text-secondary mb-3" id="concurrentMessage">
+                    <h3 class="fw-bold mb-3" data-i18n="concurrent_title">Keamanan Sesi</h3>
+                    <p class="text-secondary mb-3" id="concurrentMessage" data-i18n="concurrent_desc">
                         Sistem mendeteksi NIK ini telah aktif di tab atau perangkat lain. Sesi ini dihentikan untuk
                         melindungi integritas data dan privasi sesi Anda.
                     </p>
 
                     <div class="alert alert-danger rounded-4 border-0 small py-2 mb-4">
-                        Di alihkan ke Beranda dalam <span id="concurrentCountdown" class="fw-bold">5</span> detik...
+                        <span data-i18n="redirect_home_prefix">Di alihkan ke Beranda dalam</span> <span id="concurrentCountdown" class="fw-bold">5</span> <span data-i18n="seconds">detik...</span>
                     </div>
 
                     <button type="button" onclick="clearAndExit()"
-                        class="btn btn-primary w-100 py-3 fw-bold rounded-3 shadow-sm">
+                        class="btn btn-primary w-100 py-3 fw-bold rounded-3 shadow-sm" data-i18n="btn_back_home_now">
                         Kembali ke Beranda Sekarang <i class="bi bi-arrow-right ms-2"></i>
                     </button>
                 </div>
@@ -173,9 +184,8 @@
         </div>
     </div>
 
-    <!-- MODAL ERROR VOTE (SUARA DITOLAK / DOUBLE VOTING) -->
-    <div class="modal fade" id="errorVoteModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-        aria-hidden="true">
+    <!-- Modal Error Vote (Suara Ditolak / Double Voting) -->
+    <div class="modal fade" id="errorVoteModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
                 <div class="modal-body p-5 text-center">
@@ -184,22 +194,22 @@
                             <i class="bi bi-exclamation-triangle"></i>
                         </div>
                     </div>
-                    <h2 class="fw-extrabold mb-2">Suara Ditolak</h2>
-                    <p class="text-muted mb-4" id="errorVoteMessage">NIK ini sudah memberikan suara.</p>
+                    <h2 class="fw-extrabold mb-2" data-i18n="vote_rejected_title">Suara Ditolak</h2>
+                    <p class="text-muted mb-4" id="errorVoteMessage" data-i18n="err_nik_already_voted">NIK ini sudah memberikan suara.</p>
 
-                    <!-- TOMBOL LIHAT AUDIT CONTRACT INTERACTION -->
+                    <!-- Tombol Lihat Audit Contract Interaction -->
                     <div class="mb-4">
                         <a id="btnErrorEtherscan" href="#" target="_blank" style="display: none;" class="btn btn-outline-secondary w-100 py-2.5 fw-bold rounded-3 small text-decoration-none align-items-center justify-content-center gap-2">
-                            <i class="bi bi-box-arrow-up-right"></i> Periksa Audit di Etherscan
+                            <i class="bi bi-box-arrow-up-right"></i> <span data-i18n="btn_check_etherscan">Periksa Audit di Etherscan</span>
                         </a>
                     </div>
 
                     <div class="alert alert-danger rounded-4 border-0 small py-2 mb-4">
-                        Kembali ke Beranda dalam <span id="errorCountdown" class="fw-bold">5</span> detik...
+                        <span data-i18n="redirect_home_prefix">Kembali ke Beranda dalam</span> <span id="errorCountdown" class="fw-bold">5</span> <span data-i18n="seconds">detik...</span>
                     </div>
 
                     <div class="d-grid">
-                        <button onclick="clearAndExit()" class="btn btn-danger btn-lg rounded-4 fw-bold py-3 shadow-sm">
+                        <button onclick="clearAndExit()" class="btn btn-danger btn-lg rounded-4 fw-bold py-3 shadow-sm" data-i18n="btn_exit_now">
                             Keluar Sekarang <i class="bi bi-box-arrow-right ms-2"></i>
                         </button>
                     </div>
@@ -208,8 +218,8 @@
         </div>
     </div>
 
-    <div class="modal fade" id="networkErrorModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-        aria-hidden="true">
+    <!-- Modal Network Error -->
+    <div class="modal fade" id="networkErrorModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered">
             <div class="modal-content border-0 shadow-lg" style="border-radius: 20px;">
                 <div class="modal-body p-5 text-center">
@@ -218,13 +228,12 @@
                             <i class="bi bi-wifi-off"></i>
                         </div>
                     </div>
-                    <h2 class="fw-extrabold mb-2">Masalah Koneksi</h2>
-                    <p class="text-muted mb-5">Gagal terhubung ke server. Pastikan internet Anda stabil dan coba lagi.
-                    </p>
+                    <h2 class="fw-extrabold mb-2" data-i18n="net_error_title">Masalah Koneksi</h2>
+                    <p class="text-muted mb-5" data-i18n="net_error_desc">Gagal terhubung ke server. Pastikan internet Anda stabil dan coba lagi.</p>
 
                     <div class="d-grid">
                         <button type="button" onclick="refreshPage()"
-                            class="btn btn-primary text-white btn-lg rounded-4 fw-bold py-3 shadow-sm">
+                            class="btn btn-primary text-white btn-lg rounded-4 fw-bold py-3 shadow-sm" data-i18n="btn_try_again">
                             Coba Lagi <i class="bi bi-arrow-clockwise ms-2"></i>
                         </button>
                     </div>
@@ -233,6 +242,7 @@
         </div>
     </div>
 
+    <!-- Tombol Mode Tema (Floating Action Button) -->
     <button id="theme-toggle" class="theme-fab" title="Ganti Mode">
         <div class="fab-content">
             <i class="bi bi-sun-fill" id="theme-icon"></i>
@@ -240,7 +250,7 @@
     </button>
 
     <footer class="container py-5 text-center">
-        <p class="text-muted small mb-0">E-Voting System &copy; 2026 - Aman, Jujur, Transparan</p>
+        <p class="text-muted small mb-0" data-i18n="footer_text">E-Voting System &copy; 2026 - Aman, Jujur, Transparan</p>
     </footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>

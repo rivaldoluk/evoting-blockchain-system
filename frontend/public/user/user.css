@@ -411,3 +411,38 @@ body {
     --bs-body-bg: #ffffff;
     --bs-body-color: #212529;
 }
+
+/* =========================================
+   Language Switcher
+   ========================================= */
+
+.btn-group #btn-lang-id,
+.btn-group #btn-lang-en {
+    color: var(--text-secondary);
+    background-color: transparent;
+    border: none;
+    transition: all 0.2s ease;
+}
+
+.btn-group #btn-lang-id.active,
+.btn-group #btn-lang-en.active {
+    background-color: var(--accent) !important;
+    color: #ffffff !important;
+}
+
+/* Dark Mode */
+[data-theme="dark"] .btn-group {
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    background: rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .btn-group #btn-lang-id,
+[data-theme="dark"] .btn-group #btn-lang-en {
+    color: var(--text-secondary);
+}
+
+[data-theme="dark"] .btn-group #btn-lang-id.active,
+[data-theme="dark"] .btn-group #btn-lang-en.active {
+    background-color: var(--accent) !important;
+    color: #ffffff !important;
+}

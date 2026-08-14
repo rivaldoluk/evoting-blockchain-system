@@ -475,6 +475,73 @@
     opacity: 1;
     transform: scale(1.2); /* Sedikit lebih besar agar menonjol */
   }
+
+  /* ==========================================
+       STYLING LANGUAGE SWITCHER (MULTI-BAHASA)
+       ========================================== */
+    .lang-switcher-wrapper {
+      position: fixed;
+      top: 1rem;
+      right: 1rem;
+      z-index: 1050;
+    }
+
+    .lang-switcher-group {
+      background: rgba(255, 255, 255, 0.75);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.4);
+      border-radius: 50rem;
+      padding: 3px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+      display: flex;
+      gap: 2px;
+      transition: background 0.3s ease, border-color 0.3s ease;
+    }
+
+    /* Penyesuaian Switcher pada Dark Mode */
+    [data-theme="dark"] .lang-switcher-group {
+      background: rgba(30, 30, 30, 0.75);
+      border-color: rgba(255, 255, 255, 0.1);
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+    }
+
+    .lang-btn {
+      border: none;
+      background: transparent;
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      font-weight: 700;
+      padding: 5px 12px;
+      border-radius: 50rem;
+      cursor: pointer;
+      letter-spacing: 0.5px;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .lang-btn:hover {
+      color: var(--text-main);
+    }
+
+    /* Tampilan Tombol Bahasa Aktif */
+    .lang-btn.active {
+      background-color: var(--primary);
+      color: #ffffff !important;
+      box-shadow: 0 2px 8px rgba(13, 110, 253, 0.35);
+    }
+
+    /* Penyesuaian Posisi di Layar Kecil / Mobile */
+    @media (max-width: 576px) {
+      .lang-switcher-wrapper {
+        top: 0.75rem;
+        right: 0.75rem;
+      }
+
+      .lang-btn {
+        font-size: 0.7rem;
+        padding: 4px 10px;
+      }
+    }
   </style>
 </head>
 
@@ -483,34 +550,41 @@
   <!-- Alert Container -->
   <div id="alertContainer" class="alert-fixed"></div>
 
+  <!-- Container Language Switcher Floating -->
+<div class="lang-switcher-wrapper">
+  <div class="lang-switcher-group">
+    <button type="button" class="lang-btn active" id="btn-lang-id" onclick="changeLanguage('id')">ID</button>
+    <button type="button" class="lang-btn" id="btn-lang-en" onclick="changeLanguage('en')">EN</button>
+  </div>
+</div>
+
   <!-- Halaman Utama: Verifikasi Identitas -->
   <div id="mainPage" class="container py-5">
     <div class="text-center mb-5">
-      <h1 class="fw-bold text-primary">E-VOTING PILKADES</h1>
-      <p class="text-muted">Pemilihan Kepala Desa Tahun 2026</p>
+      <h1 class="fw-bold text-primary" data-i18n="main_title">E-VOTING PILKADES</h1>
+      <p class="text-muted" data-i18n="main_subtitle">Pemilihan Kepala Desa Tahun 2026</p>
     </div>
 
     <div class="card mx-auto" style="max-width: 540px;">
       <div class="card-header text-center">
-        <h4 class="mb-0">Langkah 1 : Verifikasi Identitas</h4>
+        <h4 class="mb-0" data-i18n="step1_title">Langkah 1 : Verifikasi Identitas</h4>
       </div>
       <div class="card-body p-4">
-        <p class="text-center mb-4">
+        <p class="text-center mb-4" data-i18n="step1_desc">
           Scan QR Code yang diberikan panitia<br>
           atau masukkan kode token secara manual
         </p>
 
         <div class="d-grid gap-3">
           <button id="btnScanQR" class="btn btn-primary btn-lg">
-            <i class="bi bi-qr-code-scan me-2"></i> Scan QR Code
+            <i class="bi bi-qr-code-scan me-2"></i> <span data-i18n="btn_scan">Scan QR Code</span>
           </button>
 
-          <div class="text-center my-2">— ATAU —</div>
+          <div class="text-center my-2" data-i18n="or_divider">— ATAU —</div>
 
           <div class="input-group input-group-lg">
-            <input type="text" id="inputToken" class="form-control" placeholder="Masukkan kode token (UUID)"
-              autocomplete="off" />
-            <button id="btnVerifyToken" class="btn btn-outline-primary" type="button">Verifikasi</button>
+            <input type="text" id="inputToken" class="form-control" data-i18n-placeholder="input_token_placeholder" placeholder="Masukkan kode token (UUID)" autocomplete="off" />
+            <button id="btnVerifyToken" class="btn btn-outline-primary" type="button" data-i18n="btn_verify">Verifikasi</button>
           </div>
         </div>
       </div>
@@ -520,9 +594,9 @@
   <!-- Halaman Scan QR -->
   <div id="scanPage">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h4 class="text-white mb-0">Pindai Kode QR</h4>
+      <h4 class="text-white mb-0" data-i18n="scan_title">Pindai Kode QR</h4>
       <button id="btnCloseScan" class="btn btn-outline-light btn-sm">
-        <i class="bi bi-x-lg"></i> Tutup
+        <i class="bi bi-x-lg"></i> <span data-i18n="btn_close">Tutup</span>
       </button>
     </div>
 
@@ -530,7 +604,7 @@
 
     <div class="text-center mt-4">
       <button id="btnChooseGallery" class="btn btn-outline-light btn-lg">
-        <i class="bi bi-images me-2"></i> Pilih dari Galeri
+        <i class="bi bi-images me-2"></i> <span data-i18n="btn_gallery">Pilih dari Galeri</span>
       </button>
       <input type="file" id="fileInput" accept="image/*" style="display:none;" />
     </div>
@@ -540,31 +614,30 @@
   <div id="stage2" class="container py-5" style="display:none;">
     <div class="card mx-auto" style="max-width: 540px;">
       <div class="card-header text-center">
-        <h4 class="mb-0">Langkah 2 : Masukkan NIK</h4>
+        <h4 class="mb-0" data-i18n="step2_title">Langkah 2 : Masukkan NIK</h4>
       </div>
       <div class="card-body p-4">
-        <!-- TAMBAHKAN INI: Info Status Token -->
-      <div id="tokenStatusInfo" class="mb-4" style="display:none;">
+        <!-- Info Status Token -->
+        <div id="tokenStatusInfo" class="mb-4" style="display:none;">
           <div class="alert alert-warning border-0 shadow-sm rounded-4 d-flex align-items-center">
-              <i class="bi bi-exclamation-triangle-fill fs-4 me-3 text-warning"></i>
-              <div>
-                  <div class="fw-bold">Token Sudah Terpakai</div>
-                  <div class="small text-muted">Masukkan NIK yang tertaut untuk melihat bukti suara.</div>
-              </div>
+            <i class="bi bi-exclamation-triangle-fill fs-4 me-3 text-warning"></i>
+            <div>
+              <div class="fw-bold" data-i18n="token_used_title">Token Sudah Terpakai</div>
+              <div class="small text-muted" data-i18n="token_used_desc">Masukkan NIK yang tertaut untuk melihat bukti suara.</div>
+            </div>
           </div>
-      </div>
+        </div>
 
         <form id="formNIK">
           <div class="mb-4">
-            <label for="nikInput" class="form-label fw-bold">Nomor Induk Kependudukan (NIK)</label>
+            <label for="nikInput" class="form-label fw-bold" data-i18n="nik_label">Nomor Induk Kependudukan (NIK)</label>
             <input type="text" class="form-control form-control-lg text-center" id="nikInput"
-              placeholder="16 digit NIK Anda" maxlength="16" inputmode="numeric" pattern="[0-9]{16}" required
-              autocomplete="off" />
+              data-i18n-placeholder="nik_placeholder" placeholder="16 digit NIK Anda" maxlength="16" inputmode="numeric" pattern="[0-9]{16}" required autocomplete="off" />
           </div>
 
           <div class="d-grid">
             <button type="submit" id="btnCheckNIK" class="btn btn-primary btn-lg">
-              <i class="bi bi-shield-check me-2"></i> Verifikasi & Lanjut
+              <i class="bi bi-shield-check me-2"></i> <span data-i18n="btn_verify_next">Verifikasi & Lanjut</span>
             </button>
           </div>
         </form>
@@ -572,102 +645,97 @@
     </div>
   </div>
 
+  <!-- Tahap Panduan -->
   <div id="stagePanduan" class="container py-5" style="display:none;">
     <div class="card mx-auto" style="max-width: 600px;">
       <div class="card-header text-center">
-        <h4 class="mb-0">Panduan & Tata Cara Voting</h4>
+        <h4 class="mb-0" data-i18n="guide_title">Panduan & Tata Cara Voting</h4>
       </div>
       <div class="card-body p-4">
         <div class="alert alert-info">
           <i class="bi bi-info-circle-fill me-2"></i>
-          Status Voting: <strong id="votingStatusText">Mengecek status...</strong>
+          <span data-i18n="voting_status">Status Voting:</span> <strong id="votingStatusText" data-i18n="checking_status">Mengecek status...</strong>
         </div>
 
         <div class="mb-4">
-  <h5 class="fw-bold mb-3 text-theme-main">Daftar Kandidat Tetap</h5>
-  
-  <div id="candidateCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000">
-    <div id="candidatePreviewList" class="carousel-inner">
-      <div class="carousel-item active">
-        <div class="text-center py-5 bg-theme-box rounded-4">
-          <div class="spinner-border text-primary" role="status"></div>
-          <p class="mt-2 small text-muted">Menyiapkan surat suara...</p>
+          <h5 class="fw-bold mb-3 text-theme-main" data-i18n="candidate_list_title">Daftar Kandidat Tetap</h5>
+          <div id="candidateCarousel" class="carousel slide" data-bs-ride="carousel" data-bs-interval="3000">
+            <div id="candidatePreviewList" class="carousel-inner">
+              <div class="carousel-item active">
+                <div class="text-center py-5 bg-theme-box rounded-4">
+                  <div class="spinner-border text-primary" role="status"></div>
+                  <p class="mt-2 small text-muted" data-i18n="preparing_ballot">Menyiapkan surat suara...</p>
+                </div>
+              </div>
+            </div>
+            <div class="carousel-indicators" style="position: relative; margin-top: 20px;"></div>
+          </div>
         </div>
-      </div>
-    </div>
-    <div class="carousel-indicators" style="position: relative; margin-top: 20px;">
-    </div>
-  </div>
-</div>
 
-        <h5 class="fw-bold mb-3 text-theme-main">Ketentuan & Keamanan</h5>
-<div class="mb-4">
-  <div class="bg-theme-item d-flex align-items-center p-3 mb-2 rounded-4 border shadow-sm" style="border-color: var(--border-color) !important;">
-    <i class="bi bi-1-circle-fill text-primary fs-4 me-3"></i>
-    <span class="text-theme-main">Anda hanya memiliki <strong>1 (satu) kali</strong> kesempatan memilih.</span>
-  </div>
+        <h5 class="fw-bold mb-3 text-theme-main" data-i18n="terms_title">Ketentuan & Keamanan</h5>
+        <div class="mb-4">
+          <div class="bg-theme-item d-flex align-items-center p-3 mb-2 rounded-4 border shadow-sm">
+            <i class="bi bi-1-circle-fill text-primary fs-4 me-3"></i>
+            <span class="text-theme-main" data-i18n="term_1">Anda hanya memiliki <strong>1 (satu) kali</strong> kesempatan memilih.</span>
+          </div>
 
-  <div class="bg-theme-item d-flex align-items-center p-3 mb-2 rounded-4 border shadow-sm" style="border-color: var(--border-color) !important;">
-    <i class="bi bi-lock-fill text-danger fs-4 me-3"></i>
-    <span class="text-theme-main">Pilihan bersifat <strong>permanen</strong> (tidak dapat diubah/batal).</span>
-  </div>
+          <div class="bg-theme-item d-flex align-items-center p-3 mb-2 rounded-4 border shadow-sm">
+            <i class="bi bi-lock-fill text-danger fs-4 me-3"></i>
+            <span class="text-theme-main" data-i18n="term_2">Pilihan bersifat <strong>permanen</strong> (tidak dapat diubah/batal).</span>
+          </div>
 
-  <div class="bg-theme-item d-flex align-items-center p-3 mb-2 rounded-4 border shadow-sm" style="border-color: var(--border-color) !important;">
-    <i class="bi bi-shield-shaded text-success fs-4 me-3"></i>
-    <span class="text-theme-main">Identitas (NIK) dianonimkan via <strong>Blockchain Technology</strong>.</span>
-  </div>
+          <div class="bg-theme-item d-flex align-items-center p-3 mb-2 rounded-4 border shadow-sm">
+            <i class="bi bi-shield-shaded text-success fs-4 me-3"></i>
+            <span class="text-theme-main" data-i18n="term_3">Identitas (NIK) dianonimkan via <strong>Blockchain Technology</strong>.</span>
+          </div>
 
-  <div class="bg-theme-item d-flex align-items-center p-3 mb-2 rounded-4 border shadow-sm" style="border-color: var(--border-color) !important;">
-    <i class="bi bi-wifi text-warning fs-4 me-3"></i>
-    <span class="text-theme-main small">Pastikan koneksi internet stabil sebelum menekan kirim.</span>
-  </div>
-</div>
+          <div class="bg-theme-item d-flex align-items-center p-3 mb-2 rounded-4 border shadow-sm">
+            <i class="bi bi-wifi text-warning fs-4 me-3"></i>
+            <span class="text-theme-main small" data-i18n="term_4">Pastikan koneksi internet stabil sebelum menekan kirim.</span>
+          </div>
+        </div>
 
-<div class="text-center mb-4 p-4 rounded-4 bg-theme-box shadow-sm" 
-     style="border: 2px dashed var(--border-color) !important;">
-    
-    <div class="d-flex align-items-center justify-content-center mb-1">
-        <small class="text-muted fw-bold text-uppercase" style="letter-spacing: 1px; font-size: 0.7rem;">
-            Audit Transparansi Digital
-        </small>
-        <i class="bi bi-patch-check-fill text-primary ms-2" style="font-size: 0.9rem;"></i>
-    </div>
-    
-    <p class="small text-muted mb-3">Pantau isi kotak suara secara real-time:</p>
-    
-    <a id="etherscanLink" href="#" target="_blank" 
-       class="btn btn-outline-primary btn-sm rounded-pill px-4 fw-bold shadow-sm mb-3">
-        <i class="bi bi-box-seam me-2"></i> Lihat Kotak Suara Digital
-    </a>
+        <div class="text-center mb-4 p-4 rounded-4 bg-theme-box shadow-sm" style="border: 2px dashed var(--border-color) !important;">
+          <div class="d-flex align-items-center justify-content-center mb-1">
+            <small class="text-muted fw-bold text-uppercase" style="letter-spacing: 1px; font-size: 0.7rem;" data-i18n="audit_title">Audit Transparansi Digital</small>
+            <i class="bi bi-patch-check-fill text-primary ms-2" style="font-size: 0.9rem;"></i>
+          </div>
+          
+          <p class="small text-muted mb-3" data-i18n="audit_desc">Pantau isi kotak suara secara real-time:</p>
+          
+          <a id="etherscanLink" href="#" target="_blank" class="btn btn-outline-primary btn-sm rounded-pill px-4 fw-bold shadow-sm mb-3">
+            <i class="bi bi-box-seam me-2"></i> <span data-i18n="btn_ballot_box">Lihat Kotak Suara Digital</span>
+          </a>
 
-    <div>
-        <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill" style="font-size: 0.65rem;">
-            <span class="pulse-dot-small"></span> Terhubung ke Jaringan Blockchain
-        </span>
-    </div>
-</div>
+          <div>
+            <span class="badge bg-success-subtle text-success border border-success-subtle px-3 py-2 rounded-pill" style="font-size: 0.65rem;">
+              <span class="pulse-dot-small"></span> <span data-i18n="blockchain_connected">Terhubung ke Jaringan Blockchain</span>
+            </span>
+          </div>
+        </div>
 
-<div class="d-grid">
-  <button id="btnStartVoting" class="btn btn-primary btn-lg shadow-sm">
-    Mulai Voting Sekarang <i class="bi bi-arrow-right ms-2"></i>
-  </button>
-</div>
+        <div class="d-grid">
+          <button id="btnStartVoting" class="btn btn-primary btn-lg shadow-sm">
+            <span data-i18n="btn_start_voting">Mulai Voting Sekarang</span> <i class="bi bi-arrow-right ms-2"></i>
+          </button>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- Loading -->
-  <div id="stageLoading" class="container py-5 text-center" style="display:none;">
-    <div class="loader"></div>
-    <h4 class="mt-4">Sedang memproses...</h4>
-    <p class="text-muted">Mohon tunggu sebentar</p>
-  </div>
+<div id="stageLoading" class="container py-5 text-center" style="display:none;">
+  <div class="loader"></div>
+  <h4 class="mt-4" data-i18n="loading_title">Sedang memproses...</h4>
+  <p class="text-muted" data-i18n="loading_desc">Mohon tunggu sebentar</p>
+</div>
 
-  <div id="theme-touch" class="assistive-touch">
-    <i class="bi bi-sun-fill" id="theme-icon"></i>
-  </div>
+<div id="theme-touch" class="assistive-touch">
+  <i class="bi bi-sun-fill" id="theme-icon"></i>
+</div>
 
-  <div class="modal fade" id="candidateModal" tabindex="-1" aria-hidden="true">
+<!-- Modal Kandidat -->
+<div class="modal fade" id="candidateModal" tabindex="-1" aria-hidden="true">
   <div class="modal-dialog modal-dialog-centered modal-dialog-scrollable">
     <div class="modal-content border-0 shadow-2xl bg-theme-card" style="border-radius: 30px; overflow: hidden;">
       
@@ -693,7 +761,7 @@
         <div class="text-start mb-4">
           <div class="d-flex align-items-center mb-2">
             <div class="icon-square-sm bg-primary text-white me-2"><i class="bi bi-eye-fill"></i></div>
-            <label class="fw-bold small text-uppercase text-muted" style="letter-spacing: 1px;">Visi Utama</label>
+            <label class="fw-bold small text-uppercase text-muted" style="letter-spacing: 1px;" data-i18n="modal_vision_title">Visi Utama</label>
           </div>
           <div class="p-3 rounded-4 bg-theme-box border-0" id="visiContainer">
             <p id="modalVisi" class="mb-0 text-theme-main" style="line-height: 1.6; font-size: 0.95rem;"></p>
@@ -703,7 +771,7 @@
         <div class="text-start mb-2">
           <div class="d-flex align-items-center mb-2">
             <div class="icon-square-sm bg-success text-white me-2"><i class="bi bi-list-check"></i></div>
-            <label class="fw-bold small text-uppercase text-muted" style="letter-spacing: 1px;">Misi & Program Kerja</label>
+            <label class="fw-bold small text-uppercase text-muted" style="letter-spacing: 1px;" data-i18n="modal_mission_title">Misi & Program Kerja</label>
           </div>
           <div class="p-1 rounded-4 bg-theme-box" id="misiContainer">
             <ul id="modalMisi" class="list-unstyled mb-0 p-3 custom-misi-list"></ul>
@@ -712,7 +780,7 @@
       </div>
 
       <div class="modal-footer border-0 p-4 pt-0">
-        <button type="button" class="btn btn-theme-secondary w-100 rounded-4 py-3 fw-bold shadow-sm" data-bs-dismiss="modal">Tutup Profil</button>
+        <button type="button" class="btn btn-theme-secondary w-100 rounded-4 py-3 fw-bold shadow-sm" data-bs-dismiss="modal" data-i18n="modal_btn_close">Tutup Profil</button>
       </div>
     </div>
   </div>
@@ -721,20 +789,18 @@
   <!-- Bootstrap JS -->
   <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
-  <script>
-    // === KONFIGURASI ===
-  const BACKEND_URL = 'https://10c5-172-216-170-152.ngrok-free.app';
+<script>
+  // === KONFIGURASI ===
+  const BACKEND_URL = 'https://5257-172-216-170-152.ngrok-free.app';
   const NGROK_HEADERS = {
     "ngrok-skip-browser-warning": "69420"
   };
 
-  // --- TAMBAHAN VARIABEL UNTUK RATE LIMIT ---
-  const MAX_ATTEMPTS = 5;          // Maksimal percobaan salah
-  const LOCKOUT_TIME = 60000;      // Waktu blokir (60 detik / 1 menit) dalam milidetik
+  const MAX_ATTEMPTS = 5;
+  const LOCKOUT_TIME = 60000;
 
   let tokenAttempts = 0;
   let nikAttempts = 0;
-  // ------------------------------------------
 
   function getFullImageUrl(path) {
     if (!path) return 'img/default.png';
@@ -749,19 +815,29 @@
   let html5QrCode = null;
   let isTokenAlreadyUsed = false;
 
+  // Global variable untuk menyimpan objek terjemahan
+  let currentTranslations = {};
+
+  // Helper i18n sederhana untuk mengambil teks dari kamus
+  function t(key, fallback = '') {
+    return currentTranslations[key] || fallback;
+  }
+
   // === HELPER ===
   function showStage(stageId) {
     document.querySelectorAll('[id^="stage"], #mainPage, #scanPage').forEach(el => el.style.display = 'none');
     document.getElementById(stageId).style.display = 'block';
 
-    // LOGIKA BARU: Sembunyikan Assistive Touch saat scan
     const touchBtn = document.getElementById('theme-touch');
+    const langBtn = document.querySelector('.lang-switcher-wrapper');
     if (stageId === 'scanPage') {
-      touchBtn.style.setProperty('display', 'none', 'important');
-    } else {
-      touchBtn.style.setProperty('display', 'flex', 'important');
-    }
+    if (touchBtn) touchBtn.style.setProperty('display', 'none', 'important');
+    if (langBtn) langBtn.style.setProperty('display', 'none', 'important');
+  } else {
+    if (touchBtn) touchBtn.style.setProperty('display', 'flex', 'important');
+    if (langBtn) langBtn.style.setProperty('display', 'block', 'important');
   }
+}
 
   function showAlert(message, type = 'danger') {
     const alert = document.createElement('div');
@@ -771,7 +847,6 @@
     setTimeout(() => alert.remove(), 5000);
   }
 
-  // --- HELPER BARU: FUNGSI COOLDOWN BUTTON ---
   function startButtonCooldown(buttonId, durationMs) {
     const btn = document.getElementById(buttonId);
     if (!btn) return;
@@ -788,7 +863,7 @@
         btn.innerHTML = originalText;
         btn.disabled = false;
       } else {
-        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Tunggu ${secondsLeft}s`;
+        btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> ${secondsLeft}s`;
       }
     }, 1000);
   }
@@ -797,7 +872,6 @@
   async function openScanMode() {
     showStage('scanPage');
 
-    // Pastikan reader bersih sebelum mulai
     document.getElementById('reader').innerHTML = '';
 
     if (html5QrCode) {
@@ -815,7 +889,6 @@
       (decodedText) => {
         html5QrCode.stop().then(() => {
           html5QrCode = null;
-          // Mengambil token saja jika yang di-scan adalah URL
           const rawText = decodedText.trim();
           const tokenOnly = rawText.includes('token=') ? rawText.split('token=')[1].split('&')[0] : rawText;
 
@@ -825,12 +898,11 @@
       (err) => { /* scanning... */ }
     ).catch((err) => {
       console.warn("Kamera ditolak/error:", err);
-      // PENTING: Jika ditolak, hancurkan objek agar tidak mengunci fitur Galeri
       if (html5QrCode) {
         html5QrCode.clear();
         html5QrCode = null;
       }
-      showAlert('Akses kamera ditolak. Kamu tetap bisa menggunakan fitur "Pilih dari Galeri".', 'warning');
+      showAlert(t('alert_camera_denied', 'Akses kamera ditolak. Kamu tetap bisa menggunakan fitur "Pilih dari Galeri".'), 'warning');
     });
   }
 
@@ -846,11 +918,10 @@
   async function processToken(token) {
     if (!token) return;
 
-    // Cek jika user sedang dalam masa blokir brute-force token manual
     const lockTime = localStorage.getItem('token_lockout_until');
     if (lockTime && Date.now() < parseInt(lockTime)) {
       const remaining = Math.ceil((parseInt(lockTime) - Date.now()) / 1000);
-      showAlert(`Terlalu banyak percobaan salah. Fitur dikunci selama ${remaining} detik lagi.`, 'danger');
+      showAlert(`Lockout active. ${remaining}s remaining.`, 'danger');
       return;
     }
 
@@ -858,48 +929,51 @@
     showStage('stageLoading');
 
     try {
-      const res = await fetch(`${BACKEND_URL}/verify-token`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', ...NGROK_HEADERS },
-        body: JSON.stringify({ token })
-      });
+  const res = await fetch(`${BACKEND_URL}/verify-token`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', ...NGROK_HEADERS },
+    body: JSON.stringify({ token })
+  });
 
-      const data = await res.json();
+  const data = await res.json();
 
-      if (!data.success) throw new Error(data.error || 'Token tidak valid');
+  if (!data.success) {
+    // Membaca terjemahan berdasarkan errorKey
+    const localizedError = t(data.errorKey, data.error || 'Token tidak valid');
+    throw new Error(localizedError);
+  }
 
-      // RESET ATTEMPTS JIKA BERHASIL
-      tokenAttempts = 0;
-      localStorage.removeItem('token_lockout_until');
+  // RESET ATTEMPTS JIKA BERHASIL
+  tokenAttempts = 0;
+  localStorage.removeItem('token_lockout_until');
 
-      currentToken = token;
-      isTokenAlreadyUsed = data.isUsed; // Simpan flag dari backend
+  currentToken = token;
+  isTokenAlreadyUsed = data.isUsed;
 
-      // Tampilkan/Sembunyikan pesan di Stage 2
-      const infoBox = document.getElementById('tokenStatusInfo');
-      if (infoBox) {
-        infoBox.style.display = isTokenAlreadyUsed ? 'block' : 'none';
-      }
+  const infoBox = document.getElementById('tokenStatusInfo');
+  if (infoBox) {
+    infoBox.style.display = isTokenAlreadyUsed ? 'block' : 'none';
+  }
 
-      showStage('stage2');
-      setTimeout(() => {
-         const nikInput = document.getElementById('nikInput');
-         if(nikInput) nikInput.focus();
-      }, 200);
+  showStage('stage2');
+  setTimeout(() => {
+     const nikInput = document.getElementById('nikInput');
+     if(nikInput) nikInput.focus();
+  }, 200);
 
-    } catch (err) {
-      // TAMBAHAN LOGIKA ATTACK TRACKER JIKA GAGAL
-      tokenAttempts++;
-      if (tokenAttempts >= MAX_ATTEMPTS) {
-        const lockoutUntil = Date.now() + LOCKOUT_TIME;
-        localStorage.setItem('token_lockout_until', lockoutUntil);
-        showAlert(`Anda telah salah memasukkan token sebanyak ${MAX_ATTEMPTS} kali. Akses diblokir selama 1 menit!`, 'danger');
-        tokenAttempts = 0; // reset counter setelah lock diterapkan
-      } else {
-        showAlert(`${err.message || 'Gagal memverifikasi token'}. Sisa percobaan: ${MAX_ATTEMPTS - tokenAttempts}`);
-      }
-      showStage('mainPage');
-    }
+} catch (err) {
+  tokenAttempts++;
+  if (tokenAttempts >= MAX_ATTEMPTS) {
+    const lockoutUntil = Date.now() + LOCKOUT_TIME;
+    localStorage.setItem('token_lockout_until', lockoutUntil);
+    showAlert(t('alert_token_locked', 'Akses diblokir selama 1 menit!'), 'danger');
+    tokenAttempts = 0;
+  } else {
+    const leftText = t('label_attempts_left', 'Sisa percobaan');
+    showAlert(`${err.message}. ${leftText}: ${MAX_ATTEMPTS - tokenAttempts}`, 'danger');
+  }
+  showStage('mainPage');
+}
   }
 
   // === EVENT LISTENER ===
@@ -916,7 +990,6 @@
 
     showStage('stageLoading');
 
-    // Gunakan instance BARU dan BERBEDA khusus untuk file
     const fileScanner = new Html5Qrcode("reader");
 
     try {
@@ -930,34 +1003,30 @@
       console.error("Gagal baca file:", err);
       if (fileScanner) await fileScanner.clear();
 
-      showAlert('Gagal membaca QR: Pastikan gambar tajam, tidak buram, dan QR Code terlihat jelas.', 'danger');
+      showAlert(t('alert_qr_error', 'Gagal membaca QR code.'), 'danger');
       showStage('mainPage');
     } finally {
-      e.target.value = ''; // Reset input agar bisa pilih file yang sama lagi
+      e.target.value = '';
     }
   });
 
-  // Verifikasi manual + RATE LIMIT COOLDOWN
   document.getElementById('btnVerifyToken').addEventListener('click', () => {
-    // 1. Cek Lockout LocalStorage
     const lockTime = localStorage.getItem('token_lockout_until');
     if (lockTime && Date.now() < parseInt(lockTime)) {
       const remaining = Math.ceil((parseInt(lockTime) - Date.now()) / 1000);
-      showAlert(`Fitur masih terkunci. Silakan tunggu ${remaining} detik.`, 'danger');
+      showAlert(`Please wait ${remaining}s.`, 'danger');
       return;
     }
 
     const token = document.getElementById('inputToken').value.trim();
     if (token) {
-      // 2. Beri cooldown 3 detik pada tombol agar tidak bisa di-spam klik cepat
       startButtonCooldown('btnVerifyToken', 3000);
       processToken(token);
     } else {
-      showAlert('Masukkan kode token terlebih dahulu!');
+      showAlert(t('alert_token_empty', 'Masukkan kode token terlebih dahulu!'));
     }
   });
 
-  // Fungsi untuk mengecek status voting dari contract melalui backend
   async function checkVotingStatus() {
     try {
       const res = await fetch(`${BACKEND_URL}/voting-status`, {
@@ -973,10 +1042,10 @@
         if(alertBox) {
             alertBox.classList.add('alert-info-custom', 'text-center');
             alertBox.innerHTML = `
-                <div class="mb-2 small text-uppercase fw-bold text-muted">Status Pemilihan</div>
+                <div class="mb-2 small text-uppercase fw-bold text-muted" data-i18n="voting_status">${t('voting_status', 'Status Pemilihan')}</div>
                 <div id="statusBadgeContainer"></div>
                 <div id="countdownTimer">00:00:00</div>
-                <div id="timerLabel" class="small text-muted">Waktu tersisa untuk memberikan suara</div>
+                <div id="timerLabel" class="small text-muted">${t('label_time_remaining', 'Waktu tersisa untuk memberikan suara')}</div>
             `;
             timerDisplay = document.getElementById('countdownTimer');
             badgeContainer = document.getElementById('statusBadgeContainer');
@@ -988,28 +1057,30 @@
       if (countdownInterval) clearInterval(countdownInterval);
 
       if (data.status === 'active') {
-        if(badgeContainer) badgeContainer.innerHTML = '<span class="badge-status bg-success-subtle text-success border border-success"><span class="pulse-dot"></span> BERLANGSUNG</span>';
+        if(badgeContainer) badgeContainer.innerHTML = `<span class="badge-status bg-success-subtle text-success border border-success"><span class="pulse-dot"></span> ${t('status_ongoing', 'BERLANGSUNG')}</span>`;
         if(btnStart) btnStart.disabled = false;
 
         runTimer(data.targetTime, timerDisplay, () => {
-          if(badgeContainer) badgeContainer.innerHTML = '<span class="badge-status bg-danger-subtle text-danger border border-danger">WAKTU HABIS</span>';
-          if(btnStart) btnStart.disabled = true;
+          if(badgeContainer) badgeContainer.innerHTML = `<span class="badge-status bg-danger-subtle text-danger border border-danger">${t('status_time_up', 'WAKTU HABIS')}</span>`;
+          if(btnStart) btnStart.disabled = false;
           if(timerDisplay) timerDisplay.innerText = "00:00:00";
-          document.getElementById('timerLabel').innerText = "Sesi telah berakhir secara otomatis.";
+          document.getElementById('timerLabel').innerText = t('label_session_ended', 'Sesi telah berakhir secara otomatis.');
         });
 
       } else if (data.status === 'upcoming') {
-        if(badgeContainer) badgeContainer.innerHTML = '<span class="badge-status bg-warning-subtle text-warning border border-warning">BELUM DIMULAI</span>';
-        if(btnStart) btnStart.disabled = true;
+        if(badgeContainer) badgeContainer.innerHTML = `<span class="badge-status bg-warning-subtle text-warning border border-warning">${t('status_not_started', 'BELUM DIMULAI')}</span>`;
+        if(btnStart) btnStart.disabled = false;
         if(timerDisplay) timerDisplay.innerText = "--:--:--";
-        document.getElementById('timerLabel').innerText = "Menunggu pembukaan oleh panitia.";
+        document.getElementById('timerLabel').innerText = t('label_waiting_committee', 'Menunggu pembukaan oleh panitia.');
 
       } else {
-        if(badgeContainer) badgeContainer.innerHTML = '<span class="badge-status bg-secondary-subtle text-secondary border border-secondary">VOTING SELESAI</span>';
-        if(btnStart) btnStart.disabled = true;
-        if(timerDisplay) timerDisplay.innerText = "CLOSED";
-        document.getElementById('timerLabel').innerText = "Penerimaan suara telah ditutup.";
-      }
+  if (badgeContainer) badgeContainer.innerHTML = `<span class="badge-status bg-secondary-subtle text-secondary border border-secondary">${t('status_ended', 'VOTING SELESAI')}</span>`;
+  if (btnStart) btnStart.disabled = false;
+  if (timerDisplay) timerDisplay.innerText = t('status_closed', 'CLOSED');
+  
+  const timerLabel = document.getElementById('timerLabel');
+  if (timerLabel) timerLabel.innerText = t('label_voting_closed', 'Penerimaan suara telah ditutup.');
+}
     } catch (err) {
       console.error("Gagal cek status:", err);
     }
@@ -1040,26 +1111,29 @@
     countdownInterval = setInterval(update, 1000);
   }
 
-  // === INPUT NIK + VALIDASI NIK HASH & RATE LIMIT ===
+  // === INPUT NIK ===
   document.getElementById('formNIK').addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    // 1. Cek Lockout LocalStorage untuk NIK
     const lockTime = localStorage.getItem('nik_lockout_until');
-    if (lockTime && Date.now() < parseInt(lockTime)) {
-      const remaining = Math.ceil((parseInt(lockTime) - Date.now()) / 1000);
-      showAlert(`Input NIK dikunci sementara. Silakan tunggu ${remaining} detik.`, 'danger');
-      return;
-    }
+if (lockTime && Date.now() < parseInt(lockTime)) {
+  const remaining = Math.ceil((parseInt(lockTime) - Date.now()) / 1000);
+  
+  // Mengambil template pesan dari kamus dan mengganti {seconds} dengan sisa waktu
+  let msg = t('alert_nik_wait', 'Input NIK dikunci sementara. Silakan tunggu {seconds} detik.');
+  msg = msg.replace('{seconds}', remaining);
+  
+  showAlert(msg, 'danger');
+  return;
+}
 
     const nik = document.getElementById('nikInput').value.trim();
 
     if (!/^\d{16}$/.test(nik)) {
-      showAlert('NIK harus tepat 16 digit angka!');
+      showAlert(t('alert_nik_invalid', 'NIK harus tepat 16 digit angka!'));
       return;
     }
 
-    // 2. Cooldown Tombol Submit Form NIK (3 Detik)
     const submitBtn = e.target.querySelector('button[type="submit"]');
     if(submitBtn) {
         submitBtn.disabled = true;
@@ -1080,13 +1154,15 @@
       });
 
       const data = await res.json();
-      if (!data.success) throw new Error(data.error);
+      if (!data.success) {
+    // Ambil terjemahan berdasarkan errorKey dari backend, atau gunakan string bawaan data.error
+    const localizedError = t(data.errorKey, data.error);
+    throw new Error(localizedError);
+  }
 
-      // RESET ATTEMPTS JIKA BERHASIL
       nikAttempts = 0;
       localStorage.removeItem('nik_lockout_until');
 
-      // --- LOGIKA REDIRECT OTOMATIS ---
       if (data.alreadyVoted) {
         sessionStorage.setItem('voterNIK', currentNIK);
         sessionStorage.setItem('voterToken', currentToken);
@@ -1103,21 +1179,22 @@
       updateContractLink();
 
     } catch (err) {
-      // TAMBAHAN LOGIKA ATTACK TRACKER JIKA GAGAL VERIFIKASI NIK
-      nikAttempts++;
-      if (nikAttempts >= MAX_ATTEMPTS) {
-        const lockoutUntil = Date.now() + LOCKOUT_TIME;
-        localStorage.setItem('nik_lockout_until', lockoutUntil);
-        showAlert(`Terlalu banyak mencoba NIK yang salah. Input dikunci selama 1 menit!`, 'danger');
-        nikAttempts = 0;
-      } else {
-        showAlert(`${err.message}. Sisa percobaan: ${MAX_ATTEMPTS - nikAttempts}`);
-      }
-      showStage('stage2');
-    }
+  nikAttempts++;
+  showStage('stage2');
+
+  if (nikAttempts >= MAX_ATTEMPTS) {
+    const lockoutUntil = Date.now() + LOCKOUT_TIME;
+    localStorage.setItem('nik_lockout_until', lockoutUntil);
+    showAlert(t('alert_nik_locked', 'Terlalu banyak mencoba NIK yang salah. Input dikunci selama 1 menit!'), 'danger');
+    nikAttempts = 0;
+  } else {
+    // Menampilkan pesan error + sisa percobaan (cukup 1 kali call showAlert)
+    const leftText = t('label_attempts_left', 'Sisa percobaan');
+    showAlert(`${err.message}. ${leftText}: ${MAX_ATTEMPTS - nikAttempts}`, 'danger');
+  }
+}
   });
 
-  // === BARU: Navigasi ke user.html ===
   document.getElementById('btnStartVoting').addEventListener('click', () => {
     sessionStorage.setItem('voterNIK', currentNIK);
     sessionStorage.setItem('voterToken', currentToken);
@@ -1126,7 +1203,6 @@
 
   let allCandidatesData = [];
 
-  // Ambil data gabungan dari Backend
   async function loadCandidatePreview() {
     try {
       const res = await fetch(`${BACKEND_URL}/results`, {
@@ -1166,7 +1242,7 @@
                   <div class="candidate-name-slide">${cand.nama}</div>
                   <p class="text-muted mb-3 text-center" style="font-size: 0.7rem;"></p>
                   <button class="btn btn-outline-primary btn-view-profile rounded-pill fw-bold">
-                    Lihat Visi-Misi
+                    ${t('btn_view_profile', 'Lihat Visi-Misi')}
                   </button>
                 </div>
               </div>
@@ -1187,35 +1263,40 @@
     }
   }
 
-  // Tampilkan Detail ke Modal
   function showCandidateDetail(index) {
-    const cand = allCandidatesData[index];
-    const modal = new bootstrap.Modal(document.getElementById('candidateModal'));
+  const cand = allCandidatesData[index];
+  const modal = new bootstrap.Modal(document.getElementById('candidateModal'));
+  const noPrefix = currentLang === 'en' ? 'Candidate No.' : 'No. Urut';
 
-    document.getElementById('modalHeaderColor').style.background = 
-      `linear-gradient(135deg, ${cand.warna} 0%, ${cand.warna}dd 100%)`;
-    document.getElementById('modalNoUrut').style.backgroundColor = cand.warna;
-    document.getElementById('modalNoUrut').classList.add('text-white');
+  document.getElementById('modalHeaderColor').style.background = 
+    `linear-gradient(135deg, ${cand.warna} 0%, ${cand.warna}dd 100%)`;
+  document.getElementById('modalNoUrut').style.backgroundColor = cand.warna;
+  document.getElementById('modalNoUrut').classList.add('text-white');
 
-    document.getElementById('modalFoto').src = getFullImageUrl(cand.foto);
-    document.getElementById('modalNoUrut').innerText = `No. Urut ${cand.noUrut}`;
-    document.getElementById('modalNamaKetua').innerText = cand.nama;
+  document.getElementById('modalFoto').src = getFullImageUrl(cand.foto);
+  document.getElementById('modalNoUrut').innerText = `${noPrefix} ${cand.noUrut}`;
+  document.getElementById('modalNamaKetua').innerText = cand.nama;
 
-    document.getElementById('modalTagline').innerText = cand.tagline;
-    document.getElementById('modalVisi').innerText = cand.visi;
+  // Pilih teks berdasarkan bahasa yang sedang aktif
+  const taglineText = (currentLang === 'en' && cand.tagline_en) ? cand.tagline_en : cand.tagline;
+  const visiText = (currentLang === 'en' && cand.visi_en) ? cand.visi_en : cand.visi;
+  const misiArray = (currentLang === 'en' && cand.misi_en && cand.misi_en.length > 0) ? cand.misi_en : cand.misi;
 
-    const misiList = document.getElementById('modalMisi');
-    misiList.innerHTML = '';
-    if (Array.isArray(cand.misi)) {
-      cand.misi.forEach(m => {
-        misiList.innerHTML += `<li>${m}</li>`;
-      });
-    }
+  document.getElementById('modalTagline').innerText = taglineText;
+  document.getElementById('modalVisi').innerText = visiText;
 
-    modal.show();
+  const misiList = document.getElementById('modalMisi');
+  misiList.innerHTML = '';
+  if (Array.isArray(misiArray)) {
+    misiArray.forEach(m => {
+      misiList.innerHTML += `<li>${m}</li>`;
+    });
   }
 
-  // === Inisialisasi ===
+  modal.show();
+}
+
+  // === Inisialisasi TEMA ===
   showStage('mainPage');
 
   const touchBtn = document.getElementById('theme-touch');
@@ -1349,14 +1430,82 @@
       const linkEl = document.getElementById('etherscanLink');
       if (data.address && linkEl) {
         linkEl.href = data.explorerUrl;
-        linkEl.innerHTML = `<i class="bi bi-box-seam me-2"></i> Lihat Kotak Suara Digital`;
+        linkEl.innerHTML = `<i class="bi bi-box-seam me-2"></i> <span data-i18n="btn_ballot_box">${t('btn_ballot_box', 'Lihat Kotak Suara Digital')}</span>`;
       }
     } catch (err) {
       console.error("Gagal memuat link:", err);
-      document.getElementById('etherscanLink').innerHTML = `<i class="bi bi-exclamation-triangle me-2"></i> Kotak Suara Sedang Maintenance`;
+      document.getElementById('etherscanLink').innerHTML = `<i class="bi bi-exclamation-triangle me-2"></i> ${t('ballot_box_maint', 'Kotak Suara Sedang Maintenance')}`;
     }
   }
-  </script>
+
+  // === SISTEM MULTI-BAHASA (i18n) ===
+  let currentLang = localStorage.getItem('preferredLang') || 'id';
+
+  async function fetchLanguageData(lang) {
+    try {
+      const response = await fetch(`${BACKEND_URL}/lang/${lang}`, {
+        headers: NGROK_HEADERS
+      });
+      
+      if (!response.ok) throw new Error('Gagal mengambil data bahasa');
+      
+      return await response.json();
+    } catch (err) {
+      console.error("Gagal memuat file bahasa dari backend:", err);
+      return null;
+    }
+  }
+
+  async function updateContent(lang) {
+    const translations = await fetchLanguageData(lang);
+    if (!translations) return;
+
+    // Simpan terjemahan secara global agar fungsi JS lain bisa membacanya via t()
+    currentTranslations = translations;
+
+    // 1. Update elemen dengan atribut data-i18n
+    document.querySelectorAll('[data-i18n]').forEach(element => {
+      const key = element.getAttribute('data-i18n');
+      if (translations[key]) {
+        element.innerHTML = translations[key];
+      }
+    });
+
+    // 2. Update placeholder pada input form
+    document.querySelectorAll('[data-i18n-placeholder]').forEach(element => {
+      const key = element.getAttribute('data-i18n-placeholder');
+      if (translations[key]) {
+        element.placeholder = translations[key];
+      }
+    });
+
+    // 3. Simpan preferensi bahasa dan update kelas tombol
+    localStorage.setItem('preferredLang', lang);
+    document.documentElement.lang = lang;
+
+    const btnId = document.getElementById('btn-lang-id');
+    const btnEn = document.getElementById('btn-lang-en');
+    if (btnId && btnEn) {
+      btnId.classList.toggle('active', lang === 'id');
+      btnEn.classList.toggle('active', lang === 'en');
+    }
+
+    // Refresh elemen-elemen dinamis jika sedang aktif di layar
+    if (allCandidatesData.length > 0) {
+      loadCandidatePreview();
+    }
+    checkVotingStatus();
+  }
+
+  function changeLanguage(lang) {
+    currentLang = lang;
+    updateContent(lang);
+  }
+
+  document.addEventListener('DOMContentLoaded', () => {
+    updateContent(currentLang);
+  });
+</script>
 </body>
 
 </html>

@@ -1,24 +1,89 @@
-const BACKEND_URL = 'https://10c5-172-216-170-152.ngrok-free.app';
+const BACKEND_URL = 'https://5257-172-216-170-152.ngrok-free.app';
 const NGROK_HEADERS = {
     "ngrok-skip-browser-warning": "69420"
 };
+
 let selectedCandidateId = null;
 let countdownInterval = null;
+let allCandidatesData = [];
+
+// === SISTEM MULTI-BAHASA (i18n) ===
+let currentLang = localStorage.getItem('preferredLang') || 'id';
+let currentTranslations = {};
+
+function t(key, fallback = '') {
+    return currentTranslations[key] || fallback;
+}
+
+async function fetchLanguageData(lang) {
+    try {
+        const response = await fetch(`${BACKEND_URL}/lang/${lang}`, {
+            headers: NGROK_HEADERS
+        });
+        if (!response.ok) throw new Error('Gagal mengambil data bahasa');
+        return await response.json();
+    } catch (err) {
+        console.error("Gagal memuat file bahasa:", err);
+        return null;
+    }
+}
+
+async function updateContent(lang) {
+    const translations = await fetchLanguageData(lang);
+    if (!translations) return;
+
+    currentTranslations = translations;
+
+    // 1. Update elemen HTML ber-atribut data-i18n
+    document.querySelectorAll('[data-i18n]').forEach(element => {
+        const key = element.getAttribute('data-i18n');
+        if (translations[key]) {
+            element.innerHTML = translations[key];
+        }
+    });
+
+    // 2. Simpan preferensi bahasa
+    localStorage.setItem('preferredLang', lang);
+    document.documentElement.lang = lang;
+
+    // 3. Highlight tombol aktif (ID / EN) jika ada di Navbar
+    const btnId = document.getElementById('btn-lang-id');
+    const btnEn = document.getElementById('btn-lang-en');
+    if (btnId && btnEn) {
+        btnId.classList.toggle('active', lang === 'id');
+        btnEn.classList.toggle('active', lang === 'en');
+    }
+
+    // Refresh elemen dinamis
+    if (allCandidatesData.length > 0) {
+        renderCandidates(allCandidatesData);
+    }
+    checkVotingStatus();
+}
+
+function changeLanguage(lang) {
+    currentLang = lang;
+    updateContent(lang);
+}
 
 function getFullImageUrl(path) {
     if (!path) return '/img/default.png';
     if (path.startsWith('http')) return path;
     const fileName = path.split('/').pop();
-    return `/img/${fileName}`; // Mengambil langsung dari public Vercel
+    return `/img/${fileName}`;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     initAuth();
     initTheme();
+    
+    // Muat data terjemahan terlebih dahulu
+    await updateContent(currentLang);
+    
+    // Setelah terjemahan siap, baru load kandidat dan status voting
     loadCandidates();
     initSwipeLogic();
-    // Tambahkan pemanggilan status voting
-    checkVotingStatus(); 
+    checkVotingStatus();
 });
 
 /**
@@ -30,7 +95,6 @@ function initAuth() {
         window.location.href = '../index.html';
         return;
     }
-    // Menampilkan NIK dengan sensor tengah yang lebih rapi
     const maskedNIK = `${nik.substring(0, 4)}••••${nik.substring(12)}`;
     document.getElementById('displayNIK').innerText = `NIK: ${maskedNIK}`;
 }
@@ -41,38 +105,49 @@ function initAuth() {
 async function loadCandidates() {
     try {
         const res = await fetch(`${BACKEND_URL}/results`, {
-    headers: NGROK_HEADERS // Tambahkan ini
-});
-        const data = await res.json();
-        const grid = document.getElementById('candidateGrid');
+            headers: NGROK_HEADERS
+        });
+        allCandidatesData = await res.json();
+        renderCandidates(allCandidatesData);
+    } catch (e) { 
+        console.error("Error loading candidates", e);
+        document.getElementById('candidateGrid').innerHTML = `
+            <div class="col-12 text-center py-5" style="animation: fadeIn 0.5s ease;">
+                <div class="mb-4">
+                    <i class="bi bi-cloud-slash display-1 text-muted"></i>
+                </div>
+                <h4 class="fw-bold">${t('net_error_title', 'Gagal Memuat Kandidat')}</h4>
+                <p class="text-secondary mb-4">${t('net_error_desc', 'Terjadi masalah koneksi ke server. Silakan coba muat ulang halaman.')}</p>
+                
+                <button onclick="location.reload()" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm">
+                    <i class="bi bi-arrow-clockwise me-2"></i> ${t('btn_try_again', 'Muat Ulang Halaman')}
+                </button>
+            </div>`;
+    }
+}
+
+function renderCandidates(data) {
+    const grid = document.getElementById('candidateGrid');
+    if (!grid) return;
+
+    grid.innerHTML = data.map((cand, index) => {
+        const taglineText = (currentLang === 'en' && cand.tagline_en) ? cand.tagline_en : cand.tagline;
         
-        grid.innerHTML = data.map((cand, index) => `
+        return `
             <div class="col-md-6 col-lg-4" style="animation: fadeIn 0.6s ease forwards ${index * 0.1}s; opacity: 0;">
                 <div class="candidate-card" onclick="openVoteModal('${cand.id}', '${cand.nama}', '${cand.noUrut}', '${cand.foto}')">
                     <div class="candidate-number">${cand.noUrut}</div>
                     
                     <img src="${getFullImageUrl(cand.foto)}" class="img-circle" alt="${cand.nama}" onerror="this.src='/img/default.png'">
                     <h4 class="fw-extrabold mb-1 tracking-tight">${cand.nama}</h4>
-                    <p class="text-secondary small mb-4"></p>
-                    <button class="btn btn-outline-primary btn-sm rounded-pill px-4 fw-bold">Pilih Calon</button>
+                    <p class="text-secondary small mb-4">${taglineText || ''}</p>
+                    <button class="btn btn-outline-primary btn-sm rounded-pill px-4 fw-bold">
+                        ${t('btn_select_candidate', 'Pilih Calon')}
+                    </button>
                 </div>
             </div>
-        `).join('');
-    } catch (e) { 
-        console.error("Error loading candidates", e);
-    document.getElementById('candidateGrid').innerHTML = `
-        <div class="col-12 text-center py-5" style="animation: fadeIn 0.5s ease;">
-            <div class="mb-4">
-                <i class="bi bi-cloud-slash display-1 text-muted"></i>
-            </div>
-            <h4 class="fw-bold">Gagal Memuat Kandidat</h4>
-            <p class="text-secondary mb-4">Terjadi masalah koneksi ke server. Silakan coba muat ulang halaman.</p>
-            
-            <button onclick="location.reload()" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm">
-                <i class="bi bi-arrow-clockwise me-2"></i> Muat Ulang Halaman
-            </button>
-        </div>`;
-    }
+        `;
+    }).join('');
 }
 
 /**
@@ -81,10 +156,11 @@ async function loadCandidates() {
 function openVoteModal(id, nama, noUrut, foto) {
     selectedCandidateId = id;
     document.getElementById('confirmNama').innerText = nama;
-    document.getElementById('confirmNoUrut').innerText = `Kandidat Nomor ${noUrut}`;
+    
+    const candidatePrefix = currentLang === 'en' ? 'Candidate No.' : 'Kandidat Nomor';
+    document.getElementById('confirmNoUrut').innerText = `${candidatePrefix} ${noUrut}`;
     document.getElementById('confirmImg').src = getFullImageUrl(foto);
 
-    // Reset modal ke state awal (Konfirmasi)
     document.getElementById('voteStateConfirm').style.display = 'block';
     document.getElementById('voteStateSuccess').style.display = 'none';
     resetSwipe();
@@ -99,10 +175,11 @@ function openVoteModal(id, nama, noUrut, foto) {
 function initSwipeLogic() {
     const handle = document.getElementById('swipeHandle');
     const track = document.getElementById('swipeTrack');
+    if (!handle || !track) return;
+
     let isDragging = false;
     let startX = 0;
 
-    // Cegah aksi default browser (seperti scroll saat menggeser tombol)
     const preventDefaults = (e) => {
         if (isDragging) {
             e.preventDefault();
@@ -112,7 +189,6 @@ function initSwipeLogic() {
 
     handle.addEventListener('pointerdown', (e) => {
         isDragging = true;
-        // Ambil posisi kursor/sentuhan awal relatif terhadap handle
         startX = e.clientX;
         
         handle.setPointerCapture(e.pointerId);
@@ -123,23 +199,20 @@ function initSwipeLogic() {
     handle.addEventListener('pointermove', (e) => {
         if (!isDragging) return;
         
-        // Mencegah scroll layar saat jari menggeser tombol
         preventDefaults(e);
 
         let deltaX = e.clientX - startX;
         const maxMove = track.offsetWidth - handle.offsetWidth - 10;
 
-        // Batasi gerakan agar tidak keluar jalur
         if (deltaX < 0) deltaX = 0;
         if (deltaX > maxMove) deltaX = maxMove;
 
         handle.style.transform = `translateX(${deltaX}px)`;
         
-        // Efek visual teks memudar
         const opacityValue = 1 - (deltaX / maxMove);
-        document.querySelector('.swipe-text').style.opacity = Math.max(opacityValue, 0.1);
+        const swipeTextEl = document.querySelector('.swipe-text');
+        if (swipeTextEl) swipeTextEl.style.opacity = Math.max(opacityValue, 0.1);
 
-        // Jika sampai ujung (98% dari maxMove)
         if (deltaX >= maxMove * 0.98) {
             isDragging = false;
             handle.style.transform = `translateX(${maxMove}px)`;
@@ -154,7 +227,6 @@ function initSwipeLogic() {
         resetSwipe();
     });
 
-    // Tambahan untuk menangani jika pointer keluar dari area (cancel)
     handle.addEventListener('pointercancel', () => {
         isDragging = false;
         resetSwipe();
@@ -163,9 +235,18 @@ function initSwipeLogic() {
 
 function resetSwipe() {
     const handle = document.getElementById('swipeHandle');
+    const swipeText = document.querySelector('.swipe-text');
+    if (!handle) return;
+
     handle.style.transition = 'transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
     handle.style.transform = 'translateX(0)';
-    document.querySelector('.swipe-text').style.opacity = 0.3; // Kembali ke transparan awal
+    handle.style.pointerEvents = 'auto';
+    handle.style.background = '';
+    
+    if (swipeText) {
+        swipeText.style.opacity = 0.3;
+        swipeText.innerText = t('swipe_text', 'GESER UNTUK VOTE');
+    }
     handle.innerHTML = '<i class="bi bi-chevron-double-right"></i>';
 }
 
@@ -198,11 +279,13 @@ async function processVoting() {
         const data = await res.json();
 
         if (data.success) {
-            // JALUR VALID / PEMILIH PERTAMA
             handle.innerHTML = '<i class="bi bi-check-lg"></i>';
             handle.style.background = '#10b981'; 
-            swipeText.innerText = "SUARA BERHASIL DIKIRIM!";
-            swipeText.style.opacity = "1";
+            
+            if (swipeText) {
+                swipeText.innerText = t('vote_success_msg', 'SUARA BERHASIL DIKIRIM!');
+                swipeText.style.opacity = "1";
+            }
 
             sessionStorage.setItem('lastVoteTx', data.txHash);
             sessionStorage.setItem('lastVoteTime', new Date().toISOString());
@@ -220,12 +303,11 @@ async function processVoting() {
             }, 1000);
 
         } else {
-            // JALUR DOUBLE VOTING / DATA DITOLAK
             if (data.isDoubleVote) {
-                // Berikan data.txHash yang dikirim langsung dari backend
-                showErrorVoteModal(data.error, true, data.txHash);
+                showErrorVoteModal(t('err_nik_already_voted', data.error), true, data.txHash);
             } else {
-                showErrorVoteModal(data.error || "Pilihan Anda ditolak oleh sistem.", false, null);
+                const localizedError = t(data.errorKey, data.error || "Pilihan Anda ditolak oleh sistem.");
+                showErrorVoteModal(localizedError, false, null);
             }
             resetSwipe();
         }
@@ -237,25 +319,20 @@ async function processVoting() {
     }
 }
 
-// --- TAMBAHKAN FUNGSI BARU INI DI PALING BAWAH user.js ---
 function showConcurrentAlert(customMessage) {
-    // 1. Tutup modal vote jika sedang terbuka
     const voteModalEl = document.getElementById('confirmVoteModal');
     if (voteModalEl) {
         const voteModalInstance = bootstrap.Modal.getInstance(voteModalEl);
         if (voteModalInstance) voteModalInstance.hide();
     }
 
-    // 2. Update pesan jika ada pesan khusus
     if (customMessage) {
         document.getElementById('concurrentMessage').innerText = customMessage;
     }
 
-    // 3. Tampilkan modal keamanan sesi
     const concurrentModal = new bootstrap.Modal(document.getElementById('concurrentModal'));
     concurrentModal.show();
 
-    // 4. Jalankan Countdown (5 detik)
     let timeLeft = 5;
     const countdownEl = document.getElementById('concurrentCountdown');
 
@@ -265,7 +342,7 @@ function showConcurrentAlert(customMessage) {
 
         if (timeLeft <= 0) {
             clearInterval(timer);
-            clearAndExit(); // Fungsi redirect & clear session yang sudah Anda buat
+            clearAndExit();
         }
     }, 1000);
 }
@@ -274,7 +351,6 @@ function showConcurrentAlert(customMessage) {
  * Menampilkan Modal Error dengan Tombol Dinamis ke Tx Hash Etherscan
  */
 function showErrorVoteModal(message, isDoubleVote, txHash) {
-    // 1. Tutup modal konfirmasi
     const voteModalEl = document.getElementById('confirmVoteModal');
     if (voteModalEl) {
         const voteModalInstance = bootstrap.Modal.getInstance(voteModalEl);
@@ -288,27 +364,23 @@ function showErrorVoteModal(message, isDoubleVote, txHash) {
         btnEtherscan.style.setProperty('display', 'inline-flex', 'important');
         
         if (txHash) {
-            // JIKA TX HASH SUDAH ADA: Aktifkan tombol dan pasang link langsung ke /tx/
             btnEtherscan.classList.remove('disabled');
             btnEtherscan.style.pointerEvents = 'auto';
-            btnEtherscan.innerHTML = `<i class="bi bi-box-arrow-up-right"></i> Periksa Audit di Etherscan`;
+            btnEtherscan.innerHTML = `<i class="bi bi-box-arrow-up-right"></i> ${t('btn_check_etherscan', 'Periksa Audit di Etherscan')}`;
             btnEtherscan.setAttribute('href', `https://sepolia.etherscan.io/tx/${txHash}`);
         } else {
-            // JIKA TX HASH BELUM ADA/SEDANG DIPROSES: Masuk mode Loading
             btnEtherscan.classList.add('disabled');
             btnEtherscan.style.pointerEvents = 'none';
-            btnEtherscan.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Menghubungkan ke Blockchain...`;
+            btnEtherscan.innerHTML = `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> ${t('connecting_blockchain', 'Menghubungkan ke Blockchain...')}`;
             btnEtherscan.setAttribute('href', '#');
         }
     } else {
         btnEtherscan.style.setProperty('display', 'none', 'important');
     }
 
-    // Tampilkan modal error
     const errorModal = new bootstrap.Modal(document.getElementById('errorVoteModal'));
     errorModal.show();
 
-    // Berikan waktu countdown sedikit lebih panjang (15 detik) agar pemilih sempat memeriksa Etherscan
     let timeLeft = 5;
     const countdownEl = document.getElementById('errorCountdown');
     if (countdownEl) countdownEl.innerText = timeLeft;
@@ -327,29 +399,26 @@ function showErrorVoteModal(message, isDoubleVote, txHash) {
 }
 
 function showNetworkErrorModal() {
-    // Tutup modal konfirmasi jika masih terbuka
     const voteModalEl = document.getElementById('confirmVoteModal');
-    const voteModalInstance = bootstrap.Modal.getInstance(voteModalEl);
-    if (voteModalInstance) voteModalInstance.hide();
+    if (voteModalEl) {
+        const voteModalInstance = bootstrap.Modal.getInstance(voteModalEl);
+        if (voteModalInstance) voteModalInstance.hide();
+    }
 
-    // Tampilkan modal koneksi
     const netModal = new bootstrap.Modal(document.getElementById('networkErrorModal'));
     netModal.show();
 }
 
-// Fungsi bantu untuk keluar (Tetap sama)
 function clearAndExit() {
     sessionStorage.clear();
     window.location.href = '../index.html';
 }
 
 function refreshPage() {
-    // Memberikan sedikit efek transisi sebelum reload
     document.body.style.opacity = '0.5';
     location.reload();
 }
 
-// Fungsi Countdown Baru
 function startRedirectCountdown(seconds) {
     let timeLeft = seconds;
     const timerElement = document.getElementById('redirectTimer');
@@ -365,14 +434,11 @@ function startRedirectCountdown(seconds) {
     }, 1000);
 }
 
-/**
- * Manajemen Tema (Dark/Light) dengan Sinkronisasi Ikon
- */
 function initTheme() {
     const html = document.documentElement;
     const themeIcon = document.getElementById('theme-icon');
+    if (!themeIcon) return;
     
-    // Fungsi sinkronisasi ikon
     const syncIcon = (theme) => {
         if (theme === 'dark') {
             themeIcon.className = 'bi bi-moon-stars-fill';
@@ -381,20 +447,21 @@ function initTheme() {
         }
     };
 
-    // Set ikon awal saat load
     syncIcon(html.getAttribute('data-theme'));
 
-    document.getElementById('theme-toggle').addEventListener('click', () => {
-        const currentTheme = html.getAttribute('data-theme');
-        const targetTheme = currentTheme === 'dark' ? 'light' : 'dark';
-        
-        // Animasi transisi smooth
-        html.style.transition = 'background-color 0.5s ease, color 0.5s ease';
-        
-        localStorage.setItem('theme-preference', targetTheme);
-        html.setAttribute('data-theme', targetTheme);
-        syncIcon(targetTheme);
-    });
+    const themeToggleBtn = document.getElementById('theme-toggle');
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const targetTheme = currentTheme === 'dark' ? 'light' : 'dark';
+            
+            html.style.transition = 'background-color 0.5s ease, color 0.5s ease';
+            
+            localStorage.setItem('theme-preference', targetTheme);
+            html.setAttribute('data-theme', targetTheme);
+            syncIcon(targetTheme);
+        });
+    }
 }
 
 /**
@@ -403,11 +470,10 @@ function initTheme() {
 async function checkVotingStatus() {
     try {
         const res = await fetch(`${BACKEND_URL}/voting-status`, {
-    headers: NGROK_HEADERS // Tambahkan ini
-});
+            headers: NGROK_HEADERS
+        });
         const data = await res.json();
 
-        // Ambil elemen dari Navbar user.html
         const statusDot = document.getElementById('statusDot');
         const statusText = document.getElementById('statusText');
         const timerLabel = document.querySelector('.timer-label');
@@ -418,14 +484,14 @@ async function checkVotingStatus() {
         if (countdownInterval) clearInterval(countdownInterval);
 
         if (data.status === 'active') {
-            // UI AKTIF
-            statusDot.style.backgroundColor = '#10b981'; // Hijau
-            statusText.innerText = 'Berlangsung';
-            timerLabel.innerText = 'BERAKHIR DALAM:';
+            if(statusDot) statusDot.style.backgroundColor = '#10b981';
+            if(statusText) statusText.innerText = t('status_ongoing', 'Berlangsung');
+            if(timerLabel) timerLabel.innerText = `${t('timer_ends_in', 'BERAKHIR DALAM')}:`;
             
-            // Aktifkan Card
-            grid.style.pointerEvents = 'auto';
-            grid.style.opacity = '1';
+            if(grid) {
+                grid.style.pointerEvents = 'auto';
+                grid.style.opacity = '1';
+            }
 
             if(swipeTrack) {
                 swipeTrack.style.pointerEvents = 'auto';
@@ -433,58 +499,58 @@ async function checkVotingStatus() {
             }
 
             runTimer(data.targetTime, timerDisplay, () => {
-                // Callback jika waktu habis saat sedang buka halaman
-                statusDot.style.backgroundColor = '#ef4444'; // Merah
-                statusText.innerText = 'Selesai';
-                timerLabel.innerText = 'WAKTU HABIS:';
-                timerDisplay.innerText = "00:00:00";
-                grid.style.pointerEvents = 'none';
-                grid.style.opacity = '0.6';
+                if(statusDot) statusDot.style.backgroundColor = '#ef4444';
+                if(statusText) statusText.innerText = t('status_ended', 'Selesai');
+                if(timerLabel) timerLabel.innerText = `${t('status_time_up', 'WAKTU HABIS')}:`;
+                if(timerDisplay) timerDisplay.innerText = "00:00:00";
+                
+                if(grid) {
+                    grid.style.pointerEvents = 'none';
+                    grid.style.opacity = '0.6';
+                }
 
-                // DISABLE TOMBOL SWIPE
                 if(swipeTrack) {
-                    swipeTrack.style.pointerEvents = 'none'; // Mematikan geser
-                    swipeTrack.style.opacity = '0.5'; // Ubah warna jadi merah muda (soft red)
-                    document.querySelector('.swipe-text').innerText = "VOTING CLOSED";
-                    //document.querySelector('.swipe-text').style.color = "#dc2626";
+                    swipeTrack.style.pointerEvents = 'none';
+                    swipeTrack.style.opacity = '0.5';
+                    const swipeText = document.querySelector('.swipe-text');
+                    if(swipeText) swipeText.innerText = t('status_closed', 'VOTING CLOSED');
                 }
             });
 
         } else if (data.status === 'upcoming') {
-            // UI BELUM DIMULAI
-            statusDot.style.backgroundColor = '#f59e0b'; // Kuning/Orange
-            statusText.innerText = 'Menunggu';
-            timerLabel.innerText = 'BELUM DIMULAI';
-            timerDisplay.innerText = "--:--:--";
+            if(statusDot) statusDot.style.backgroundColor = '#f59e0b';
+            if(statusText) statusText.innerText = t('status_not_started', 'Menunggu');
+            if(timerLabel) timerLabel.innerText = t('status_not_started', 'BELUM DIMULAI');
+            if(timerDisplay) timerDisplay.innerText = "--:--:--";
             
-            // Disable Card
-            grid.style.pointerEvents = '';
-            grid.style.opacity = '0.6';
+            if(grid) {
+                grid.style.pointerEvents = 'none';
+                grid.style.opacity = '0.6';
+            }
 
-            // DISABLE TOMBOL SWIPE (Penting jika user buka modal lewat konsol)
             if(swipeTrack) {
-                    swipeTrack.style.pointerEvents = 'none'; // Mematikan geser
-                    swipeTrack.style.opacity = '0.6'; // Ubah warna jadi merah muda (soft red)
-                    document.querySelector('.swipe-text').innerText = "VOTING BELUM DIMULAI";
-                }
+                swipeTrack.style.pointerEvents = 'none';
+                swipeTrack.style.opacity = '0.6';
+                const swipeText = document.querySelector('.swipe-text');
+                if(swipeText) swipeText.innerText = t('status_not_started', 'VOTING BELUM DIMULAI');
+            }
 
         } else {
-            // UI SELESAI
-            statusDot.style.backgroundColor = '#ef4444'; // Merah
-            statusText.innerText = 'Selesai';
-            timerLabel.innerText = 'VOTING SELESAI';
-            //timerDisplay.innerText = "CLOSED";
+            if(statusDot) statusDot.style.backgroundColor = '#ef4444';
+            if(statusText) statusText.innerText = t('status_ended', 'Selesai');
+            if(timerLabel) timerLabel.innerText = t('status_ended', 'VOTING SELESAI');
             
-            // Disable Card
-            grid.style.pointerEvents = '';
-            grid.style.opacity = '0.6';
+            if(grid) {
+                grid.style.pointerEvents = 'none';
+                grid.style.opacity = '0.6';
+            }
 
-            // DISABLE TOMBOL SWIPE (Penting jika user buka modal lewat konsol)
             if(swipeTrack) {
-                    swipeTrack.style.pointerEvents = 'none'; // Mematikan geser
-                    swipeTrack.style.opacity = '0.6'; // Ubah warna jadi merah muda (soft red)
-                    document.querySelector('.swipe-text').innerText = "VOTING SELESAI";
-                }
+                swipeTrack.style.pointerEvents = 'none';
+                swipeTrack.style.opacity = '0.6';
+                const swipeText = document.querySelector('.swipe-text');
+                if(swipeText) swipeText.innerText = t('status_closed', 'VOTING SELESAI');
+            }
         }
     } catch (err) {
         console.error("Gagal cek status:", err);
@@ -501,7 +567,7 @@ function runTimer(targetTime, displayElement, onFinish) {
 
         if (diff <= 0) {
             clearInterval(countdownInterval);
-            displayElement.innerText = "00:00:00";
+            if(displayElement) displayElement.innerText = "00:00:00";
             if (onFinish) onFinish();
             return;
         }
@@ -510,8 +576,10 @@ function runTimer(targetTime, displayElement, onFinish) {
         const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const s = Math.floor((diff % (1000 * 60)) / 1000);
 
-        displayElement.innerText = 
-            `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        if(displayElement) {
+            displayElement.innerText = 
+                `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
     }
 
     update();

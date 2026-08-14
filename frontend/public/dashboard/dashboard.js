@@ -1,9 +1,71 @@
-const BACKEND_URL = 'https://10c5-172-216-170-152.ngrok-free.app';
+const BACKEND_URL = 'https://5257-172-216-170-152.ngrok-free.app';
 const NGROK_HEADERS = {
     "ngrok-skip-browser-warning": "69420"
 };
 let countdownInterval = null;
 let receiptModalInstance = null;
+let allCandidatesData = [];
+
+// === SISTEM MULTI-BAHASA (i18n) ===
+let currentLang = localStorage.getItem('preferredLang') || 'id';
+let currentTranslations = {};
+
+function t(key, fallback = '') {
+    return currentTranslations[key] || fallback;
+}
+
+async function fetchLanguageData(lang) {
+    try {
+        const response = await fetch(`${BACKEND_URL}/lang/${lang}`, {
+            headers: NGROK_HEADERS
+        });
+        if (!response.ok) throw new Error('Gagal mengambil data bahasa');
+        return await response.json();
+    } catch (err) {
+        console.error("Gagal memuat file bahasa:", err);
+        return null;
+    }
+}
+
+async function updateContent(lang) {
+    const translations = await fetchLanguageData(lang);
+    if (!translations) return;
+
+    currentTranslations = translations;
+
+    // 1. Update elemen HTML ber-atribut data-i18n
+    document.querySelectorAll('[data-i18n]').forEach(element => {
+        const key = element.getAttribute('data-i18n');
+        if (translations[key]) {
+            element.innerHTML = translations[key];
+        }
+    });
+
+    // 2. Simpan preferensi bahasa
+    localStorage.setItem('preferredLang', lang);
+    document.documentElement.lang = lang;
+
+    // 3. Highlight tombol aktif (ID / EN) jika ada di Navbar
+    const btnId = document.getElementById('btn-lang-id');
+    const btnEn = document.getElementById('btn-lang-en');
+    if (btnId && btnEn) {
+        btnId.classList.toggle('active', lang === 'id');
+        btnEn.classList.toggle('active', lang === 'en');
+    }
+
+    // Refresh elemen dinamis
+    if (allCandidatesData.length > 0) {
+        renderStats(allCandidatesData);
+    }
+    initSmartStatus();
+    checkVotingStatus();
+    fillReceiptData();
+}
+
+function changeLanguage(lang) {
+    currentLang = lang;
+    updateContent(lang);
+}
 
 function getFullImageUrl(path) {
     if (!path) return '/img/default.png';
@@ -40,11 +102,10 @@ document.addEventListener('DOMContentLoaded', async () => {
         sessionStorage.removeItem('isRechecking');
     }
 
-    initSmartStatus();
     initTheme();
+    await updateContent(currentLang);
     fetchResults(); // Ambil data awal saat pertama kali buka
     setupRealtimeUpdate();
-    checkVotingStatus();
     checkNewVoteReceipt();
 });
 
@@ -61,7 +122,6 @@ async function reSyncVoteStatus() {
         if (data.status === 'confirmed' && data.txHash) {
             sessionStorage.setItem('lastVoteTx', data.txHash);
             sessionStorage.setItem('voterAddress', data.nikHash);
-            // SIMPAN TIMESTAMP DARI SERVER
             sessionStorage.setItem('lastVoteTime', data.timestamp); 
             console.log("✅ Data transaksi & waktu disinkronkan.");
         }
@@ -78,10 +138,8 @@ function setupRealtimeUpdate() {
         try {
             const updatedData = JSON.parse(event.data);
             console.log("⚡ Update suara masuk!");
+            allCandidatesData = updatedData;
             renderStats(updatedData);
-
-            // TAMBAHKAN INI:
-            // Setiap ada update suara, cek apakah modal struk kita perlu di-update statusnya
             checkReceiptStatus(updatedData);
         } catch (err) {
             console.error("Gagal parse data stream:", err);
@@ -93,27 +151,30 @@ function setupRealtimeUpdate() {
 async function fetchResults() {
     try {
         const res = await fetch(`${BACKEND_URL}/results`, {
-            headers: NGROK_HEADERS // Tambahkan ini
+            headers: NGROK_HEADERS
         });
         if (!res.ok) throw new Error('Gagal mengambil data dari server');
         const data = await res.json();
         if (data && Array.isArray(data)) {
+            allCandidatesData = data;
             renderStats(data);
         }
     } catch (e) {
         console.error("Dashboard Error:", e);
         const chartContainer = document.getElementById('chartContainer');
-        chartContainer.innerHTML = `<div class="col-12 text-center py-5" style="animation: fadeIn 0.5s ease;">
-            <div class="mb-4">
-                <i class="bi bi-cloud-slash display-1 text-muted"></i>
-            </div>
-            <h4 class="fw-bold">Gagal Memuat Data Perolehan Suara</h4>
-            <p class="text-secondary mb-4">Terjadi masalah koneksi ke server. Silakan coba muat ulang halaman.</p>
-            
-            <button onclick="location.reload()" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm">
-                <i class="bi bi-arrow-clockwise me-2"></i> Muat Ulang Halaman
-            </button>
-        </div>`;
+        if (chartContainer) {
+            chartContainer.innerHTML = `<div class="col-12 text-center py-5" style="animation: fadeIn 0.5s ease;">
+                <div class="mb-4">
+                    <i class="bi bi-cloud-slash display-1 text-muted"></i>
+                </div>
+                <h4 class="fw-bold">${t('net_error_title', 'Gagal Memuat Data Perolehan Suara')}</h4>
+                <p class="text-secondary mb-4">${t('net_error_desc', 'Terjadi masalah koneksi ke server. Silakan coba muat ulang halaman.')}</p>
+                
+                <button onclick="location.reload()" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm">
+                    <i class="bi bi-arrow-clockwise me-2"></i> ${t('btn_try_again', 'Muat Ulang Halaman')}
+                </button>
+            </div>`;
+        }
     }
 }
 
@@ -121,26 +182,28 @@ async function fetchResults() {
 function renderStats(candidates) {
     const totalVotes = candidates.reduce((sum, cand) => sum + (Number(cand.votes) || 0), 0);
 
-    // Update total votes dengan animasi angka
     const totalElement = document.getElementById('totalVotes');
-    const startVal = parseInt(totalElement.innerText.replace(/\./g, '')) || 0;
-    animateValue("totalVotes", startVal, totalVotes, 1000);
+    if (totalElement) {
+        const startVal = parseInt(totalElement.innerText.replace(/\./g, '')) || 0;
+        animateValue("totalVotes", startVal, totalVotes, 1000);
+    }
 
     const chartContainer = document.getElementById('chartContainer');
     const cardsContainer = document.getElementById('candidateCards');
     const syncText = document.getElementById('lastUpdateText');
 
     if (syncText) {
-        syncText.innerText = `Last Update: ${new Date().toLocaleTimeString('id-ID')}`;
+        const timeLocale = currentLang === 'en' ? 'en-US' : 'id-ID';
+        const labelPrefix = currentLang === 'en' ? 'Last Update:' : 'Terakhir diperbarui:';
+        syncText.innerText = `${labelPrefix} ${new Date().toLocaleTimeString(timeLocale)}`;
         
-        // Tambahkan efek flash pada parent (sync-badge)
         const badge = syncText.closest('.sync-badge');
         if (badge) {
-            badge.style.backgroundColor = "rgba(16, 185, 129, 0.2)"; // Hijau emerald transparan
+            badge.style.backgroundColor = "rgba(16, 185, 129, 0.2)";
             badge.style.transform = "scale(1.05)";
             
             setTimeout(() => {
-                badge.style.backgroundColor = ""; // Kembali ke CSS asal
+                badge.style.backgroundColor = "";
                 badge.style.transform = "";
             }, 600);
         }
@@ -148,6 +211,9 @@ function renderStats(candidates) {
 
     let chartHTML = '';
     let cardsHTML = '';
+
+    const candidatePrefix = currentLang === 'en' ? 'Candidate No.' : 'Kandidat No.';
+    const votesSuffix = currentLang === 'en' ? 'Votes' : 'Suara';
 
     candidates.forEach(cand => {
         const votes = Number(cand.votes) || 0;
@@ -157,8 +223,8 @@ function renderStats(candidates) {
         chartHTML += `
             <div class="vote-bar-wrapper animate-fade-in">
                 <div class="progress-label">
-                    <span class="text-truncate" style="max-width: 70%">Kandidat No. ${cand.noUrut}</span>
-                    <span class="text-accent fw-bold">${percentage}% <small class="text-muted fw-normal">(${votes} Suara)</small></span>
+                    <span class="text-truncate" style="max-width: 70%">${candidatePrefix} ${cand.noUrut}</span>
+                    <span class="text-accent fw-bold">${percentage}% <small class="text-muted fw-normal">(${votes} ${votesSuffix})</small></span>
                 </div>
                 <div class="progress">
                     <div class="progress-bar" 
@@ -173,10 +239,10 @@ function renderStats(candidates) {
                     <img src="${getFullImageUrl(cand.foto)}" class="cand-detail-img" onerror="this.src='/img/default.png'">
                     <div class="overflow-hidden">
                         <h6 class="fw-bold mb-0 text-truncate">${cand.nama}</h6>
-                        <small class="text-muted">Kandidat No. ${cand.noUrut}</small>
+                        <small class="text-muted">${candidatePrefix} ${cand.noUrut}</small>
                         <div class="mt-1">
                              <span class="badge rounded-pill" style="background-color: ${barColor}22; color: ${barColor};">
-                                 ${votes} Suara
+                                 ${votes} ${votesSuffix}
                              </span>
                         </div>
                     </div>
@@ -184,21 +250,22 @@ function renderStats(candidates) {
             </div>`;
     });
 
-    chartContainer.innerHTML = chartHTML;
-    cardsContainer.innerHTML = cardsHTML;
+    if (chartContainer) chartContainer.innerHTML = chartHTML;
+    if (cardsContainer) cardsContainer.innerHTML = cardsHTML;
 }
 
 // --- 6. UI Helpers ---
 function animateValue(id, start, end, duration) {
     const obj = document.getElementById(id);
-    if (start === end) return;
+    if (!obj || start === end) return;
     const range = end - start;
     let current = start;
     const increment = end > start ? 1 : -1;
     const stepTime = Math.abs(Math.floor(duration / (range || 1)));
+    const locale = currentLang === 'en' ? 'en-US' : 'id-ID';
     const timer = setInterval(function () {
         current += increment;
-        obj.innerText = current.toLocaleString('id-ID');
+        obj.innerText = current.toLocaleString(locale);
         if (current == end) clearInterval(timer);
     }, stepTime || 10);
 }
@@ -206,8 +273,8 @@ function animateValue(id, start, end, duration) {
 function initTheme() {
     const html = document.documentElement;
     const themeIcon = document.getElementById('theme-icon');
+    if (!themeIcon) return;
 
-    // Fungsi sinkronisasi ikon
     const syncIcon = (theme) => {
         if (theme === 'dark') {
             themeIcon.className = 'bi bi-moon-stars-fill';
@@ -216,46 +283,47 @@ function initTheme() {
         }
     };
 
-    // Set ikon awal saat load
     syncIcon(html.getAttribute('data-theme'));
 
-    document.getElementById('theme-toggle').addEventListener('click', () => {
-        const currentTheme = html.getAttribute('data-theme');
-        const targetTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    const themeBtn = document.getElementById('theme-toggle');
+    if (themeBtn) {
+        themeBtn.addEventListener('click', () => {
+            const currentTheme = html.getAttribute('data-theme');
+            const targetTheme = currentTheme === 'dark' ? 'light' : 'dark';
 
-        // Animasi transisi smooth
-        html.style.transition = 'background-color 0.5s ease, color 0.5s ease';
+            html.style.transition = 'background-color 0.5s ease, color 0.5s ease';
 
-        localStorage.setItem('theme-preference', targetTheme);
-        html.setAttribute('data-theme', targetTheme);
-        syncIcon(targetTheme);
-    });
+            localStorage.setItem('theme-preference', targetTheme);
+            html.setAttribute('data-theme', targetTheme);
+            syncIcon(targetTheme);
+        });
+    }
 }
 
 function logout() {
     const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
 
     Swal.fire({
-        title: 'Konfirmasi Keluar',
-        html: `Demi keamanan, keluar dari halaman ini akan mengakhiri sesi Anda. Anda memerlukan QR Code dan NIK Anda kembali untuk mengakses dashboard ini di lain waktu.`,
+        title: t('logout_confirm_title', 'Konfirmasi Keluar'),
+        html: t('logout_confirm_msg', 'Demi keamanan, keluar dari halaman ini akan mengakhiri sesi Anda. Anda memerlukan QR Code dan NIK Anda kembali untuk mengakses dashboard ini di lain waktu.'),
         icon: 'warning',
         iconColor: '#ef4444',
         showCancelButton: true,
-        confirmButtonText: 'Ya, Keluar',
-        cancelButtonText: 'Batal',
+        confirmButtonText: t('btn_yes_logout', 'Ya, Keluar'),
+        cancelButtonText: t('btn_cancel', 'Batal'),
 
         customClass: {
             popup: 'swal2-popup-custom',
             title: 'swal2-title-custom',
             htmlContainer: 'swal2-html-custom',
-            actions: 'swal2-actions', // Penting untuk gap
+            actions: 'swal2-actions',
             confirmButton: 'swal2-confirm-custom btn btn-danger shadow-sm',
             cancelButton: 'swal2-cancel-custom btn btn-light border shadow-sm'
         },
 
         background: isDark ? '#0f172a' : '#ffffff',
         buttonsStyling: false,
-        reverseButtons: true // Memposisikan Batal di kiri, Keluar di kanan
+        reverseButtons: true
     }).then((result) => {
         if (result.isConfirmed) {
             sessionStorage.clear();
@@ -265,48 +333,52 @@ function logout() {
 }
 
 /**
- * Logika Sinkronisasi Waktu (Mirip user.js)
+ * Logika Sinkronisasi Waktu
  */
 async function checkVotingStatus() {
     try {
         const res = await fetch(`${BACKEND_URL}/voting-status`, {
-            headers: NGROK_HEADERS // Tambahkan ini
+            headers: NGROK_HEADERS
         });
         const data = await res.json();
 
         const timerLabel = document.getElementById('timerLabel');
         const timerDisplay = document.getElementById('navTimerValue');
-        const statusPulse = document.getElementById('statusPulse'); // Dot status
+        const statusPulse = document.getElementById('statusPulse');
 
         if (countdownInterval) clearInterval(countdownInterval);
 
         if (data.status === 'active') {
-            // --- SEDANG BERLANGSUNG (HIJAU) ---
-            statusPulse.style.backgroundColor = '#10b981';
-            statusPulse.style.boxShadow = '0 0 10px rgba(16, 185, 129, 0.7)';
-            timerLabel.innerText = 'BERAKHIR DALAM';
+            if (statusPulse) {
+                statusPulse.style.backgroundColor = '#10b981';
+                statusPulse.style.boxShadow = '0 0 10px rgba(16, 185, 129, 0.7)';
+            }
+            if (timerLabel) timerLabel.innerText = t('timer_ends_in', 'BERAKHIR DALAM');
 
             runTimer(data.targetTime, timerDisplay, () => {
-                // Saat waktu habis otomatis jadi merah
-                statusPulse.style.backgroundColor = '#ef4444';
-                statusPulse.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.7)';
-                timerLabel.innerText = 'WAKTU HABIS';
-                timerDisplay.innerText = "00:00:00";
+                if (statusPulse) {
+                    statusPulse.style.backgroundColor = '#ef4444';
+                    statusPulse.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.7)';
+                }
+                if (timerLabel) timerLabel.innerText = t('status_time_up', 'WAKTU HABIS');
+                if (timerDisplay) timerDisplay.innerText = "00:00:00";
             });
 
         } else if (data.status === 'upcoming') {
-            // --- BELUM DIMULAI (KUNING/ORANGE) ---
-            statusPulse.style.backgroundColor = '#f59e0b';
-            statusPulse.style.boxShadow = '0 0 10px rgba(245, 158, 11, 0.7)';
-            timerLabel.innerText = 'BELUM DIMULAI';
-            timerDisplay.innerText = "--:--:--";
+            if (statusPulse) {
+                statusPulse.style.backgroundColor = '#f59e0b';
+                statusPulse.style.boxShadow = '0 0 10px rgba(245, 158, 11, 0.7)';
+            }
+            if (timerLabel) timerLabel.innerText = t('status_not_started', 'BELUM DIMULAI');
+            if (timerDisplay) timerDisplay.innerText = "--:--:--";
 
         } else {
-            // --- SELESAI (MERAH) ---
-            statusPulse.style.backgroundColor = '#ef4444';
-            statusPulse.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.7)';
-            timerLabel.innerText = 'STATUS VOTING';
-            timerDisplay.innerText = "SELESAI";
+            if (statusPulse) {
+                statusPulse.style.backgroundColor = '#ef4444';
+                statusPulse.style.boxShadow = '0 0 10px rgba(239, 68, 68, 0.7)';
+            }
+            if (timerLabel) timerLabel.innerText = t('voting_status', 'STATUS VOTING');
+            if (timerDisplay) timerDisplay.innerText = t('status_ended', 'SELESAI');
         }
     } catch (err) {
         console.error("Gagal cek status:", err);
@@ -323,7 +395,7 @@ function runTimer(targetTime, displayElement, onFinish) {
 
         if (diff <= 0) {
             clearInterval(countdownInterval);
-            displayElement.innerText = "00:00:00";
+            if (displayElement) displayElement.innerText = "00:00:00";
             if (onFinish) onFinish();
             return;
         }
@@ -332,8 +404,10 @@ function runTimer(targetTime, displayElement, onFinish) {
         const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
         const s = Math.floor((diff % (1000 * 60)) / 1000);
 
-        displayElement.innerText =
-            `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        if (displayElement) {
+            displayElement.innerText =
+                `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+        }
     }
 
     update();
@@ -352,81 +426,74 @@ function initSmartStatus() {
     const txHash = sessionStorage.getItem('lastVoteTx');
     const userAddress = sessionStorage.getItem('voterAddress');
 
-    // Jika user sudah pernah vote (NIK ada di session)
     if (sessionStorage.getItem('voterNIK')) {
-        statusArea.style.display = 'block';
+        if (statusArea) statusArea.style.display = 'block';
 
         if (txHash && txHash !== "undefined") {
-            // --- MODE SUKSES (VERIFIED) ---
-            widgetLabel.innerText = "VERIFIKASI ON-CHAIN";
-            widgetLabel.style.color = "#10b981"; // Hijau Emerald
+            if (widgetLabel) {
+                widgetLabel.innerText = t('widget_label_verified', 'VERIFIKASI ON-CHAIN');
+                widgetLabel.style.color = "#10b981";
+            }
             
-            widgetIcon.className = "bi bi-patch-check-fill";
-            // widgetIconContainer.style.background = "rgba(16, 185, 129, 0.2)";
-            widgetIconContainer.style.color = "#10b981";
+            if (widgetIcon) widgetIcon.className = "bi bi-patch-check-fill";
+            if (widgetIconContainer) widgetIconContainer.style.color = "#10b981";
             
-            widgetBtnText.innerText = "Lihat Suara";
+            if (widgetBtnText) widgetBtnText.innerText = t('widget_btn_view', 'Lihat Suara');
             
-            if (userAddress) {
+            if (userAddress && miniAddress) {
                 const shortAddr = `${userAddress.substring(0, 6)}...${userAddress.substring(userAddress.length - 4)}`;
                 miniAddress.innerText = shortAddr;
             }
             
-            // Hapus animasi pulse jika ada
-            statusWidget.classList.remove('widget-pending');
+            if (statusWidget) statusWidget.classList.remove('widget-pending');
 
         } else {
-            // --- MODE PENDING (ANTREAN) ---
-            widgetLabel.innerText = "SEDANG DIPROSES...";
-            widgetLabel.style.color = "#f59e0b"; // Oranye Amber
+            if (widgetLabel) {
+                widgetLabel.innerText = t('widget_label_processing', 'SEDANG DIPROSES...');
+                widgetLabel.style.color = "#f59e0b";
+            }
             
-            widgetIcon.className = "bi bi-hourglass-split anim-hourglass";
-            // widgetIconContainer.style.background = "rgba(245, 158, 11, 0.2)";
-            widgetIconContainer.style.color = "#f59e0b";
+            if (widgetIcon) widgetIcon.className = "bi bi-hourglass-split anim-hourglass";
+            if (widgetIconContainer) widgetIconContainer.style.color = "#f59e0b";
             
-            widgetBtnText.innerText = "Cek Status";
-            miniAddress.innerText = "Memproses...";
+            if (widgetBtnText) widgetBtnText.innerText = t('widget_btn_check', 'Cek Status');
+            if (miniAddress) miniAddress.innerText = t('status_processing', 'Memproses...');
             
-            // Tambahkan efek berdenyut pada seluruh widget agar user tahu ini sedang aktif
-            statusWidget.classList.add('widget-pending');
+            if (statusWidget) statusWidget.classList.add('widget-pending');
         }
     } else {
-        statusArea.style.display = 'none';
+        if (statusArea) statusArea.style.display = 'none';
     }
 }
 
-// Helper: Persingkat Hash (0x1234...abcd)
 function shortenHash(hash, start = 8, end = 6) {
     if (!hash || hash.length < 15) return hash;
     return `${hash.substring(0, start)}...${hash.substring(hash.length - end)}`;
 }
 
-// Helper: Copy dengan Feedback Visual
 function copyText(elementId, event) {
     const el = document.getElementById(elementId);
     const btn = event.currentTarget; 
     const txHash = sessionStorage.getItem('lastVoteTx');
 
-    // CEK: Jika yang diklik adalah tombol Tx Hash tapi hash belum ada, JANGAN LANJUT
     if (elementId === 'receiptTxHash' && (!txHash || txHash === "undefined")) {
         console.warn("Percobaan salin gagal: Tx Hash belum tersedia.");
         return; 
     }
 
-    const textToCopy = el.getAttribute('data-full-hash') || el.innerText;
+    const textToCopy = el ? (el.getAttribute('data-full-hash') || el.innerText) : '';
 
-    // Tambahan proteksi jika teks masih mengandung spinner atau placeholder
-    if (!textToCopy || textToCopy.includes('Menunggu') || textToCopy.includes('0x...')) {
+    if (!textToCopy || textToCopy.includes('Menunggu') || textToCopy.includes('0x...') || textToCopy.includes('Memproses')) {
         return;
     }
 
     navigator.clipboard.writeText(textToCopy).then(() => {
-        showCopyToast("Berhasil disalin"); // Pakai pesan default
+        showCopyToast(t('copy_success', 'Berhasil disalin'));
 
         const originalHTML = btn.innerHTML;
         
         if (btn.classList.contains('btn-copy-premium')) {
-            btn.innerHTML = `<i class="bi bi-check2-all text-success"></i> <span class="text-success">Tersalin</span>`;
+            btn.innerHTML = `<i class="bi bi-check2-all text-success"></i> <span class="text-success">${t('copied_status', 'Tersalin')}</span>`;
             btn.classList.add('border-success');
         } else {
             btn.innerHTML = `<i class="bi bi-check2-all text-success"></i>`;
@@ -442,22 +509,21 @@ function copyText(elementId, event) {
     }).catch(err => console.error('Gagal salin:', err));
 }
 
-function showCopyToast(message = "Berhasil disalin", iconClass = "bi-check-circle-fill", iconColor = "#10b981") {
+function showCopyToast(message = t('copy_success', 'Berhasil disalin'), iconClass = "bi-check-circle-fill", iconColor = "#10b981") {
     const toast = document.getElementById('copyToast');
     const toastText = document.getElementById('toastText');
     const toastIcon = document.getElementById('toastIcon');
 
-    // Set pesan dan ikon secara dinamis
-    toastText.innerText = message;
-    toastIcon.className = `bi ${iconClass} me-2`;
-    toastIcon.style.color = iconColor;
+    if (toastText) toastText.innerText = message;
+    if (toastIcon) {
+        toastIcon.className = `bi ${iconClass} me-2`;
+        toastIcon.style.color = iconColor;
+    }
 
-    // Slide Up
-    toast.classList.add('show');
+    if (toast) toast.classList.add('show');
 
-    // Slide Down setelah 2 detik
     setTimeout(() => {
-        toast.classList.remove('show');
+        if (toast) toast.classList.remove('show');
     }, 2000);
 }
 
@@ -467,17 +533,17 @@ function showReceiptModal() {
 
     if (!txHash) {
         Swal.fire({
-            title: '<span class="swal-title-custom">Data Tidak Ditemukan</span>',
+            title: `<span class="swal-title-custom">${t('data_not_found_title', 'Data Tidak Ditemukan')}</span>`,
             html: `
                 <div class="swal-content-custom">
                     <div class="empty-data-icon">
                         <i class="bi bi-search-heart"></i>
                     </div>
-                    <p class="mt-3 text-muted">Bukti suara digital tidak tersedia atau sesi Anda telah berakhir.</p>
+                    <p class="mt-3 text-muted">${t('data_not_found_desc', 'Bukti suara digital tidak tersedia atau sesi Anda telah berakhir.')}</p>
                 </div>
             `,
             showConfirmButton: true,
-            confirmButtonText: 'Mengerti',
+            confirmButtonText: t('btn_understand', 'Mengerti'),
             buttonsStyling: false,
             customClass: {
                 popup: 'swal-premium-popup',
@@ -490,10 +556,10 @@ function showReceiptModal() {
                 popup: 'animate__animated animate__fadeOutDown animate__faster'
             }
         }).then((result) => {
-    if (result.isConfirmed) {
-        window.location.reload(); // Fungsi refresh halaman
-    }
-});
+            if (result.isConfirmed) {
+                window.location.reload();
+            }
+        });
         return;
     }
 
@@ -506,27 +572,24 @@ function showReceiptModal() {
 
     if (!modalEl.classList.contains('show')) {
         receiptModalInstance.show();
-        statusArea.style.opacity = '0.7';
+        if (statusArea) statusArea.style.opacity = '0.7';
         modalEl.addEventListener('hidden.bs.modal', () => {
-            statusArea.style.opacity = '1';
+            if (statusArea) statusArea.style.opacity = '1';
         }, { once: true });
     }
 }
 
-// Ganti fungsi fillReceiptData Anda dengan ini
 function fillReceiptData() {
     const txHash = sessionStorage.getItem('lastVoteTx');
     const nik = sessionStorage.getItem('voterNIK');
     const time = sessionStorage.getItem('lastVoteTime');
-    const userAddress = sessionStorage.getItem('voterAddress'); // Ini nikHash dari backend
+    const userAddress = sessionStorage.getItem('voterAddress');
 
-    // --- SETUP ELEMENT ---
     const addrEl = document.getElementById('receiptAddress');
     const hashEl = document.getElementById('receiptTxHash');
     const statusBadge = document.getElementById('receiptStatus');
     const explorerBtn = document.getElementById('receiptExplorer');
     
-    // Ambil tombol copy berdasarkan fungsi onclick-nya
     const copyBtnAddr = document.querySelector('[onclick="copyText(\'receiptAddress\', event)"]');
     const copyBtnHash = document.querySelector('[onclick="copyText(\'receiptTxHash\', event)"]');
 
@@ -534,39 +597,36 @@ function fillReceiptData() {
     const headerSubTitle = document.getElementById('headerSubTitle');
     const headerIcon = document.getElementById('headerIcon');
     const headerCircle = document.getElementById('headerIconCircle');
+    const receiptNIK = document.getElementById('receiptNIK');
+    const receiptTime = document.getElementById('receiptTime');
 
-    // PERBAIKAN LOGIKA WAKTU:
-    if (nik) document.getElementById('receiptNIK').innerText = nik.substring(0, 4) + "••••" + nik.substring(12);
+    if (nik && receiptNIK) receiptNIK.innerText = nik.substring(0, 4) + "••••" + nik.substring(12);
     
+    // --- OPSI WAKTU ---
     if (time && time !== "undefined" && time !== "null") {
-        // Pastikan dikonversi ke Number dengan parseInt atau Number()
         const timestamp = Number(time); 
         const dateObj = new Date(timestamp); 
+        const timeLocale = currentLang === 'en' ? 'en-US' : 'id-ID';
 
-        // Cek apakah dateObj valid
-        if (!isNaN(dateObj.getTime())) {
-            document.getElementById('receiptTime').innerText = dateObj.toLocaleString('id-ID', {
+        if (!isNaN(dateObj.getTime()) && receiptTime) {
+            receiptTime.innerText = dateObj.toLocaleString(timeLocale, {
                 day: '2-digit',
                 month: '2-digit',
                 year: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit',
                 second: '2-digit'
-            }) + " WIB";
-        } else {
-            document.getElementById('receiptTime').innerText = "Sekarang";
+            });
+        } else if (receiptTime) {
+            receiptTime.innerText = t('time_now', 'Sekarang');
         }
-    } else {
-        // Jika session kosong, jalankan ulang sinkronisasi
-        document.getElementById('receiptTime').innerText = "Sinkronisasi waktu...";
-        reSyncVoteStatus().then(() => fillReceiptData()); 
+    } else if (receiptTime) {
+        receiptTime.innerText = t('time_now', 'Sekarang');
     }
 
-    // --- LOGIKA VALIDASI (SUDAH ADA TX HASH) ---
+    // --- JIKA SUDAH ADA TX HASH (SUKSES) ---
     if (txHash && txHash !== "undefined" && txHash !== "null") {
-        
-        // 1. Tampilkan Alamat Pemilih (NIK Hash)
-        if (userAddress) {
+        if (userAddress && addrEl) {
             addrEl.innerText = shortenHash(userAddress, 6, 4);
             addrEl.setAttribute('data-full-hash', userAddress);
             if (copyBtnAddr) {
@@ -576,45 +636,47 @@ function fillReceiptData() {
             }
         }
 
-        // 2. Tampilkan Transaction Hash
-        hashEl.innerText = shortenHash(txHash, 8, 6);
-        hashEl.setAttribute('data-full-hash', txHash);
-        if (copyBtnHash) {
-            copyBtnHash.classList.remove('disabled-btn');
-            copyBtnHash.style.opacity = "1";
-            copyBtnHash.style.pointerEvents = "auto";
+        if (hashEl) {
+            hashEl.innerText = shortenHash(txHash, 8, 6);
+            hashEl.setAttribute('data-full-hash', txHash);
+            if (copyBtnHash) {
+                copyBtnHash.classList.remove('disabled-btn');
+                copyBtnHash.style.opacity = "1";
+                copyBtnHash.style.pointerEvents = "auto";
+            }
         }
 
-        // --- MODE SUKSES (SELEBRASI) ---
-        headerTitle.innerText = "Suara Diterima!";
-        headerSubTitle.innerText = "Suara berhasil diverifikasi";
-        headerIcon.innerText = "verified_user";
+        if (headerTitle) headerTitle.innerText = t('receipt_header_title', 'Suara Diterima!');
+        if (headerSubTitle) headerSubTitle.innerText = t('receipt_header_subtitle', 'Transaksi berhasil diverifikasi');
+        if (headerIcon) headerIcon.innerText = "verified_user";
         
-        // Kembalikan warna ke hijau/biru sukses Anda
-        headerCircle.style.background = "linear-gradient(135deg, #10b981, #059669)";
-        headerCircle.style.boxShadow = "0 0 20px rgba(16, 185, 129, 0.5)";
+        if (headerCircle) {
+            headerCircle.style.background = "linear-gradient(135deg, #10b981, #059669)";
+            headerCircle.style.boxShadow = "0 0 20px rgba(16, 185, 129, 0.5)";
+        }
 
-        // 3. Aktifkan Tombol Explorer & Status
-        explorerBtn.classList.remove('disabled');
-        explorerBtn.style.pointerEvents = "auto";
-        explorerBtn.style.opacity = "1";
-        explorerBtn.href = `https://sepolia.etherscan.io/tx/${txHash}`;
+        if (explorerBtn) {
+            explorerBtn.classList.remove('disabled');
+            explorerBtn.style.pointerEvents = "auto";
+            explorerBtn.style.opacity = "1";
+            explorerBtn.href = `https://sepolia.etherscan.io/tx/${txHash}`;
+        }
         
         updateStatusToSuccess(statusBadge);
 
     } 
-    // --- LOGIKA LOADING (ANTREAN BATCH) ---
+    // --- JIKA MASIH PENDING (MEMPROSES) ---
     else {
-        // 1. Loading Alamat Pemilih
-        addrEl.innerHTML = `<span class="spinner-border spinner-border-sm me-1" style="width: 10px; height: 10px;"></span> Memproses...`;
+        const processingText = t('status_processing', 'Memproses...');
+
+        if (addrEl) addrEl.innerHTML = `<span class="spinner-border spinner-border-sm me-1" style="width: 10px; height: 10px;"></span> ${processingText}`;
         if (copyBtnAddr) {
             copyBtnAddr.classList.add('disabled-btn');
             copyBtnAddr.style.opacity = "0.3";
             copyBtnAddr.style.pointerEvents = "none";
         }
 
-        // 2. Loading Transaction Hash
-        hashEl.innerHTML = `<span class="spinner-border spinner-border-sm me-1" style="width: 10px; height: 10px;"></span> Memproses...`;
+        if (hashEl) hashEl.innerHTML = `<span class="spinner-border spinner-border-sm me-1" style="width: 10px; height: 10px;"></span> ${processingText}`;
         if (copyBtnHash) {
             copyBtnHash.classList.add('disabled-btn');
             copyBtnHash.style.opacity = "0.3";
@@ -622,36 +684,35 @@ function fillReceiptData() {
         }
 
         if (statusBadge) {
-        statusBadge.innerHTML = `
-            <i class="bi bi-hourglass-split me-1 anim-hourglass"></i> 
-            Pending
-        `;
-        statusBadge.className = "badge-status-receipt pending";
-    }
+            statusBadge.innerHTML = `
+                <i class="bi bi-hourglass-split me-1 anim-hourglass"></i> 
+                ${t('status_pending', 'Pending')}
+            `;
+            statusBadge.className = "badge-status-receipt pending";
+        }
 
-        // --- MODE PENDING (MENUNGGU) ---
-        headerTitle.innerText = "Suara Diverifikasi...";
-        headerSubTitle.innerText = "Sedang memverifikasi suara Anda ke Blockchain";
-        headerIcon.innerText = "hourglass_empty"; // Ikon Google Material untuk jam pasir
+        if (headerTitle) headerTitle.innerText = t('receipt_header_pending_title', 'Suara Diverifikasi...');
+        if (headerSubTitle) headerSubTitle.innerText = t('receipt_header_pending_subtitle', 'Sedang memverifikasi suara Anda ke Blockchain');
+        if (headerIcon) headerIcon.innerText = "hourglass_empty";
         
-        // Ubah warna ke Oranye/Kuning (Amber) agar user waspada tapi tenang
-        headerCircle.style.background = "linear-gradient(135deg, #f59e0b, #d97706)";
-        headerCircle.style.boxShadow = "0 0 20px rgba(245, 158, 11, 0.4)";
+        if (headerCircle) {
+            headerCircle.style.background = "linear-gradient(135deg, #f59e0b, #d97706)";
+            headerCircle.style.boxShadow = "0 0 20px rgba(245, 158, 11, 0.4)";
+        }
 
-        // 3. Matikan Tombol Explorer
-        explorerBtn.classList.add('disabled');
-        explorerBtn.style.pointerEvents = "none";
-        explorerBtn.style.opacity = "0.5";
+        if (explorerBtn) {
+            explorerBtn.classList.add('disabled');
+            explorerBtn.style.pointerEvents = "none";
+            explorerBtn.style.opacity = "0.5";
+        }
 
-        // Jalankan detektif polling
         startPollingStatus();
     }
 }
 
-// Fungsi "Detektif" untuk bertanya ke server
 let pollInterval = null;
 function startPollingStatus() {
-    if (pollInterval) return; // Jangan jalankan dua kali
+    if (pollInterval) return;
 
     const nik = sessionStorage.getItem('voterNIK');
     if (!nik) return;
@@ -665,25 +726,22 @@ function startPollingStatus() {
 
             if (data.status === 'confirmed') {
                 sessionStorage.setItem('lastVoteTx', data.txHash);
-            sessionStorage.setItem('voterAddress', data.nikHash);
-            sessionStorage.setItem('lastVoteTime', data.timestamp);
+                sessionStorage.setItem('voterAddress', data.nikHash);
+                sessionStorage.setItem('lastVoteTime', data.timestamp);
                 
-                // Stop Polling
                 clearInterval(pollInterval);
                 pollInterval = null;
 
-                // Update Tampilan Struk & Widget Smart Status
                 fillReceiptData();
                 initSmartStatus();
-                showCopyToast("Suara Diterima", "bi-shield-check", "#10b981");
+                showCopyToast(t('receipt_header_title', 'Suara Diterima'), "bi-shield-check", "#10b981");
             }
         } catch (err) {
             console.error("Polling error:", err);
         }
-    }, 4000); // Tanya setiap 4 detik (Aman untuk Ngrok)
+    }, 4000);
 }
 
-// --- 7. Helpers & Utilities ---
 function checkNewVoteReceipt() {
     if (sessionStorage.getItem('isNewVote') === 'true') {
         showReceiptModal();
@@ -693,28 +751,23 @@ function checkNewVoteReceipt() {
 
 function updateStatusToSuccess(element) {
     if (element) {
-        // 1. Tambahkan efek transisi keluar sebentar (opsional)
         element.style.opacity = '0';
         
         setTimeout(() => {
-            // 2. Ganti class dari pending ke success
             element.classList.remove('pending');
             element.classList.add('success');
             
-            // 3. Update konten dengan ikon yang lebih elegan
             element.innerHTML = `
                 <i class="bi bi-check-circle-fill me-1 animate-pop"></i> 
-                Terkonfirmasi
+                ${t('status_confirmed', 'Terkonfirmasi')}
             `;
             
-            // 4. Munculkan kembali dengan transisi
             element.style.opacity = '1';
         }, 200);
     }
 }
 
 function refreshPage() {
-    // Memberikan sedikit efek transisi sebelum reload
     document.body.style.opacity = '0.5';
     location.reload();
 }

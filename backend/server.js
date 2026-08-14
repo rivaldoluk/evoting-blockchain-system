@@ -91,16 +91,31 @@ app.get('/', (req, res) => {
 // Endpoint: Verifikasi token QR (tiket masuk)
 app.post('/verify-token', (req, res) => {
   const { token } = req.body;
-  if (!token) return res.status(400).json({ error: 'Token QR tidak boleh kosong' });
+  if (!token) {
+    return res.status(400).json({ 
+      success: false,
+      errorKey: 'err_token_empty', 
+      error: 'Token QR tidak boleh kosong' 
+    });
+  }
 
   if (tokens.length === 0) {
-    return res.json({ success: true, message: 'Token QR valid, silakan input NIK' });
+    return res.json({ 
+      success: true, 
+      isUsed: false,
+      messageKey: 'msg_token_valid_input_nik',
+      message: 'Token QR valid, silakan input NIK' 
+    });
   }
 
   const tokenData = tokens.find(t => t.qrToken === token);
 
   if (!tokenData) {
-    return res.status(403).json({ error: 'Token QR tidak terdaftar' });
+    return res.status(403).json({ 
+      success: false,
+      errorKey: 'err_token_not_found', 
+      error: 'Token QR tidak terdaftar' 
+    });
   }
 
   // JIKA SUDAH TERPAKAI: Beri akses masuk ke tahap NIK tapi tandai isUsed
@@ -108,59 +123,70 @@ app.post('/verify-token', (req, res) => {
     return res.json({ 
       success: true, 
       isUsed: true, 
+      messageKey: 'msg_token_used_verify',
       message: 'Token sudah digunakan. Masukkan NIK Anda untuk memverifikasi status.' 
     });
   }
 
   // JIKA BELUM TERPAKAI
-  return res.json({ success: true, isUsed: false, message: 'Token valid, silakan input NIK' });
+  return res.json({ 
+    success: true, 
+    isUsed: false, 
+    messageKey: 'msg_token_valid_input_nik',
+    message: 'Token valid, silakan input NIK' 
+  });
 });
 
-// Endpoint: Verifikasi NIK (cek apakah NIK terdaftar di proofs.json)
+// Endpoint: Verifikasi NIK
 app.post('/verify-nik', (req, res) => {
   const { nik, token } = req.body;
   if (!nik || nik.trim().length !== 16 || !/^\d{16}$/.test(nik)) {
-    return res.status(400).json({ success: false, error: 'NIK harus tepat 16 digit angka' });
+    return res.status(400).json({ 
+      success: false, 
+      errorKey: 'err_nik_format', 
+      error: 'NIK harus tepat 16 digit angka' 
+    });
   }
 
   const cleanNik = nik.trim();
   const nikHash = '0x' + keccak256(cleanNik).toString('hex');
 
-  // 1. Cek apakah NIK terdaftar di DPT (proofs.json)
   const proofData = proofs.find(p => p.nikHash === nikHash);
   if (!proofData) {
-    return res.status(403).json({ success: false, error: 'NIK tidak terdaftar sebagai pemilih' });
+    return res.status(403).json({ 
+      success: false, 
+      errorKey: 'err_nik_not_registered', 
+      error: 'NIK tidak terdaftar sebagai pemilih' 
+    });
   }
 
-  // 2. VALIDASI TOKEN TERHADAP NIK (KUNCI PASANGAN)
   const tokenData = tokens.find(t => t.qrToken === token);
 
-  // A. Jika token ini sudah digunakan, pastikan yang pakai adalah NIK ini
   if (tokenData && tokenData.used === true) {
     if (tokenData.voter !== nikHash) {
       return res.status(403).json({ 
         success: false, 
+        errorKey: 'err_token_linked_other', 
         error: 'Token ini sudah tertaut dengan NIK lain.' 
       });
     }
   }
 
-  // B. PERBAIKAN: Cek apakah NIK ini sudah pernah menggunakan token LAIN sebelumnya
-  // Ini mencegah satu NIK menggunakan banyak token
   const tokenLain = tokens.find(t => t.voter === nikHash && t.qrToken !== token);
   if (tokenLain) {
     return res.status(403).json({
       success: false,
+      errorKey: 'err_nik_already_voted',
       error: 'NIK ini sudah memberikan suara.'
     });
   }
 
-  // 3. Cek apakah sudah memberikan suara (Double Voting)
   const hasVoted = !!voted[nikHash];
 
   res.json({ 
     success: true, 
     alreadyVoted: hasVoted,
+    messageKey: hasVoted ? 'msg_data_found_redirect' : 'msg_nik_valid',
     message: hasVoted ? 'Data ditemukan, mengalihkan...' : 'NIK valid' 
   });
 });
@@ -353,20 +379,23 @@ async function getResultsData() {
     const blockchainResults = await Promise.all(promises);
 
     return blockchainResults.map((blockchainData, i) => {
-      const idStr = blockchainData.id.toString();
-      const detail = detailKandidat.find(k => k.id.toString() === idStr);
-      return {
-        id: idStr,
-        noUrut: detail ? detail.noUrut : (i + 1).toString().padStart(2, '0'),
-        nama: blockchainData.name,
-        tagline: detail ? detail.tagline : "",
-        votes: Number(blockchainData.voteCount),
-        foto: detail ? detail.foto : "img/default.png",
-        warna: detail ? detail.warna : "#0d6efd",
-        visi: detail ? detail.visi : "Visi belum tersedia",
-        misi: detail ? detail.misi : [],
-      };
-    });
+  const idStr = blockchainData.id.toString();
+  const detail = detailKandidat.find(k => k.id.toString() === idStr);
+  return {
+    id: idStr,
+    noUrut: detail ? detail.noUrut : (i + 1).toString().padStart(2, '0'),
+    nama: blockchainData.name,
+    tagline: detail ? detail.tagline : "",
+    tagline_en: detail ? detail.tagline_en : "",
+    votes: Number(blockchainData.voteCount),
+    foto: detail ? detail.foto : "img/default.png",
+    warna: detail ? detail.warna : "#0d6efd",
+    visi: detail ? detail.visi : "Visi belum tersedia",
+    visi_en: detail ? detail.visi_en : "Vision not available",
+    misi: detail ? detail.misi : [],
+    misi_en: detail ? detail.misi_en : [],
+  };
+});
   } catch (err) {
     console.error('Error getResultsData:', err.message);
     return [];
@@ -474,6 +503,18 @@ async function sendUpdateToAll() {
   const data = `data: ${JSON.stringify(results)}\n\n`;
   clients.forEach(client => client.write(data));
 }
+
+// Route untuk mengambil data bahasa
+app.get('/lang/:lang', (req, res) => {
+  const lang = req.params.lang; // 'id' atau 'en'
+  const filePath = path.join(__dirname, 'lang', `${lang}.json`);
+
+  res.sendFile(filePath, (err) => {
+    if (err) {
+      res.status(404).json({ error: 'File bahasa tidak ditemukan' });
+    }
+  });
+});
 
 // Start server
 app.listen(port, () => {
