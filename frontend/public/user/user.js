@@ -157,7 +157,7 @@ function openVoteModal(id, nama, noUrut, foto) {
     selectedCandidateId = id;
     document.getElementById('confirmNama').innerText = nama;
     
-    const candidatePrefix = currentLang === 'en' ? 'Candidate No.' : 'Kandidat Nomor';
+    const candidatePrefix = currentLang === 'en' ? 'Candidate Number' : 'Kandidat Nomor';
     document.getElementById('confirmNoUrut').innerText = `${candidatePrefix} ${noUrut}`;
     document.getElementById('confirmImg').src = getFullImageUrl(foto);
 
