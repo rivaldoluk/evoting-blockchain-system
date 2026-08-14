@@ -1062,20 +1062,20 @@
 
         runTimer(data.targetTime, timerDisplay, () => {
           if(badgeContainer) badgeContainer.innerHTML = `<span class="badge-status bg-danger-subtle text-danger border border-danger">${t('status_time_up', 'WAKTU HABIS')}</span>`;
-          if(btnStart) btnStart.disabled = false;
+          if(btnStart) btnStart.disabled = true;
           if(timerDisplay) timerDisplay.innerText = "00:00:00";
           document.getElementById('timerLabel').innerText = t('label_session_ended', 'Sesi telah berakhir secara otomatis.');
         });
 
       } else if (data.status === 'upcoming') {
         if(badgeContainer) badgeContainer.innerHTML = `<span class="badge-status bg-warning-subtle text-warning border border-warning">${t('status_not_started', 'BELUM DIMULAI')}</span>`;
-        if(btnStart) btnStart.disabled = false;
+        if(btnStart) btnStart.disabled = true;
         if(timerDisplay) timerDisplay.innerText = "--:--:--";
         document.getElementById('timerLabel').innerText = t('label_waiting_committee', 'Menunggu pembukaan oleh panitia.');
 
       } else {
   if (badgeContainer) badgeContainer.innerHTML = `<span class="badge-status bg-secondary-subtle text-secondary border border-secondary">${t('status_ended', 'VOTING SELESAI')}</span>`;
-  if (btnStart) btnStart.disabled = false;
+  if (btnStart) btnStart.disabled = true;
   if (timerDisplay) timerDisplay.innerText = t('status_closed', 'CLOSED');
   
   const timerLabel = document.getElementById('timerLabel');
@@ -1439,7 +1439,7 @@ if (lockTime && Date.now() < parseInt(lockTime)) {
   }
 
   // === SISTEM MULTI-BAHASA (i18n) ===
-  let currentLang = localStorage.getItem('preferredLang') || 'id';
+  let currentLang = localStorage.getItem('preferredLang') || 'en';
 
   async function fetchLanguageData(lang) {
     try {
