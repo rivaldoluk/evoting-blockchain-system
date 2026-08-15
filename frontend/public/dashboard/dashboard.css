@@ -1358,3 +1358,112 @@ main.container {
     font-size: 1.3rem !important;
   }
 }
+
+/* ===================================================
+   SWEETALERT2 LOGOUT CONFIRMATION (PREMIUM STYLING)
+   =================================================== */
+
+/* Container Popup */
+.swal2-logout-popup {
+    border-radius: 24px !important;
+    padding: 1.75rem 1.5rem !important;
+    border: 1px solid var(--border, #e2e8f0) !important;
+    backdrop-filter: blur(12px) !important;
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2) !important;
+    max-width: 420px !important; /* Agar pas & proporsional */
+    width: 90% !important;
+}
+
+/* Judul Modal */
+.swal2-logout-title {
+    font-size: 1.35rem !important;
+    font-weight: 800 !important;
+    color: var(--text-primary, #0f172a) !important;
+    letter-spacing: -0.3px !important;
+    padding-top: 0.5rem !important;
+}
+
+/* Pesan Teks (HTML Container) */
+.swal2-logout-html {
+    font-size: 0.875rem !important;
+    line-height: 1.55 !important;
+    color: var(--text-secondary, #64748b) !important;
+    margin-top: 0.75rem !important;
+    margin-bottom: 1.25rem !important;
+}
+
+/* Pembungkus Tombol */
+.swal2-logout-actions {
+    display: flex !important;
+    gap: 12px !important;
+    width: 100% !important;
+    margin-top: 1rem !important;
+    justify-content: center !important;
+}
+
+/* Tombol Keluar (Confirm - Red Accent) */
+.swal2-logout-confirm-btn {
+    background: #ef4444 !important;
+    color: #ffffff !important;
+    border: none !important;
+    border-radius: 12px !important;
+    padding: 10px 20px !important;
+    font-size: 0.85rem !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    flex: 1 !important;
+    transition: all 0.25s ease !important;
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.3) !important;
+}
+
+.swal2-logout-confirm-btn:hover {
+    background: #dc2626 !important;
+    transform: translateY(-2px) !important;
+    box-shadow: 0 6px 16px rgba(239, 68, 68, 0.4) !important;
+}
+
+.swal2-logout-confirm-btn:active {
+    transform: translateY(0) !important;
+}
+
+/* Tombol Batal (Cancel - Neutral) */
+.swal2-logout-cancel-btn {
+    background: transparent !important;
+    color: var(--text-secondary, #64748b) !important;
+    border: 1px solid var(--border, #e2e8f0) !important;
+    border-radius: 12px !important;
+    padding: 10px 20px !important;
+    font-size: 0.85rem !important;
+    font-weight: 700 !important;
+    cursor: pointer !important;
+    flex: 1 !important;
+    transition: all 0.25s ease !important;
+}
+
+.swal2-logout-cancel-btn:hover {
+    background: rgba(0, 0, 0, 0.05) !important;
+    color: var(--text-primary, #0f172a) !important;
+}
+
+[data-theme="dark"] .swal2-logout-cancel-btn:hover {
+    background: rgba(255, 255, 255, 0.08) !important;
+    color: #ffffff !important;
+}
+
+/* Layar Seluler (HP / Galaxy Z Fold) */
+@media (max-width: 480px) {
+    .swal2-logout-popup {
+        padding: 1.25rem 1rem !important;
+    }
+    
+    .swal2-logout-actions {
+        flex-direction: row !important; /* Tetap berdampingan */
+        gap: 8px !important;
+    }
+
+    .swal2-logout-confirm-btn,
+    .swal2-logout-cancel-btn {
+        padding: 9px 12px !important;
+        font-size: 0.8rem !important;
+    }
+}

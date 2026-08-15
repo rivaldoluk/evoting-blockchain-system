@@ -313,17 +313,23 @@ function logout() {
         cancelButtonText: t('btn_cancel', 'Batal'),
 
         customClass: {
-            popup: 'swal2-popup-custom',
-            title: 'swal2-title-custom',
-            htmlContainer: 'swal2-html-custom',
-            actions: 'swal2-actions',
-            confirmButton: 'swal2-confirm-custom btn btn-danger shadow-sm',
-            cancelButton: 'swal2-cancel-custom btn btn-light border shadow-sm'
+            popup: 'swal2-logout-popup',
+            title: 'swal2-logout-title',
+            htmlContainer: 'swal2-logout-html',
+            actions: 'swal2-logout-actions',
+            confirmButton: 'swal2-logout-confirm-btn',
+            cancelButton: 'swal2-logout-cancel-btn'
         },
 
         background: isDark ? '#0f172a' : '#ffffff',
         buttonsStyling: false,
-        reverseButtons: true
+        reverseButtons: true, // Memposisikan "Batal" di kiri dan "Keluar" di kanan
+        showClass: {
+            popup: 'animate__animated animate__fadeInDown animate__faster'
+        },
+        hideClass: {
+            popup: 'animate__animated animate__fadeOutUp animate__faster'
+        }
     }).then((result) => {
         if (result.isConfirmed) {
             sessionStorage.clear();
