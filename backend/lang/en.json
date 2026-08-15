@@ -40,7 +40,7 @@
   "btn_view_profile": "View Vision & Mission",
   "status_ongoing": "IN PROGRESS",
   "status_not_started": "NOT STARTED",
-  "status_ended": "VOTING ENDED",
+  "status_ended": "ENDED",
   "status_time_up": "TIME'S UP",
   "label_time_remaining": "Time remaining to cast your vote",
   "label_session_ended": "Session has automatically ended.",
@@ -137,5 +137,6 @@
   "logout_confirm_title": "Confirm Logout",
   "logout_confirm_msg": "For security reasons, logging out will terminate your current session. You will need your QR Code and NIK again to access this dashboard in the future.",
   "btn_yes_logout": "Yes, Logout",
-  "btn_cancel": "Cancel"
+  "btn_cancel": "Cancel",
+  "voter_status_active": "Verified Session"
 }

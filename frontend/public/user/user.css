@@ -446,3 +446,116 @@ body {
     background-color: var(--accent) !important;
     color: #ffffff !important;
 }
+
+/* ===================================================
+   GLASSMORPHISM USER PROFILE & DROPDOWN (Z FOLD READY)
+   =================================================== */
+
+/* Container Kaca Utama */
+.user-profile-chip-glass {
+    display: inline-flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    padding: 4px 10px 4px 4px !important;
+    border-radius: 50rem !important;
+    backdrop-filter: blur(10px) saturate(180%) !important;
+    -webkit-backdrop-filter: blur(10px) saturate(180%) !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    cursor: pointer !important;
+}
+
+/* Hilangkan Panah Bawaan Bootstrap Dropdown Toggle */
+.user-profile-chip-glass.dropdown-toggle::after {
+    display: none !important;
+}
+
+/* Light Mode Styling */
+[data-theme="light"] .user-profile-chip-glass {
+    background: rgba(255, 255, 255, 0.65) !important;
+    border: 1px solid rgba(0, 0, 0, 0.08) !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.04) !important;
+}
+
+/* Dark Mode Styling (Navy Glass) */
+[data-theme="dark"] .user-profile-chip-glass {
+    background: rgba(30, 41, 59, 0.6) !important;
+    border: 1px solid rgba(255, 255, 255, 0.15) !important;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.25) !important;
+}
+
+/* Avatar Lingkaran */
+.user-profile-chip-glass .chip-avatar {
+    width: 28px !important;
+    height: 28px !important;
+    border-radius: 50% !important;
+    background: var(--accent, #0d6efd) !important;
+    color: #ffffff !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    font-size: 0.85rem !important;
+    flex-shrink: 0 !important;
+    box-shadow: 0 2px 6px rgba(13, 110, 253, 0.3) !important;
+}
+
+.user-profile-chip-glass .chip-text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.1;
+}
+
+.user-profile-chip-glass .chip-label {
+    font-size: 0.58rem !important;
+    font-weight: 800 !important;
+    letter-spacing: 0.5px !important;
+    color: var(--accent, #0d6efd) !important;
+    text-transform: uppercase !important;
+}
+
+.user-profile-chip-glass .chip-nik {
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    color: var(--text-primary, #0f172a) !important;
+    white-space: nowrap !important;
+}
+
+[data-theme="dark"] .user-profile-chip-glass .chip-nik {
+    color: #f8fafc !important;
+}
+
+/* --- STYLING DROPDOWN MENU --- */
+.user-profile-dropdown .dropdown-menu {
+    min-width: 200px !important;
+    background: var(--bg-card, #ffffff) !important;
+    border: 1px solid var(--border, #e2e8f0) !important;
+    backdrop-filter: blur(15px) !important;
+    margin-top: 10px !important;
+}
+
+[data-theme="dark"] .user-profile-dropdown .dropdown-menu {
+    background: rgba(15, 23, 42, 0.95) !important;
+    border-color: rgba(255, 255, 255, 0.15) !important;
+    color: #f8fafc !important;
+}
+
+/* === BREAKPOINT KHUSUS GALAXY Z FOLD & MOBILE (≤ 767px) === */
+@media (max-width: 767px) {
+    /* Pada layar lipat Z Fold / HP, chip hanya berupa tombol bundar ikon avatar saja */
+    .user-profile-chip-glass {
+        padding: 2px !important;
+        border-radius: 50% !important;
+    }
+    
+    .user-profile-chip-glass .chip-avatar {
+        width: 32px !important;
+        height: 32px !important;
+        font-size: 0.95rem !important;
+    }
+}
+
+/* Di layar Desktop (>= 768px), ubah cursor menjadi default agar tidak terkesan bisa diklik */
+@media (min-width: 768px) {
+    .user-profile-chip-glass {
+        cursor: default !important;
+    }
+}

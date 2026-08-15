@@ -84,6 +84,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     loadCandidates();
     initSwipeLogic();
     checkVotingStatus();
+    handleProfileDropdownResponsive();
+    window.addEventListener('resize', handleProfileDropdownResponsive);
 });
 
 /**
@@ -96,7 +98,34 @@ function initAuth() {
         return;
     }
     const maskedNIK = `${nik.substring(0, 4)}••••${nik.substring(12)}`;
-    document.getElementById('displayNIK').innerText = `NIK: ${maskedNIK}`;
+    
+    // Setel NIK untuk tampilan Desktop (jika ada)
+    const displayNIK = document.getElementById('displayNIK');
+    if (displayNIK) displayNIK.innerText = `NIK: ${maskedNIK}`;
+
+    // Setel NIK untuk tampilan Dropdown Mobile/Z-Fold
+    const displayNIKDropdown = document.getElementById('displayNIKDropdown');
+    if (displayNIKDropdown) displayNIKDropdown.innerText = `NIK: ${maskedNIK}`;
+}
+
+// Pengendali Dropdown Profil Responsif
+function handleProfileDropdownResponsive() {
+    const chipBtn = document.getElementById('profileDropdown');
+    if (!chipBtn) return;
+
+    if (window.innerWidth <= 767) {
+        // Di HP / Z-Fold: Aktifkan Dropdown saat diklik
+        chipBtn.setAttribute('data-bs-toggle', 'dropdown');
+    } else {
+        // Di Desktop: Matikan Dropdown
+        chipBtn.removeAttribute('data-bs-toggle');
+        
+        // Tutup dropdown jika secara tak sengaja sedang terbuka saat resize layar
+        const dropdownInstance = bootstrap.Dropdown.getInstance(chipBtn);
+        if (dropdownInstance) {
+            dropdownInstance.hide();
+        }
+    }
 }
 
 /**

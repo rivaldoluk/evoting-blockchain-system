@@ -51,16 +51,36 @@
                     <button type="button" class="btn btn-sm fw-bold px-2 py-1" id="btn-lang-en" onclick="changeLanguage('en')" style="font-size: 0.7rem;">EN</button>
                 </div>
 
-                <!-- Profile Chip -->
-                <div class="user-profile-chip">
-                    <div class="chip-avatar d-none d-sm-flex">
-                        <i class="bi bi-person-fill"></i>
-                    </div>
-                    <div class="chip-text text-end text-sm-start">
-                        <small class="text-muted d-block" style="font-size: 0.6rem; line-height: 1;" data-i18n="valid_voter">PEMILIH SAH</small>
-                        <span id="displayNIK" class="fw-bold" style="font-size: 0.75rem;">NIK: ************</span>
-                    </div>
-                </div>
+                <!-- Profile Chip dengan Dropdown (Responsive Z Fold & Mobile) -->
+<div class="dropdown user-profile-dropdown">
+    <div class="user-profile-chip-glass dropdown-toggle" id="profileDropdown" data-bs-toggle="dropdown" aria-expanded="false" role="button">
+        <div class="chip-avatar">
+            <i class="bi bi-person-fill"></i>
+        </div>
+        <!-- Teks ini otomatis tersembunyi di Fold / Mobile, dan tampil di Desktop -->
+        <div class="chip-text d-none d-md-flex">
+            <small class="chip-label" data-i18n="valid_voter">PEMILIH SAH</small>
+            <span id="displayNIK" class="chip-nik">NIK: ************</span>
+        </div>
+    </div>
+
+    <!-- Dropdown Menu khusus layar kecil (Z Fold / Mobile) -->
+    <ul class="dropdown-menu dropdown-menu-end shadow-lg border-0 rounded-4 p-3 animate-pop-in" aria-labelledby="profileDropdown">
+        <li class="d-flex align-items-center gap-3 mb-2 pb-2 border-bottom">
+            <div class="dropdown-avatar">
+                <i class="bi bi-person-check-fill text-primary fs-4"></i>
+            </div>
+            <div>
+                <small class="text-primary fw-bold text-uppercase d-block" style="font-size: 0.6rem; letter-spacing: 0.5px;" data-i18n="valid_voter">PEMILIH SAH</small>
+                <span id="displayNIKDropdown" class="fw-bold" style="font-size: 0.8rem;">NIK: ************</span>
+            </div>
+        </li>
+        <li class="text-muted small text-center" style="font-size: 0.65rem;">
+    <i class="bi bi-shield-lock-fill text-success me-1"></i>
+    <span data-i18n="voter_status_active">Sesi Terverifikasi</span>
+</li>
+    </ul>
+</div>
             </div>
         </div>
     </nav>
