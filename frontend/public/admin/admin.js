@@ -10,13 +10,82 @@ let eventSource;
 let AUTHORIZED_ADMIN = "";
 let TOTAL_DPT = 0;
 
-// State untuk Tabel & Pagination (Pindahkan ke sini agar tidak undefined)
+// === SISTEM MULTI-BAHASA (i18n) KHUSUS ADMIN ===
+let currentLang = localStorage.getItem('preferredLang') || 'id';
+let currentTranslations = {};
+
+function t(key, fallback = '') {
+    return currentTranslations[key] || fallback;
+}
+
+async function fetchLanguageData(lang) {
+    try {
+        const response = await fetch(`${BACKEND_URL}/lang/${lang}`, {
+            headers: NGROK_HEADERS
+        });
+        if (!response.ok) throw new Error('Gagal mengambil data bahasa');
+        return await response.json();
+    } catch (err) {
+        console.error("Gagal memuat file bahasa:", err);
+        return null;
+    }
+}
+
+async function updateContent(lang) {
+    const translations = await fetchLanguageData(lang);
+    if (!translations) return;
+
+    currentTranslations = translations;
+
+    // 1. Update elemen ber-atribut data-i18n
+    document.querySelectorAll('[data-i18n]').forEach(element => {
+        const key = element.getAttribute('data-i18n');
+        if (translations[key]) {
+            element.innerHTML = translations[key];
+        }
+    });
+
+    // 2. Update placeholder input pencarian
+    const voterSearchInput = document.getElementById('voterSearchInput');
+    if (voterSearchInput && translations['search_voter_placeholder']) {
+        voterSearchInput.placeholder = translations['search_voter_placeholder'];
+    }
+
+    // 3. Simpan preferensi bahasa
+    localStorage.setItem('preferredLang', lang);
+    document.documentElement.lang = lang;
+
+    // 4. Toggle kelas tombol aktif (ID / EN)
+    const btnId = document.getElementById('btn-lang-id');
+    const btnEn = document.getElementById('btn-lang-en');
+    if (btnId && btnEn) {
+        btnId.classList.toggle('active', lang === 'id');
+        btnEn.classList.toggle('active', lang === 'en');
+    }
+
+    // 5. Refresh elemen UI dinamis yang sedang tampil & RENDER ULANG LOGS
+    refreshDashboardStatus();
+    if (allCandidatesData.length > 0) {
+        updateDashboardUI(allCandidatesData);
+    }
+    renderTransactionTableRows();
+    checkMetaMaskAvailability();
+    renderLogs(); // <--- PERBAIKAN: Render ulang log saat bahasa berganti
+}
+
+function changeLanguage(lang) {
+    currentLang = lang;
+    updateContent(lang);
+}
+
+// State untuk Tabel & Pagination
 let allVoters = [];
 let filteredVoters = [];
 let votedVotersOnly = []; 
 let currentPage = 1;      // Pagination Modal DPT
 let txCurrentPage = 1;    // Pagination Tabel Utama
 const rowsPerPage = 10;
+let allCandidatesData = []; 
 
 function getFullImageUrl(path) {
     if (!path) return '/img/default.png';
@@ -25,21 +94,24 @@ function getFullImageUrl(path) {
     return `/img/${fileName}`;
 }
 
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
     // 1. Inisialisasi Tema
     themeHandler.init();
 
-    // 2. Cek ketersediaan MetaMask (Visual Indikator)
+    // 2. Muat Bahasa & Terjemahan
+    await updateContent(currentLang);
+
+    // 3. Cek ketersediaan MetaMask (Visual Indikator)
     checkMetaMaskAvailability();
 
-    // 3. Jalankan Jam Login
+    // 4. Jalankan Jam Login
     setInterval(updateLoginClock, 1000);
     updateLoginClock();
 
-    // 4. Cek Sesi Login
+    // 5. Cek Sesi Login
     checkSession();
 
-    // 5. Pasang Event Listeners
+    // 6. Pasang Event Listeners
     initEventListeners();
 });
 
@@ -88,7 +160,6 @@ const themeHandler = {
         };
         icon.className = `bi ${icons[theme]}`;
 
-        // Tandai dropdown item yang aktif
         document.querySelectorAll('[data-bs-theme-value]').forEach(el => {
             el.classList.toggle('active', el.getAttribute('data-bs-theme-value') === theme);
         });
@@ -104,14 +175,13 @@ function initEventListeners() {
     const logoutBtnNavbar = document.getElementById('btnLogout');
 
     if (btnConnect) btnConnect.addEventListener('click', connectWallet);
-    if(logoutBtnSidebar) logoutBtnSidebar.onclick = (e) => { e.preventDefault(); confirmLogout(); };
-    if(logoutBtnNavbar) logoutBtnNavbar.onclick = (e) => { e.preventDefault(); confirmLogout(); };
+    if (logoutBtnSidebar) logoutBtnSidebar.onclick = (e) => { e.preventDefault(); confirmLogout(); };
+    if (logoutBtnNavbar) logoutBtnNavbar.onclick = (e) => { e.preventDefault(); confirmLogout(); };
 
-    // Di dalam fungsi initEventListeners()
-const btnStart = document.getElementById('btnStartVoting');
-if (btnStart) {
-    btnStart.onclick = () => startVotingProcess();
-}
+    const btnStart = document.getElementById('btnStartVoting');
+    if (btnStart) {
+        btnStart.onclick = () => startVotingProcess();
+    }
     
     const btnPemilih = document.getElementById('menuDataPemilih');
     if (btnPemilih) {
@@ -121,36 +191,38 @@ if (btnStart) {
         };
     }
 
-    document.getElementById('prevPage').addEventListener('click', () => {
-        if (currentPage > 1) {
-            currentPage--;
-            renderVoterTable();
-        }
-    });
+    const prevPageBtn = document.getElementById('prevPage');
+    if (prevPageBtn) {
+        prevPageBtn.addEventListener('click', () => {
+            if (currentPage > 1) {
+                currentPage--;
+                renderVoterTable();
+            }
+        });
+    }
 
-    document.getElementById('nextPage').addEventListener('click', () => {
-        if ((currentPage * rowsPerPage) < allVoters.length) {
-            currentPage++;
-            renderVoterTable();
-        }
-    });
+    const nextPageBtn = document.getElementById('nextPage');
+    if (nextPageBtn) {
+        nextPageBtn.addEventListener('click', () => {
+            if ((currentPage * rowsPerPage) < filteredVoters.length) {
+                currentPage++;
+                renderVoterTable();
+            }
+        });
+    }
 
     const searchInput = document.getElementById('voterSearchInput');
     if (searchInput) {
         searchInput.addEventListener('input', (e) => {
             const keyword = e.target.value.toLowerCase();
-
-            // Filter data berdasarkan NIK Hash
             filteredVoters = allVoters.filter(voter =>
                 voter.nikHash.toLowerCase().includes(keyword)
             );
-
-            currentPage = 1; // Balik ke halaman 1 saat mencari
+            currentPage = 1;
             renderVoterTable();
         });
     }
 
-    // TAMBAHKAN LOGIKA TOMBOL PAGINATION TRANSAKSI
     const btnPrevTx = document.getElementById('prevTxPage');
     const btnNextTx = document.getElementById('nextTxPage');
 
@@ -158,7 +230,7 @@ if (btnStart) {
         btnPrevTx.onclick = () => {
             if (txCurrentPage > 1) {
                 txCurrentPage--;
-                renderTransactionTableRows(); // Fungsi baru untuk render ulang
+                renderTransactionTableRows();
             }
         };
     }
@@ -172,16 +244,17 @@ if (btnStart) {
         };
     }
 
-    // Tambahkan di initEventListeners
-    document.getElementById('menuKandidat').onclick = (e) => { e.preventDefault(); showKandidatData(); };
+    const menuKandidat = document.getElementById('menuKandidat');
+    if (menuKandidat) {
+        menuKandidat.onclick = (e) => { e.preventDefault(); showKandidatData(); };
+    }
 }
 
 async function checkSession() {
     try {
-        // 1. Ambil config dari backend
         const configRes = await fetch(`${BACKEND_URL}/admin/config`, {
-    headers: NGROK_HEADERS // Tambahkan ini
-});
+            headers: NGROK_HEADERS
+        });
         const configData = await configRes.json();
 
         AUTHORIZED_ADMIN = configData.authorizedAdmin.toLowerCase();
@@ -189,55 +262,51 @@ async function checkSession() {
 
         const isAuth = sessionStorage.getItem('adminAuth');
         
-        // 2. Jika status auth ada, validasi ulang dengan MetaMask aktif
         if (isAuth === 'true' && window.ethereum) {
             provider = new ethers.BrowserProvider(window.ethereum);
-            const accounts = await provider.listAccounts(); // Cek akun aktif sekarang
+            const accounts = await provider.listAccounts();
             
-            // Ambil address aktif (jika ada)
             const currentAddress = accounts.length > 0 ? accounts[0].address.toLowerCase() : null;
             const savedAddress = sessionStorage.getItem('adminAddress')?.toLowerCase();
 
-            // VALIDASI KRUSIAL: 
-            // Cek apakah MetaMask terkoneksi, akunnya sama dengan session, DAN akunnya adalah admin resmi
             if (currentAddress && currentAddress === savedAddress && currentAddress === AUTHORIZED_ADMIN) {
                 signer = await provider.getSigner();
                 showDashboard(savedAddress);
             } else {
-                // Jika akun berubah saat refresh atau bukan admin, langsung tendang
                 executeLogout(); 
             }
         } else if (isAuth === 'true' && !window.ethereum) {
-            // Jika status auth true tapi MetaMask hilang (extension di-disable)
             executeLogout();
         }
 
     } catch (err) {
         console.error("Gagal load config atau validasi sesi:", err);
-        // Opsi: Tampilkan modal error koneksi jika gagal fetch config
     }
 }
 
 async function connectWallet() {
     const btnConnect = document.getElementById('btnConnectMetamask');
     const status = document.getElementById('loginStatus');
-    status.className = "mt-3 small text-primary";
-    status.innerText = "Menghubungkan ke server...";
+    
+    if (status) {
+        status.className = "mt-3 small text-primary";
+        status.innerText = t('status_connecting_server', 'Menghubungkan ke server...');
+    }
 
     btnConnect.disabled = true;
     const originalText = btnConnect.innerHTML;
-    btnConnect.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menghubungkan...';
+    btnConnect.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>${t('btn_connecting', 'Menghubungkan...')}`;
 
     try {
         const configRes = await fetch(`${BACKEND_URL}/admin/config`, {
-    headers: NGROK_HEADERS // Tambahkan ini
-});
-        if (!configRes.ok) throw new Error("Gagal mengambil konfigurasi server.");
+            headers: NGROK_HEADERS
+        });
+        if (!configRes.ok) throw new Error(t('err_config_fetch', 'Gagal mengambil konfigurasi server.'));
         const configData = await configRes.json();
         AUTHORIZED_ADMIN = configData.authorizedAdmin.toLowerCase();
 
         if (typeof window.ethereum === 'undefined') {
-            throw new Error("Setelah instalasi selesai, silakan refresh halaman ini.");
+            throw new Error(t('err_refresh_page', 'Setelah instalasi selesai, silakan refresh halaman ini.'));
         }
 
         provider = new ethers.BrowserProvider(window.ethereum);
@@ -246,41 +315,43 @@ async function connectWallet() {
         adminAddress = (await signer.getAddress()).toLowerCase();
 
         if (adminAddress !== AUTHORIZED_ADMIN) {
-            status.className = "mt-3 small text-danger";
-            status.innerText = "Akses Ditolak: Anda bukan Admin.";
+            if (status) {
+                status.className = "mt-3 small text-danger";
+                status.innerText = t('err_access_denied', 'Akses Ditolak: Anda bukan Admin.');
+            }
             return;
         }
 
-        // --- BAGIAN SIGNATURE CHALLENGE ---
-        status.innerText = "Silakan tanda tangani permintaan masuk di MetaMask...";
-        const message = `Login Admin Panel\nTime: ${new Date().toLocaleString()}\nNonce: ${Math.floor(Math.random() * 1000000)}`;
+        if (status) status.innerText = t('sign_metamask_prompt', 'Silakan tanda tangani permintaan masuk di MetaMask...');
+        const timeLocale = currentLang === 'en' ? 'en-US' : 'id-ID';
+        const message = `Login Admin Panel\nTime: ${new Date().toLocaleString(timeLocale)}\nNonce: ${Math.floor(Math.random() * 1000000)}`;
         
         try {
             await signer.signMessage(message);
         } catch (signErr) {
-            // Menangani jika user menekan 'Cancel' pada pop-up Signature
             if (signErr.code === 'ACTION_REJECTED' || signErr.code === 4001) {
-                throw new Error("Login dibatalkan: Tanda tangan diperlukan untuk akses ke dashboard.");
+                throw new Error(t('err_sign_cancelled', 'Login dibatalkan: Tanda tangan diperlukan untuk akses ke dashboard.'));
             }
             throw signErr;
         }
 
-        // Berhasil Login
         sessionStorage.setItem('adminAuth', 'true');
         sessionStorage.setItem('adminAddress', adminAddress);
 
         showDashboard(adminAddress);
-        addLog(`Admin login berhasil: ${adminAddress.substring(0, 6)}...${adminAddress.substring(adminAddress.length - 4)}`, "success");
+        const shortAddr = `${adminAddress.substring(0, 6)}...${adminAddress.substring(adminAddress.length - 4)}`;
+        addLog('log_admin_login_success', 'success', shortAddr);
 
     } catch (err) {
         console.error("Login Error:", err.code, err.message);
         
-        status.className = "mt-3 small text-danger";
-        // Menampilkan pesan yang lebih ramah pengguna
-        if (err.code === 'ACTION_REJECTED' || err.code === 4001) {
-            status.innerText = "Akun belum tersedia! Silahkan masuk menggunakan akun admin";
-        } else {
-            status.innerText = err.message || "Gagal menghubungkan MetaMask.";
+        if (status) {
+            status.className = "mt-3 small text-danger";
+            if (err.code === 'ACTION_REJECTED' || err.code === 4001) {
+                status.innerText = t('err_account_not_available', 'Akun belum tersedia! Silahkan masuk menggunakan akun admin');
+            } else {
+                status.innerText = err.message || t('err_metamask_connect', 'Gagal menghubungkan MetaMask.');
+            }
         }
     } finally {
         btnConnect.disabled = false;
@@ -296,22 +367,18 @@ function showDashboard(address) {
     document.getElementById('adminDashboard').style.display = 'block';
 
     if (window.ethereum) {
-        // Jika user ganti akun di MetaMask
         window.ethereum.on('accountsChanged', (accounts) => {
             if (accounts.length === 0 || accounts[0].toLowerCase() !== AUTHORIZED_ADMIN) {
                 showAdminAuthModal();
             }
         });
-        // Jika user ganti network (misal dari Sepolia ke Mainnet)
         window.ethereum.on('chainChanged', () => window.location.reload());
     }
 
-    // Tampilkan Address di UI
     const displayAddr = `${address.substring(0, 6)}...${address.substring(address.length - 4)}`;
     document.getElementById('adminWallet').innerText = displayAddr;
 
     renderLogs();
-    // Mulai Sinkronisasi Data
     startRealtimeStream();
     startCountdownTimer();
     startLiveTimeUpdates();
@@ -319,11 +386,9 @@ function showDashboard(address) {
 }
 
 function showAdminAuthModal() {
-    // Tampilkan modal
     const authModal = new bootstrap.Modal(document.getElementById('adminAuthModal'));
     authModal.show();
 
-    // Jalankan Countdown 5 detik
     let timeLeft = 5;
     const countdownEl = document.getElementById('adminCountdown');
 
@@ -333,23 +398,21 @@ function showAdminAuthModal() {
 
         if (timeLeft <= 0) {
             clearInterval(timer);
-            executeLogout(); // Pastikan fungsi logout Anda sudah benar
+            executeLogout();
         }
     }, 1000);
 }
 
 async function startRealtimeStream() {
-    // --- LANGKAH 1: Ambil Data Awal (Fetch) ---
-    // Ini krusial karena SSE sering tertahan proteksi browser/ngrok di awal
     try {
         const res = await fetch(`${BACKEND_URL}/results`, { 
             headers: NGROK_HEADERS 
         });
         if (res.ok) {
             const initialData = await res.json();
-            updateDashboardUI(initialData); // Tampilkan data segera
+            allCandidatesData = initialData;
+            updateDashboardUI(initialData);
             
-            // Ambil data pemilih juga untuk tabel transaksi
             const configRes = await fetch(`${BACKEND_URL}/admin/config`, { headers: NGROK_HEADERS });
             if (configRes.ok) {
                 const configData = await configRes.json();
@@ -360,18 +423,16 @@ async function startRealtimeStream() {
         console.error("Gagal mengambil data awal via fetch:", err);
     }
 
-    // --- LANGKAH 2: Inisialisasi Real-time Stream (SSE) ---
     if (eventSource) eventSource.close();
     
     eventSource = new EventSource(`${BACKEND_URL}/results-stream`);
 
     eventSource.onmessage = async (event) => {
         try {
-            // 1. Update Leaderboard & Statistik dari data Stream
             const candidates = JSON.parse(event.data);
+            allCandidatesData = candidates;
             updateDashboardUI(candidates);
             
-            // 2. Ambil ulang config untuk Sinkronisasi Tabel Transaksi
             const configRes = await fetch(`${BACKEND_URL}/admin/config`, { 
                 headers: NGROK_HEADERS 
             });
@@ -380,7 +441,7 @@ async function startRealtimeStream() {
                 updateTransactionTable(configData.votersList);
             }
             
-            addLog("Blockchain sync: Node diperbarui.", "info");
+            addLog('log_blockchain_sync', 'info');
         } catch (e) {
             console.error("Gagal sinkronisasi via stream:", e);
         }
@@ -394,22 +455,18 @@ async function startRealtimeStream() {
 function updateDashboardUI(candidates) {
     if (!candidates || !Array.isArray(candidates)) return;
 
-    // 1. Kalkulasi Total Suara
     const totalVotes = candidates.reduce((sum, c) => sum + (Number(c.votes) || 0), 0);
-
-    // 2. Kalkulasi Partisipasi
     const participation = TOTAL_DPT > 0 ? ((totalVotes / TOTAL_DPT) * 100).toFixed(1) : 0;
+    const locale = currentLang === 'en' ? 'en-US' : 'id-ID';
 
-    // 3. Update Widget Statistik (Angka Besar)
     const elTotalVotes = document.getElementById('statTotalVotes');
     const elTotalVoters = document.getElementById('statTotalVoters');
     const elParticipation = document.getElementById('statParticipation');
 
-    if (elTotalVotes) elTotalVotes.innerText = totalVotes.toLocaleString('id-ID');
-    if (elTotalVoters) elTotalVoters.innerText = TOTAL_DPT.toLocaleString('id-ID');
+    if (elTotalVotes) elTotalVotes.innerText = totalVotes.toLocaleString(locale);
+    if (elTotalVoters) elTotalVoters.innerText = TOTAL_DPT.toLocaleString(locale);
     if (elParticipation) elParticipation.innerText = participation + "%";
 
-    // 4. Update Progress Bars
     const voteBar = document.getElementById('voteProgress');
     const particBar = document.getElementById('particProgress');
     const dptBar = document.getElementById('dptProgress');
@@ -418,12 +475,12 @@ function updateDashboardUI(candidates) {
     if (particBar) particBar.style.width = Math.min(participation, 100) + "%";
     if (dptBar) dptBar.style.width = "100%";
 
-    // 5. Update Tabel Leaderboard
     const tbody = document.getElementById('leaderboardBody');
     if (!tbody) return;
 
-    // Urutkan kandidat berdasarkan suara terbanyak
     const sorted = [...candidates].sort((a, b) => (Number(b.votes) || 0) - (Number(a.votes) || 0));
+    const candidatePrefix = currentLang === 'en' ? 'Candidate No.' : 'Kandidat No.';
+    const votesSuffix = currentLang === 'en' ? 'Votes' : 'Suara';
 
     tbody.innerHTML = sorted.map((cand, index) => {
         const votes = Number(cand.votes) || 0;
@@ -437,7 +494,7 @@ function updateDashboardUI(candidates) {
                         <img src="${getFullImageUrl(cand.foto)}" class="rounded-circle me-3 border border-secondary" width="40" height="40" style="object-fit: cover;" onerror="this.src='/img/default.png'">
                         <div>
                             <div class="fw-bold">${cand.nama}</div>
-                            <div class="small text-muted">Kandidat No. ${cand.noUrut}</div>
+                            <div class="small text-muted">${candidatePrefix} ${cand.noUrut}</div>
                         </div>
                     </div>
                 </td>
@@ -450,7 +507,7 @@ function updateDashboardUI(candidates) {
                     </div>
                 </td>
                 <td class="text-end pe-4">
-                    <span class="badge bg-dark border border-secondary px-3 py-2 mono">${votes} Suara</span>
+                    <span class="badge bg-dark border border-secondary px-3 py-2 mono">${votes} ${votesSuffix}</span>
                 </td>
             </tr>
         `;
@@ -458,13 +515,10 @@ function updateDashboardUI(candidates) {
 }
 
 function updateTransactionTable(votersList) {
-    // 1. Filter hanya yang sudah memilih (voted: true)
-    // 2. Urutkan berdasarkan timestamp (Terbesar/Terbaru ke Terkecil)
     votedVotersOnly = votersList
         .filter(v => v.voted && v.timestamp) 
         .sort((a, b) => b.timestamp - a.timestamp);
 
-    // 2. Panggil fungsi render
     renderTransactionTableRows();
 }
 
@@ -478,12 +532,14 @@ function renderTransactionTableRows() {
     if (!tbody) return;
 
     if (votedVotersOnly.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="5" class="text-center py-5 text-muted">Menunggu transaksi pertama masuk...</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="5" class="text-center py-5 text-muted" data-i18n="waiting_tx">${t('waiting_tx', 'Menunggu transaksi masuk...')}</td></tr>`;
         if (txNav) txNav.classList.add('d-none');
         return;
     }
 
-    if (syncText) syncText.innerText = `Last Update: ${new Date().toLocaleTimeString('id-ID')}`;
+    const timeLocale = currentLang === 'en' ? 'en-US' : 'id-ID';
+    const labelPrefix = currentLang === 'en' ? 'Last Update:' : 'Terakhir diperbarui:';
+    if (syncText) syncText.innerText = `${labelPrefix} ${new Date().toLocaleTimeString(timeLocale)}`;
 
     const limit = 10;
     const start = (txCurrentPage - 1) * limit;
@@ -496,33 +552,27 @@ function renderTransactionTableRows() {
         const shortTx = `${txHash.substring(0, 10)}...${txHash.substring(60)}`;
         const shortNik = `${voter.nikHash.substring(0, 10)}...${voter.nikHash.substring(54)}`;
         
-        // --- LOGIKA STATUS PENDING ---
         const txTime = parseInt(voter.timestamp);
         const diffInSeconds = Math.floor((now - txTime) / 1000);
         
         let statusHTML = '';
         
-        // Jika transaksi baru masuk (kurang dari 8 detik)
         if (diffInSeconds < 5) {
             statusHTML = `
                 <span class="status-pill pending">
-                    <i class="bi bi-hourglass-split spinning me-1"></i> PENDING
+                    <i class="bi bi-hourglass-split spinning me-1"></i> ${t('status_pending', 'PENDING')}
                 </span>`;
             
-            // Atur timer untuk refresh otomatis setelah sisa waktu pending habis
-            // Ini agar status berubah jadi MINED tanpa user harus refresh
             setTimeout(() => {
                 renderTransactionTableRows();
             }, (5 - diffInSeconds) * 1000);
             
         } else {
-            // Jika sudah lewat 8 detik
             statusHTML = `
                 <span class="status-pill">
-                    <i class="bi bi-check-circle-fill me-1"></i> SUCCESS
+                    <i class="bi bi-check-circle-fill me-1"></i> ${t('status_success', 'SUCCESS')}
                 </span>`;
         }
-        // ------------------------------
 
         return `
             <tr>
@@ -550,7 +600,6 @@ function renderTransactionTableRows() {
         `;
     }).join('');
 
-    // Logic Navigasi
     if (txNav) {
         votedVotersOnly.length > limit ? txNav.classList.remove('d-none') : txNav.classList.add('d-none');
         if (btnPrevTx) btnPrevTx.disabled = (txCurrentPage === 1);
@@ -564,8 +613,8 @@ function renderTransactionTableRows() {
 async function startCountdownTimer() {
     try {
         const res = await fetch(`${BACKEND_URL}/voting-status`, {
-    headers: NGROK_HEADERS // Tambahkan ini
-});
+            headers: NGROK_HEADERS
+        });
         const data = await res.json();
 
         updateStatusBadge(data.status);
@@ -577,14 +626,13 @@ async function startCountdownTimer() {
 
                 if (diff <= 0) {
                     clearInterval(timerInterval);
-                    document.getElementById('statTimer').innerText = "ENDED";
+                    const endedText = t('status_ended', 'SELESAI');
+                    document.getElementById('statTimer').innerText = endedText;
                     
-                    // --- LOGIKA BARU: Catat ke System Logs saat waktu habis ---
-                    // Gunakan flag agar log tidak muncul berulang-ulang saat interval berjalan
                     if (sessionStorage.getItem('log_ended_triggered') !== 'true') {
-                        addLog("Sistem: Masa voting telah berakhir.", "warning");
+                        addLog('log_voting_ended', "warning");
                         sessionStorage.setItem('log_ended_triggered', 'true');
-                        refreshDashboardStatus(); // Update tombol jadi merah
+                        refreshDashboardStatus();
                     }
                 } else {
                     const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
@@ -594,19 +642,18 @@ async function startCountdownTimer() {
                 }
             }, 1000);
         } else if (data.status === 'ended') {
-            document.getElementById('statTimer').innerText = "ENDED";
-            // Jika saat buka dashboard status sudah ended, pastikan flag diset
+            document.getElementById('statTimer').innerText = t('status_ended', 'SELESAI');
             sessionStorage.setItem('log_ended_triggered', 'true');
         } else {
             document.getElementById('statTimer').innerText = data.status.toUpperCase();
         }
     } catch (e) {
-        addLog("Gagal sinkronisasi ke server.", "danger");
+        addLog('log_server_sync_failed', "danger");
     }
 }
 
 /**
- * UTILITY: Mengubah Timestamp menjadi format "X menit yang lalu"
+ * UTILITY: Mengubah Timestamp menjadi format time ago multi-bahasa
  */
 function timeAgo(timestamp) {
     if (!timestamp) return "-";
@@ -615,21 +662,27 @@ function timeAgo(timestamp) {
     const past = new Date(timestamp);
     const diffInSeconds = Math.floor((now - past) / 1000);
 
-    if (diffInSeconds < 5) return "Baru saja";
-    if (diffInSeconds < 60) return `${diffInSeconds} detik lalu`;
+    if (diffInSeconds < 5) {
+        return currentLang === 'en' ? 'Just now' : 'Baru saja';
+    }
+    if (diffInSeconds < 60) {
+        return currentLang === 'en' ? `${diffInSeconds}s ago` : `${diffInSeconds} detik lalu`;
+    }
     
     const diffInMinutes = Math.floor(diffInSeconds / 60);
-    if (diffInMinutes < 60) return `${diffInMinutes} menit lalu`;
+    if (diffInMinutes < 60) {
+        return currentLang === 'en' ? `${diffInMinutes}m ago` : `${diffInMinutes} menit lalu`;
+    }
     
     const diffInHours = Math.floor(diffInMinutes / 60);
-    if (diffInHours < 24) return `${diffInHours} jam lalu`;
+    if (diffInHours < 24) {
+        return currentLang === 'en' ? `${diffInHours}h ago` : `${diffInHours} jam lalu`;
+    }
     
-    return past.toLocaleDateString('id-ID'); // Jika sudah lewat sehari, tampilkan tanggal
+    const locale = currentLang === 'en' ? 'en-US' : 'id-ID';
+    return past.toLocaleDateString(locale);
 }
 
-/**
- * Memperbarui semua teks waktu di tabel secara berkala
- */
 function startLiveTimeUpdates() {
     setInterval(() => {
         document.querySelectorAll('.live-time').forEach(el => {
@@ -638,29 +691,24 @@ function startLiveTimeUpdates() {
                 el.innerText = timeAgo(parseInt(timestamp));
             }
         });
-    }, 10000); // Update setiap 10 detik agar tidak berat
+    }, 10000);
 }
 
-function addLog(message, type = "info") {
+// === PERBAIKAN FUNGSI SISTEM LOG DENGAN PARAMETER & KEY TRANS translation ===
+function addLog(messageKey, type = "info", params = null) {
     const container = document.getElementById('systemLogs');
     if (!container) return;
 
-    const time = new Date().toLocaleTimeString('id-ID', { hour12: false });
-    const logData = { time, message, type };
+    const timeLocale = currentLang === 'en' ? 'en-US' : 'id-ID';
+    const time = new Date().toLocaleTimeString(timeLocale, { hour12: false });
+    const logData = { time, messageKey, type, params };
 
-    // 1. Ambil log lama dari localStorage
     let logs = JSON.parse(localStorage.getItem('admin_logs')) || [];
-    
-    // 2. Tambahkan log baru ke array
-    logs.unshift(logData); // Tambah ke awal array agar yang terbaru di atas
+    logs.unshift(logData);
 
-    // 3. Batasi jumlah log (misal 100 agar tidak lemot)
     if (logs.length > 100) logs.pop();
 
-    // 4. Simpan kembali ke localStorage
     localStorage.setItem('admin_logs', JSON.stringify(logs));
-
-    // 5. Render ke UI
     renderLogs();
 }
 
@@ -670,23 +718,29 @@ function renderLogs() {
 
     const logs = JSON.parse(localStorage.getItem('admin_logs')) || [];
     
-    container.innerHTML = logs.map(log => `
-        <div class="log-item ${log.type}">
-            <span class="time">[${log.time}]</span> ${log.message}
-        </div>
-    `).join('');
+    container.innerHTML = logs.map(log => {
+        let text = t(log.messageKey, log.messageKey);
+        if (log.params) {
+            text = `${text} ${log.params}`;
+        }
+
+        return `
+            <div class="log-item ${log.type}">
+                <span class="time">[${log.time}]</span> ${text}
+            </div>
+        `;
+    }).join('');
 }
 
 function refreshLogs() {
-    // Memberi efek putar pada icon saat diklik (opsional)
     const icon = event.currentTarget.querySelector('i');
-    icon.classList.add('bi-spin'); // Anda bisa tambahkan CSS animasi putar
+    if (icon) icon.classList.add('bi-spin');
     
-    // Render ulang dari localStorage
     renderLogs();
     
-    // Simulasi loading sebentar
-    setTimeout(() => icon.classList.remove('bi-spin'), 500);
+    setTimeout(() => {
+        if (icon) icon.classList.remove('bi-spin');
+    }, 500);
 }
 
 async function showVoterData() {
@@ -694,21 +748,20 @@ async function showVoterData() {
     const voterModal = bootstrap.Modal.getOrCreateInstance(modalElement);
     voterModal.show();
 
-    // Reset pencarian dan halaman
     document.getElementById('voterSearchInput').value = "";
     currentPage = 1;
 
     try {
         const res = await fetch(`${BACKEND_URL}/admin/config`, {
-    headers: NGROK_HEADERS // Tambahkan ini
-});
+            headers: NGROK_HEADERS
+        });
         const data = await res.json();
         allVoters = data.votersList || [];
-        filteredVoters = [...allVoters]; // Awalnya filtered sama dengan semua data
+        filteredVoters = [...allVoters];
 
         renderVoterTable();
     } catch (err) {
-        document.getElementById('voterTableBody').innerHTML = '<tr><td colspan="3">Gagal load data.</td></tr>';
+        document.getElementById('voterTableBody').innerHTML = `<tr><td colspan="3">${t('err_load_data', 'Gagal load data.')}</td></tr>`;
     }
 }
 
@@ -717,19 +770,21 @@ function renderVoterTable() {
     const start = (currentPage - 1) * rowsPerPage;
     const end = start + rowsPerPage;
 
-    // Gunakan filteredVoters, bukan allVoters
     const paginatedItems = filteredVoters.slice(start, end);
 
     if (paginatedItems.length === 0) {
-        tbody.innerHTML = '<tr><td colspan="3" class="text-center py-4 text-muted">Data tidak ditemukan.</td></tr>';
+        tbody.innerHTML = `<tr><td colspan="3" class="text-center py-4 text-muted">${t('data_not_found', 'Data tidak ditemukan.')}</td></tr>`;
         document.getElementById('paginationInfo').innerText = "0 data";
         return;
     }
 
+    const textVoted = currentLang === 'en' ? 'Voted' : 'Sudah';
+    const textNotVoted = currentLang === 'en' ? 'Not Voted' : 'Belum';
+
     tbody.innerHTML = paginatedItems.map((voter, index) => {
         const statusBadge = voter.voted
-            ? '<span class="badge bg-success-subtle text-success border border-success px-3">Sudah</span>'
-            : '<span class="badge bg-secondary-subtle text-muted border border-secondary px-3">Belum</span>';
+            ? `<span class="badge bg-success-subtle text-success border border-success px-3">${textVoted}</span>`
+            : `<span class="badge bg-secondary-subtle text-muted border border-secondary px-3">${textNotVoted}</span>`;
 
         return `
             <tr>
@@ -740,14 +795,15 @@ function renderVoterTable() {
         `;
     }).join('');
 
+    const textShowing = currentLang === 'en' ? 'Showing' : 'Menampilkan';
+    const textOf = currentLang === 'en' ? 'of' : 'dari';
+
     document.getElementById('paginationInfo').innerText =
-        `Menampilkan ${start + 1} - ${Math.min(end, filteredVoters.length)} dari ${filteredVoters.length}`;
+        `${textShowing} ${start + 1} - ${Math.min(end, filteredVoters.length)} ${textOf} ${filteredVoters.length}`;
 
     document.getElementById('prevPage').disabled = (currentPage === 1);
     document.getElementById('nextPage').disabled = (end >= filteredVoters.length);
 }
-
-let allCandidatesData = []; 
 
 async function showKandidatData() {
     const container = document.getElementById('kandidatContainer');
@@ -763,45 +819,54 @@ async function showKandidatData() {
         });
         const data = await res.json();
         
-        // Simpan data ke variabel global agar showCandidateDetail bisa menemukannya
         allCandidatesData = data; 
 
-        container.innerHTML = data.map((k, index) => `
-            <div class="col-md-6 col-xl-4">
-                <div class="card h-100 card-custom border-0 shadow-lg">
-                    <div class="position-relative">
-                        <img src="${getFullImageUrl(k.foto)}" class="card-img-top" style="height: 250px; object-fit: cover;">
-                        <span class="position-absolute top-0 end-0 m-3 badge rounded-pill bg-primary px-3 shadow">
-                            No. Urut ${k.noUrut}
-                        </span>
-                    </div>
-                    <div class="card-body p-4">
-                        <h5 class="fw-bold mb-1" style="color: var(--text-main);">${k.nama}</h5>
-                        <div class="p-3 rounded-3 mb-3" style="background: var(--input-bg); border: 1px solid var(--border);">
-                            <h6 class="small fw-bold text-uppercase opacity-50" style="color: var(--text-muted);">Visi</h6>
-                            <p class="small mb-0 text-truncate-3" style="color: var(--text-main);">${k.visi}</p>
+        const candidateNoText = currentLang === 'en' ? 'No.' : 'No. Urut';
+        const visionText = currentLang === 'en' ? 'Vision' : 'Visi';
+        const validVotesText = currentLang === 'en' ? 'Valid Votes' : 'Suara Sah';
+        const detailBtnText = currentLang === 'en' ? 'Profile Details' : 'Detail Profil';
+
+        container.innerHTML = data.map((k, index) => {
+            const visiText = (currentLang === 'en' && k.visi_en) ? k.visi_en : k.visi;
+
+            return `
+                <div class="col-md-6 col-xl-4">
+                    <div class="card h-100 card-custom border-0 shadow-lg">
+                        <div class="position-relative">
+                            <img src="${getFullImageUrl(k.foto)}" class="card-img-top" style="height: 250px; object-fit: cover;">
+                            <span class="position-absolute top-0 end-0 m-3 badge rounded-pill bg-primary px-3 shadow">
+                                ${candidateNoText} ${k.noUrut}
+                            </span>
                         </div>
-                        <div class="d-flex justify-content-between align-items-center">
-                            <span class="status-pill">${k.votes} Suara Sah</span>
-                            <button onclick="showCandidateDetail(${index})" class="btn btn-sm btn-outline-primary rounded-pill px-3">
-                                Detail Profil
-                            </button>
+                        <div class="card-body p-4">
+                            <h5 class="fw-bold mb-1" style="color: var(--text-main);">${k.nama}</h5>
+                            ${k.wakil ? `<div class="small text-muted mb-2"><i class="bi bi-person-badge me-1"></i>Wakil: ${k.wakil}</div>` : ''}
+                            <div class="p-3 rounded-3 mb-3" style="background: var(--input-bg); border: 1px solid var(--border);">
+                                <h6 class="small fw-bold text-uppercase opacity-50" style="color: var(--text-muted);">${visionText}</h6>
+                                <p class="small mb-0 text-truncate-3" style="color: var(--text-main);">${visiText}</p>
+                            </div>
+                            <div class="d-flex justify-content-between align-items-center">
+                                <span class="status-pill">${k.votes || 0} ${validVotesText}</span>
+                                <button onclick="showCandidateDetail(${index})" class="btn btn-sm btn-outline-primary rounded-pill px-3">
+                                    ${detailBtnText}
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
-            </div>
-        `).join('');
+            `;
+        }).join('');
     } catch (err) {
         container.innerHTML = `
         <div class="col-12 text-center py-5" style="animation: fadeIn 0.5s ease;">
             <div class="mb-4">
                 <i class="bi bi-cloud-slash display-1 text-muted"></i>
             </div>
-            <h4 class="fw-bold">Gagal Memuat Kandidat</h4>
-            <p class="text-secondary mb-4">Terjadi masalah koneksi ke server. Silakan coba muat ulang halaman.</p>
+            <h4 class="fw-bold">${t('err_load_candidate_title', 'Gagal Memuat Kandidat')}</h4>
+            <p class="text-secondary mb-4">${t('net_error_desc', 'Terjadi masalah koneksi ke server. Silakan coba muat ulang halaman.')}</p>
             
             <button onclick="location.reload()" class="btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm">
-                <i class="bi bi-arrow-clockwise me-2"></i> Muat Ulang Halaman
+                <i class="bi bi-arrow-clockwise me-2"></i> ${t('btn_try_again', 'Muat Ulang Halaman')}
             </button>
         </div>`;
     }
@@ -811,25 +876,33 @@ function showCandidateDetail(index) {
   const cand = allCandidatesData[index];
   const modal = new bootstrap.Modal(document.getElementById('candidateModal'));
 
-  // Update Visual Colors
   document.getElementById('modalHeaderColor').style.background = 
     `linear-gradient(135deg, ${cand.warna} 0%, ${cand.warna}dd 100%)`;
   document.getElementById('modalNoUrut').style.backgroundColor = cand.warna;
   document.getElementById('modalNoUrut').classList.add('text-white');
 
-  // Update Text Data
+  const candidateNoPrefix = currentLang === 'en' ? 'Candidate No.' : 'No. Urut';
+
   document.getElementById('modalFoto').src = getFullImageUrl(cand.foto);
-  document.getElementById('modalNoUrut').innerText = `No. Urut ${cand.noUrut}`;
-  document.getElementById('modalNamaKetua').innerText = cand.nama;
+  document.getElementById('modalNoUrut').innerText = `${candidateNoPrefix} ${cand.noUrut}`;
+  
+  let displayName = cand.nama;
+  if (cand.wakil) {
+      displayName += ` & ${cand.wakil}`;
+  }
+  document.getElementById('modalNamaKetua').innerText = displayName;
 
-  document.getElementById('modalTagline').innerText = cand.tagline;
-  document.getElementById('modalVisi').innerText = cand.visi;
+  const taglineText = (currentLang === 'en' && cand.tagline_en) ? cand.tagline_en : cand.tagline;
+  const visiText = (currentLang === 'en' && cand.visi_en) ? cand.visi_en : cand.visi;
+  const misiArray = (currentLang === 'en' && cand.misi_en) ? cand.misi_en : cand.misi;
 
-  // Render Misi dengan gaya List Baru
+  document.getElementById('modalTagline').innerText = taglineText || '';
+  document.getElementById('modalVisi').innerText = visiText || '';
+
   const misiList = document.getElementById('modalMisi');
   misiList.innerHTML = '';
-  if (Array.isArray(cand.misi)) {
-    cand.misi.forEach(m => {
+  if (Array.isArray(misiArray)) {
+    misiArray.forEach(m => {
       misiList.innerHTML += `<li>${m}</li>`;
     });
   }
@@ -847,38 +920,31 @@ async function startVotingProcess() {
     const confirmModal = bootstrap.Modal.getOrCreateInstance(modalEl);
     const btnConfirmExecute = document.getElementById('btnConfirmExecute');
     
-    // Simpan konten asli tombol modal untuk reset nanti
     const originalModalHTML = btnConfirmExecute.innerHTML;
     
     confirmModal.show();
 
-    // Pastikan tombol di-reset setiap kali modal dibuka kembali
     btnConfirmExecute.disabled = false;
     btnConfirmExecute.innerHTML = originalModalHTML;
 
     btnConfirmExecute.onclick = async () => {
         try {
-            // 1. Jalankan Loading pada tombol di dalam Modal
             btnConfirmExecute.disabled = true;
-            btnConfirmExecute.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menghubungkan...';
+            btnConfirmExecute.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>${t('btn_connecting', 'Menghubungkan...')}`;
 
-            // 2. Jalankan fungsi aktivasi (tunggu sampai proses kirim tx selesai)
             await executeVotingActivation(btnConfirmExecute);
-
-            // 3. Jika berhasil sampai tahap kirim, baru tutup modal
             confirmModal.hide();
             
         } catch (err) {
             console.error("Proses terhenti:", err);
             
-            // 4. FIX: Reset loading spinner jika user menolak/gagal
             btnConfirmExecute.disabled = false;
             btnConfirmExecute.innerHTML = originalModalHTML;
             
             if (err.code === 'ACTION_REJECTED' || err.code === 4001) {
-                addLog("Transaksi dibatalkan oleh Admin.", "danger");
+                addLog('log_tx_cancelled', 'danger');
             } else {
-                addLog(`Error: ${err.message}`, "danger");
+                addLog(`Error: ${err.message}`, 'danger');
             }
         }
     };
@@ -889,44 +955,41 @@ async function executeVotingActivation(modalBtn) {
     const originalDashboardHTML = btnDashboard.innerHTML;
 
     try {
-        // Status Loading pada tombol utama dashboard (sebagai cadangan)
         btnDashboard.disabled = true;
-        btnDashboard.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Processing...';
+        btnDashboard.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>${t('status_processing', 'Processing...')}`;
 
         const configRes = await fetch(`${BACKEND_URL}/admin/config`, {
-    headers: NGROK_HEADERS // Tambahkan ini
-});
+            headers: NGROK_HEADERS
+        });
         const config = await configRes.json();
 
-        if (!window.ethereum) throw new Error("MetaMask tidak ditemukan");
+        if (!window.ethereum) throw new Error(t('err_no_metamask', 'MetaMask tidak ditemukan'));
 
         provider = new ethers.BrowserProvider(window.ethereum);
         signer = await provider.getSigner();
         const contract = new ethers.Contract(config.contractAddress, config.abi, signer);
 
-        addLog("Menunggu konfirmasi di MetaMask...", "warning");
+        addLog('log_awaiting_metamask_confirm', 'warning');
         
-        // Update teks tombol modal agar user tahu sedang menunggu tanda tangan
-        if (modalBtn) modalBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Konfirmasi di MetaMask...';
+        if (modalBtn) modalBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>${t('btn_confirm_metamask', 'Konfirmasi di MetaMask...')}`;
 
         const durationSeconds = DEFAULT_VOTING_DURATION * 3600;
         const tx = await contract.startVoting(durationSeconds); 
         
-        addLog(`Transaksi dikirim: ${tx.hash.substring(0,10)}...`, "info");
+        const shortTxHash = `${tx.hash.substring(0,10)}...`;
+        addLog('log_tx_sent', 'info', shortTxHash);
         
-        // Update teks tombol modal saat menunggu mining
-        if (modalBtn) modalBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Menunggu Konfirmasi...';
+        if (modalBtn) modalBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>${t('btn_awaiting_confirm', 'Menunggu Konfirmasi...')}`;
 
         const receipt = await tx.wait();
 
         if (receipt.status === 1) {
-            addLog("Voting BERHASIL dibuka!", "success");
-            addLog(`Sistem: Durasi berlangsung ${DEFAULT_VOTING_DURATION} Jam.`, "info");
+            addLog('log_voting_opened', 'success');
+            addLog('log_voting_duration', 'info', `${DEFAULT_VOTING_DURATION} Jam`);
             setTimeout(() => window.location.reload(), 2000);
         }
 
     } catch (err) {
-        // Lempar error ke pemanggil (startVotingProcess) agar spinner di modal bisa di-reset
         btnDashboard.disabled = false;
         btnDashboard.innerHTML = originalDashboardHTML;
         throw err; 
@@ -936,30 +999,31 @@ async function executeVotingActivation(modalBtn) {
 async function refreshDashboardStatus() {
     try {
         const res = await fetch(`${BACKEND_URL}/voting-status`, {
-    headers: NGROK_HEADERS // Tambahkan ini
-});
+            headers: NGROK_HEADERS
+        });
         const data = await res.json();
         const btnStart = document.getElementById('btnStartVoting');
 
-        // Update Badge Visual
         updateStatusBadge(data.status);
 
-        // LOGIKA TOMBOL: Jika aktif, sembunyikan atau ganti teksnya
-        if (data.status.toLowerCase() === 'active') {
-            sessionStorage.removeItem('log_ended_triggered');
-            btnStart.disabled = true;
-            btnStart.innerHTML = '<i class="bi bi-check-all me-2"></i>Voting Berlangsung';
-            btnStart.classList.replace('btn-primary', 'btn-success');
-            // Jika ingin dihilangkan sepenuhnya, gunakan: btnStart.style.display = 'none';
-        } else if (data.status.toLowerCase() === 'ended') {
-            btnStart.disabled = true;
-            btnStart.innerHTML = '<i class="bi bi-slash-circle me-2"></i>Voting Telah Berakhir';
-            btnStart.classList.replace('btn-primary', 'btn-danger');
-        } else {
-            // Jika status 'upcoming' atau 'idle', kembalikan ke normal
-            btnStart.disabled = false;
-            btnStart.innerHTML = '<i class="bi bi-play-fill me-2"></i>Buka Voting';
-            btnStart.className = 'btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm';
+        if (btnStart) {
+            if (data.status.toLowerCase() === 'active') {
+                sessionStorage.removeItem('log_ended_triggered');
+                btnStart.disabled = true;
+                const activeText = currentLang === 'en' ? 'Voting Active' : 'Voting Berlangsung';
+                btnStart.innerHTML = `<i class="bi bi-check-all me-2"></i>${activeText}`;
+                btnStart.className = 'btn btn-success rounded-pill px-4 py-2 fw-bold shadow-sm';
+            } else if (data.status.toLowerCase() === 'ended') {
+                btnStart.disabled = true;
+                const endedText = currentLang === 'en' ? 'Voting Ended' : 'Voting Telah Berakhir';
+                btnStart.innerHTML = `<i class="bi bi-slash-circle me-2"></i>${endedText}`;
+                btnStart.className = 'btn btn-danger rounded-pill px-4 py-2 fw-bold shadow-sm';
+            } else {
+                btnStart.disabled = false;
+                const openText = currentLang === 'en' ? 'Open Voting' : 'Buka Voting';
+                btnStart.innerHTML = `<i class="bi bi-play-fill me-2"></i>${openText}`;
+                btnStart.className = 'btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm';
+            }
         }
     } catch (err) {
         console.error("Gagal refresh status:", err);
@@ -973,25 +1037,24 @@ function updateStatusBadge(status) {
     const badge = document.getElementById('badgeStatusVoting');
     if (!badge) return;
 
-    // Reset class
     badge.className = 'badge rounded-pill';
 
     switch (status.toLowerCase()) {
         case 'active':
-            badge.innerText = 'Status: Voting Aktif';
-            badge.classList.add('bg-success', 'animate-pulse'); // Tambahkan hijau & animasi
+            badge.innerText = currentLang === 'en' ? 'Status: Voting Active' : 'Status: Voting Aktif';
+            badge.classList.add('bg-success', 'animate-pulse');
             break;
         case 'ended':
-            badge.innerText = 'Status: Voting Selesai';
-            badge.classList.add('bg-danger'); // Merah
+            badge.innerText = currentLang === 'en' ? 'Status: Voting Ended' : 'Status: Voting Selesai';
+            badge.classList.add('bg-danger');
             break;
         case 'upcoming':
-            badge.innerText = 'Status: Belum Dimulai';
-            badge.classList.add('bg-warning', 'text-dark'); // Kuning
+            badge.innerText = currentLang === 'en' ? 'Status: Not Started' : 'Status: Belum Dimulai';
+            badge.classList.add('bg-warning', 'text-dark');
             break;
         default:
-            badge.innerText = 'Status: Terkunci';
-            badge.classList.add('bg-secondary'); // Abu-abu
+            badge.innerText = currentLang === 'en' ? 'Status: Locked' : 'Status: Terkunci';
+            badge.classList.add('bg-secondary');
     }
 }
 
@@ -1000,28 +1063,27 @@ function checkMetaMaskAvailability() {
     const text = document.getElementById('statusText');
     const btn = document.getElementById('btnConnectMetamask');
 
-    // Cek apakah window.ethereum (MetaMask) tersedia
     if (typeof window.ethereum !== 'undefined') {
-        // JIKA TERDETEKSI
-        dot.className = 'dot-indicator dot-amber';
-        text.textContent = 'Menunggu koneksi...';
-        btn.classList.remove('opacity-50');
+        if (dot) dot.className = 'dot-indicator dot-amber';
+        if (text) text.textContent = currentLang === 'en' ? 'Awaiting connection...' : 'Menunggu koneksi...';
+        if (btn) btn.classList.remove('opacity-50');
     } else {
-        // JIKA TIDAK TERDETEKSI
-        dot.className = 'dot-indicator dot-red';
-        text.textContent = 'MetaMask tidak terdeteksi';
+        if (dot) dot.className = 'dot-indicator dot-red';
+        if (text) text.textContent = currentLang === 'en' ? 'MetaMask not detected' : 'MetaMask tidak terdeteksi';
         
-        // Opsional: Buat tombol tidak bisa diklik dan beri info
-        btn.innerHTML = '<i class="bi bi-download me-2"></i>Install MetaMask';
-        btn.classList.remove('opacity-50');
-        btn.onclick = () => window.open('https://metamask.io/download/', '_blank');
+        if (btn) {
+            btn.innerHTML = `<i class="bi bi-download me-2"></i>${currentLang === 'en' ? 'Install MetaMask' : 'Install MetaMask'}`;
+            btn.classList.remove('opacity-50');
+            btn.onclick = () => window.open('https://metamask.io/download/', '_blank');
+        }
     }
 }
 
 function updateLoginClock() {
     const now = new Date();
-    const timeString = now.toTimeString().split(' ')[0]; // Format HH:MM:SS
-    document.getElementById('loginTimer').textContent = timeString;
+    const timeString = now.toTimeString().split(' ')[0];
+    const loginTimer = document.getElementById('loginTimer');
+    if (loginTimer) loginTimer.textContent = timeString;
 }
 
 function confirmLogout() {
@@ -1031,13 +1093,13 @@ function confirmLogout() {
 
     logoutModal.show();
 
-    // Event klik pada tombol konfirmasi di dalam modal
-    btnDoLogout.onclick = () => {
-        executeLogout(); // Panggil fungsi eksekusi logout yang asli
-    };
+    if (btnDoLogout) {
+        btnDoLogout.onclick = () => {
+            executeLogout();
+        };
+    }
 }
 
-// Fungsi eksekusi logout yang asli
 function executeLogout() {
     if (typeof eventSource !== 'undefined' && eventSource) {
         eventSource.close();

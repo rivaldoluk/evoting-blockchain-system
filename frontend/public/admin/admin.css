@@ -1023,3 +1023,220 @@ h6,
   .modal-dialog-scrollable .modal-content {
     max-height: 90vh;
   }
+
+  /* ===================================================
+   LANGUAGE SWITCHER GLASSMORPHISM (ADMIN)
+   =================================================== */
+
+/* Container Kaca Pembungkus Button */
+.lang-glass-wrapper {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px;
+    background: rgba(255, 255, 255, 0.08);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    border: 1px solid var(--border, rgba(255, 255, 255, 0.15));
+    border-radius: 50rem; /* Pill style */
+    gap: 3px;
+    transition: all 0.3s ease;
+}
+
+/* Light mode adjustment */
+[data-theme="light"] .lang-glass-wrapper {
+    background: rgba(0, 0, 0, 0.04);
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+/* Pill / Option Button */
+.lang-glass-pill {
+    font-size: 0.75rem;
+    font-weight: 700;
+    padding: 4px 10px;
+    border-radius: 50rem;
+    color: var(--text-muted, #94a3b8);
+    cursor: pointer;
+    user-select: none;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    letter-spacing: 0.5px;
+}
+
+.lang-glass-pill:hover {
+    color: var(--text-main, #ffffff);
+}
+
+/* Status Tombol Aktif (ID / EN) */
+.lang-glass-pill.active {
+    background: var(--accent-blue, #0d6efd);
+    color: #ffffff !important;
+    box-shadow: 0 2px 8px rgba(13, 110, 253, 0.35);
+}
+
+/* Responsif untuk Layar Seluler */
+@media (max-width: 576px) {
+    .lang-glass-wrapper {
+        padding: 2px;
+    }
+    .lang-glass-pill {
+        font-size: 0.7rem;
+        padding: 3px 8px;
+    }
+}
+
+/* ============================================================
+   MOBILE ACCESS RESTRICTION (ADAPTIVE LIGHT & DARK THEME)
+   ============================================================ */
+.mobile-restricted-warning {
+    display: none;
+}
+
+@media (max-width: 767.98px) {
+    body {
+        overflow: hidden !important;
+        /* Latar belakang adaptif mengikuti variabel tema global */
+        background-color: var(--bg-main, #020617) !important;
+        transition: background-color 0.3s ease;
+    }
+    
+    /* Sembunyikan Konten Utama di Layar Kecil */
+    #loginSection, 
+    #adminDashboard {
+        display: none !important;
+    }
+
+    /* Layar Peringatan Modern */
+    .mobile-restricted-warning {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 100vh;
+        padding: 2rem 1.5rem;
+        text-align: center;
+        position: relative;
+        z-index: 9999;
+        /* Gradasi latar belakang yang dinamis */
+        background: radial-gradient(circle at top right, var(--bg-sidebar, #0f172a), var(--bg-main, #020617));
+    }
+
+    /* Adjust Gradasi Khusus Light Mode */
+    [data-theme="light"] .mobile-restricted-warning {
+        background: radial-gradient(circle at top right, #ffffff, #f1f5f9);
+    }
+
+    /* Container Kartu Kaca (Glass Card) */
+    .restricted-card {
+        background: rgba(255, 255, 255, 0.03);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 2rem;
+        padding: 2.5rem 1.5rem;
+        max-width: 380px;
+        width: 100%;
+        box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+        animation: floatIn 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        transition: all 0.3s ease;
+    }
+
+    /* Penyesuaian Kartu & Teks di Light Mode */
+    [data-theme="light"] .restricted-card {
+        background: rgba(255, 255, 255, 0.85);
+        border-color: rgba(0, 0, 0, 0.08);
+        box-shadow: 0 20px 40px rgba(0, 0, 0, 0.06);
+    }
+
+    /* Visual Animasi Perangkat */
+    .device-icon-group {
+        position: relative;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 90px;
+        height: 90px;
+        background: rgba(13, 110, 253, 0.1);
+        border-radius: 50%;
+        margin-bottom: 1.5rem;
+    }
+
+    .device-icon-group i.main-icon {
+        font-size: 2.5rem;
+        color: #0d6efd;
+    }
+
+    .device-icon-group .badge-cross {
+        position: absolute;
+        bottom: 5px;
+        right: 5px;
+        background: #dc3545;
+        color: white;
+        width: 26px;
+        height: 26px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 0.8rem;
+        border: 2px solid var(--bg-main, #020617);
+        transition: border-color 0.3s ease;
+    }
+
+    [data-theme="light"] .device-icon-group .badge-cross {
+        border-color: #ffffff;
+    }
+
+    /* Rekomendasi Device Pills */
+    .device-recommend-pills {
+        display: flex;
+        gap: 8px;
+        justify-content: center;
+        margin-top: 1.25rem;
+        flex-wrap: wrap;
+    }
+
+    .device-pill {
+        background: rgba(255, 255, 255, 0.06);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        padding: 6px 14px;
+        border-radius: 50rem;
+        font-size: 0.78rem;
+        font-weight: 600;
+        color: var(--text-main, #f8fafc);
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        transition: all 0.3s ease;
+    }
+
+    [data-theme="light"] .device-pill {
+        background: rgba(0, 0, 0, 0.04);
+        border-color: rgba(0, 0, 0, 0.08);
+        color: #1e293b;
+    }
+}
+
+@keyframes floatIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* ============================================================
+   RESPONSIVE LAYOUT SETUP
+   ============================================================ */
+@media (max-width: 991.98px) {
+    .sidebar {
+        position: fixed;
+        left: -100%;
+        z-index: 1050;
+        transition: left 0.3s ease;
+    }
+    .sidebar.show {
+        left: 0;
+    }
+}
