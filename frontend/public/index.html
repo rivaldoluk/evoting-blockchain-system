@@ -1036,6 +1036,7 @@
 
       let timerDisplay = document.getElementById('countdownTimer');
       let badgeContainer = document.getElementById('statusBadgeContainer');
+      let timerLabel = document.getElementById('timerLabel');
 
       if (!timerDisplay) {
         const alertBox = document.querySelector('#stagePanduan .alert-info');
@@ -1045,10 +1046,11 @@
                 <div class="mb-2 small text-uppercase fw-bold text-muted" data-i18n="voting_status">${t('voting_status', 'Status Pemilihan')}</div>
                 <div id="statusBadgeContainer"></div>
                 <div id="countdownTimer">00:00:00</div>
-                <div id="timerLabel" class="small text-muted">${t('label_time_remaining', 'Waktu tersisa untuk memberikan suara')}</div>
+                <div id="timerLabel" class="small text-muted" data-i18n="label_time_remaining">${t('label_time_remaining', 'Waktu tersisa untuk memberikan suara')}</div>
             `;
             timerDisplay = document.getElementById('countdownTimer');
             badgeContainer = document.getElementById('statusBadgeContainer');
+            timerLabel = document.getElementById('timerLabel');
         }
       }
 
@@ -1057,34 +1059,47 @@
       if (countdownInterval) clearInterval(countdownInterval);
 
       if (data.status === 'active') {
-        if(badgeContainer) badgeContainer.innerHTML = `<span class="badge-status bg-success-subtle text-success border border-success"><span class="pulse-dot"></span> ${t('status_ongoing', 'BERLANGSUNG')}</span>`;
+        if(badgeContainer) badgeContainer.innerHTML = `<span class="badge-status bg-success-subtle text-success border border-success"><span class="pulse-dot"></span> <span data-i18n="status_ongoing">${t('status_ongoing', 'BERLANGSUNG')}</span></span>`;
         if(btnStart) btnStart.disabled = false;
 
+        // Set Atribut i18n untuk status active
+        if (timerLabel) {
+            timerLabel.setAttribute('data-i18n', 'label_time_remaining');
+            timerLabel.innerText = t('label_time_remaining', 'Waktu tersisa untuk memberikan suara');
+        }
+
         runTimer(data.targetTime, timerDisplay, () => {
-          if(badgeContainer) badgeContainer.innerHTML = `<span class="badge-status bg-danger-subtle text-danger border border-danger">${t('status_time_up', 'WAKTU HABIS')}</span>`;
+          if(badgeContainer) badgeContainer.innerHTML = `<span class="badge-status bg-danger-subtle text-danger border border-danger"><span data-i18n="status_time_up">${t('status_time_up', 'WAKTU HABIS')}</span></span>`;
           if(btnStart) btnStart.disabled = true;
           if(timerDisplay) timerDisplay.innerText = "00:00:00";
-          document.getElementById('timerLabel').innerText = t('label_session_ended', 'Sesi telah berakhir secara otomatis.');
+          if(timerLabel) {
+              timerLabel.setAttribute('data-i18n', 'label_session_ended');
+              timerLabel.innerText = t('label_session_ended', 'Sesi telah berakhir secara otomatis.');
+          }
         });
 
       } else if (data.status === 'upcoming') {
-        if(badgeContainer) badgeContainer.innerHTML = `<span class="badge-status bg-warning-subtle text-warning border border-warning">${t('status_not_started', 'BELUM DIMULAI')}</span>`;
+        if(badgeContainer) badgeContainer.innerHTML = `<span class="badge-status bg-warning-subtle text-warning border border-warning"><span data-i18n="status_not_started">${t('status_not_started', 'BELUM DIMULAI')}</span></span>`;
         if(btnStart) btnStart.disabled = true;
         if(timerDisplay) timerDisplay.innerText = "--:--:--";
-        document.getElementById('timerLabel').innerText = t('label_waiting_committee', 'Menunggu pembukaan oleh panitia.');
+        if(timerLabel) {
+            timerLabel.setAttribute('data-i18n', 'label_waiting_committee');
+            timerLabel.innerText = t('label_waiting_committee', 'Menunggu pembukaan oleh panitia.');
+        }
 
       } else {
-  if (badgeContainer) badgeContainer.innerHTML = `<span class="badge-status bg-secondary-subtle text-secondary border border-secondary">${t('status_ended', 'VOTING SELESAI')}</span>`;
-  if (btnStart) btnStart.disabled = true;
-  if (timerDisplay) timerDisplay.innerText = t('status_closed', 'CLOSED');
-  
-  const timerLabel = document.getElementById('timerLabel');
-  if (timerLabel) timerLabel.innerText = t('label_voting_closed', 'Penerimaan suara telah ditutup.');
-}
+        if (badgeContainer) badgeContainer.innerHTML = `<span class="badge-status bg-secondary-subtle text-secondary border border-secondary"><span data-i18n="status_ended">${t('status_ended', 'VOTING SELESAI')}</span></span>`;
+        if (btnStart) btnStart.disabled = true;
+        if (timerDisplay) timerDisplay.innerText = t('status_closed', 'CLOSED');
+        if (timerLabel) {
+            timerLabel.setAttribute('data-i18n', 'label_voting_closed');
+            timerLabel.innerText = t('label_voting_closed', 'Penerimaan suara telah ditutup.');
+        }
+      }
     } catch (err) {
       console.error("Gagal cek status:", err);
     }
-  }
+}
 
   function runTimer(targetTime, displayElement, onFinish) {
     function update() {

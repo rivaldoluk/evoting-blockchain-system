@@ -215,5 +215,11 @@
   "btn_confirm_metamask": "Konfirmasi di MetaMask...",
   "btn_awaiting_confirm": "Menunggu Konfirmasi...",
   "last_update_label": "Terakhir diperbarui:",
-  "last_update_text": "Terakhir diperbarui: Baru saja"
+  "last_update_text": "Terakhir diperbarui: Baru saja",
+  "status_active": "Status: Voting Aktif",
+  "status_ended_badge": "Status: Voting Selesai",
+  "status_upcoming": "Status: Belum Dimulai",
+  "status_locked": "Status: Terkunci",
+  "btn_voting_active": "Voting Berlangsung",
+  "btn_voting_ended": "Voting Telah Berakhir"
 }

@@ -215,5 +215,11 @@
   "btn_confirm_metamask": "Confirmation on MetaMask...",
   "btn_awaiting_confirm": "Waiting for Confirmation...",
   "last_update_label": "Last Update:",
-  "last_update_text": "Last Update: Just now"
+  "last_update_text": "Last Update: Just now",
+  "status_active": "Status: Voting Active",
+  "status_ended_badge": "Status: Voting Ended",
+  "status_upcoming": "Status: Not Started",
+  "status_locked": "Status: Locked",
+  "btn_voting_active": "Voting Active",
+  "btn_voting_ended": "Voting Ended"
 }

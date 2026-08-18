@@ -627,6 +627,9 @@ async function startCountdownTimer() {
 
         updateStatusBadge(data.status);
 
+        const timerEl = document.getElementById('statTimer');
+        if (!timerEl) return;
+
         if (data.status === 'active' && data.targetTime) {
             const timerInterval = setInterval(() => {
                 const now = Date.now();
@@ -634,8 +637,7 @@ async function startCountdownTimer() {
 
                 if (diff <= 0) {
                     clearInterval(timerInterval);
-                    const endedText = t('status_ended', 'SELESAI');
-                    document.getElementById('statTimer').innerText = endedText;
+                    timerEl.innerText = t('status_ended', 'SELESAI');
                     
                     if (sessionStorage.getItem('log_ended_triggered') !== 'true') {
                         addLog('log_voting_ended', "warning");
@@ -646,14 +648,17 @@ async function startCountdownTimer() {
                     const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
                     const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
                     const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
-                    document.getElementById('statTimer').innerText = `${h}:${m}:${s}`;
+                    timerEl.innerText = `${h}:${m}:${s}`;
                 }
             }, 1000);
         } else if (data.status === 'ended') {
-            document.getElementById('statTimer').innerText = t('status_ended', 'SELESAI');
+            timerEl.innerText = t('status_ended', 'SELESAI');
             sessionStorage.setItem('log_ended_triggered', 'true');
+        } else if (data.status === 'upcoming') {
+            // Tampilkan garis strip saat belum dimulai
+            timerEl.innerText = "--:--:--";
         } else {
-            document.getElementById('statTimer').innerText = data.status.toUpperCase();
+            timerEl.innerText = "--:--:--";
         }
     } catch (e) {
         addLog('log_server_sync_failed', "danger");
@@ -921,23 +926,28 @@ function showCandidateDetail(index) {
 /**
  * KONFIGURASI DURASI OTOMATIS (Dalam Jam)
  */
-const DEFAULT_VOTING_DURATION = 6; 
+const DEFAULT_VOTING_DURATION = 1; 
 
 async function startVotingProcess() {
     const modalEl = document.getElementById('modalConfirmStart');
     const confirmModal = bootstrap.Modal.getOrCreateInstance(modalEl);
     const btnConfirmExecute = document.getElementById('btnConfirmExecute');
+
+    // Ambil tombol pembatalan & penutup modal
+    const btnCancel = modalEl.querySelector('[data-bs-dismiss="modal"]');
     
     const originalModalHTML = btnConfirmExecute.innerHTML;
     
     confirmModal.show();
 
     btnConfirmExecute.disabled = false;
+    if (btnCancel) btnCancel.disabled = false;
     btnConfirmExecute.innerHTML = originalModalHTML;
 
     btnConfirmExecute.onclick = async () => {
         try {
             btnConfirmExecute.disabled = true;
+            if (btnCancel) btnCancel.disabled = true;
             btnConfirmExecute.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>${t('btn_connecting', 'Menghubungkan...')}`;
 
             await executeVotingActivation(btnConfirmExecute);
@@ -947,6 +957,7 @@ async function startVotingProcess() {
             console.error("Proses terhenti:", err);
             
             btnConfirmExecute.disabled = false;
+            if (btnCancel) btnCancel.disabled = false;
             btnConfirmExecute.innerHTML = originalModalHTML;
             
             if (err.code === 'ACTION_REJECTED' || err.code === 4001) {
@@ -964,6 +975,7 @@ async function executeVotingActivation(modalBtn) {
 
     try {
         btnDashboard.disabled = true;
+        btnDashboard.dataset.processing = "true";
         btnDashboard.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>${t('status_processing', 'Processing...')}`;
 
         const configRes = await fetch(`${BACKEND_URL}/admin/config`, {
@@ -999,6 +1011,7 @@ async function executeVotingActivation(modalBtn) {
 
     } catch (err) {
         btnDashboard.disabled = false;
+        delete btnDashboard.dataset.processing;
         btnDashboard.innerHTML = originalDashboardHTML;
         throw err; 
     }
@@ -1015,20 +1028,25 @@ async function refreshDashboardStatus() {
         updateStatusBadge(data.status);
 
         if (btnStart) {
-            if (data.status.toLowerCase() === 'active') {
+            // Hindari menimpa tampilan tombol jika sedang dalam proses transaksi (Processing...)
+            if (btnStart.dataset.processing === "true") return;
+
+            const status = data.status ? data.status.toLowerCase() : '';
+
+            if (status === 'active') {
                 sessionStorage.removeItem('log_ended_triggered');
                 btnStart.disabled = true;
-                const activeText = currentLang === 'en' ? 'Voting Active' : 'Voting Berlangsung';
+                const activeText = t('btn_voting_active', 'Voting Berlangsung');
                 btnStart.innerHTML = `<i class="bi bi-check-all me-2"></i>${activeText}`;
                 btnStart.className = 'btn btn-success rounded-pill px-4 py-2 fw-bold shadow-sm';
-            } else if (data.status.toLowerCase() === 'ended') {
+            } else if (status === 'ended') {
                 btnStart.disabled = true;
-                const endedText = currentLang === 'en' ? 'Voting Ended' : 'Voting Telah Berakhir';
+                const endedText = t('btn_voting_ended', 'Voting Telah Berakhir');
                 btnStart.innerHTML = `<i class="bi bi-slash-circle me-2"></i>${endedText}`;
                 btnStart.className = 'btn btn-danger rounded-pill px-4 py-2 fw-bold shadow-sm';
             } else {
                 btnStart.disabled = false;
-                const openText = currentLang === 'en' ? 'Open Voting' : 'Buka Voting';
+                const openText = t('btn_open_voting', 'Buka Voting');
                 btnStart.innerHTML = `<i class="bi bi-play-fill me-2"></i>${openText}`;
                 btnStart.className = 'btn btn-primary rounded-pill px-4 py-2 fw-bold shadow-sm';
             }
@@ -1049,19 +1067,19 @@ function updateStatusBadge(status) {
 
     switch (status.toLowerCase()) {
         case 'active':
-            badge.innerText = currentLang === 'en' ? 'Status: Voting Active' : 'Status: Voting Aktif';
+            badge.innerText = t('status_active', 'Status: Voting Aktif');
             badge.classList.add('bg-success', 'animate-pulse');
             break;
         case 'ended':
-            badge.innerText = currentLang === 'en' ? 'Status: Voting Ended' : 'Status: Voting Selesai';
+            badge.innerText = t('status_ended_badge', 'Status: Voting Selesai');
             badge.classList.add('bg-danger');
             break;
         case 'upcoming':
-            badge.innerText = currentLang === 'en' ? 'Status: Not Started' : 'Status: Belum Dimulai';
+            badge.innerText = t('status_upcoming', 'Status: Belum Dimulai');
             badge.classList.add('bg-warning', 'text-dark');
             break;
         default:
-            badge.innerText = currentLang === 'en' ? 'Status: Locked' : 'Status: Terkunci';
+            badge.innerText = t('status_locked', 'Status: Terkunci');
             badge.classList.add('bg-secondary');
     }
 }
