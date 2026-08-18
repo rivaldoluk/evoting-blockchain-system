@@ -531,15 +531,23 @@ function renderTransactionTableRows() {
     
     if (!tbody) return;
 
+    // 1. Selalu perbarui jam/status sinkronisasi terlepas dari ada/tidaknya transaksi
+    const timeLocale = currentLang === 'en' ? 'en-US' : 'id-ID';
+    const labelPrefix = t('last_update_label', currentLang === 'en' ? 'Last Update:' : 'Terakhir diperbarui:');
+    
+    if (syncText) {
+        if (votedVotersOnly.length === 0) {
+            syncText.innerText = t('last_update_text', currentLang === 'en' ? 'Last Update: Just now' : 'Terakhir diperbarui: Baru saja');
+        } else {
+            syncText.innerText = `${labelPrefix} ${new Date().toLocaleTimeString(timeLocale)}`;
+        }
+    }
+
     if (votedVotersOnly.length === 0) {
         tbody.innerHTML = `<tr><td colspan="5" class="text-center py-5 text-muted" data-i18n="waiting_tx">${t('waiting_tx', 'Menunggu transaksi masuk...')}</td></tr>`;
         if (txNav) txNav.classList.add('d-none');
         return;
     }
-
-    const timeLocale = currentLang === 'en' ? 'en-US' : 'id-ID';
-    const labelPrefix = currentLang === 'en' ? 'Last Update:' : 'Terakhir diperbarui:';
-    if (syncText) syncText.innerText = `${labelPrefix} ${new Date().toLocaleTimeString(timeLocale)}`;
 
     const limit = 10;
     const start = (txCurrentPage - 1) * limit;

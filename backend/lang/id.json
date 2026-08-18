@@ -115,7 +115,7 @@
   "label_total_votes": "Total Suara Masuk",
   "chart_title": "Grafik Perolehan Suara",
   "syncing_data": "Sinkronisasi data...",
-  "last_update_just_now": "Last Update: Just now",
+  "last_update_just_now": "Terakhir diperbarui: Sekarang",
   "candidate_detail_title": "Detail Kandidat",
   "copy_success": "Berhasil disalin",
   "receipt_header_title": "Suara Diterima!",
@@ -205,6 +205,7 @@
   "log_voting_duration": "Sistem: Durasi berlangsung",
   "log_tx_sent": "Hash Transaksi:",
   "log_voting_ended": "Sistem: Masa voting telah berakhir.",
+  "log_server_sync_failed": "500 koneksi ke server terputus",
   "mobile_restricted_title": "Tampilan Optimal di Layar Lebar",
   "mobile_restricted_desc": "Untuk memantau transaksi <i>blockchain</i>, <i>log waktu-nyata</i>, dan grafik suara dengan nyaman, silakan buka dasbor ini melalui:",
   "mobile_device_ipad": "iPad / Tablet",
@@ -212,5 +213,7 @@
   "mobile_device_desktop": "Komputer Desktop",
   "mobile_restricted_tip": "Mode lanskap seluler tidak direkomendasikan.",
   "btn_confirm_metamask": "Konfirmasi di MetaMask...",
-  "btn_awaiting_confirm": "Menunggu Konfirmasi..."
+  "btn_awaiting_confirm": "Menunggu Konfirmasi...",
+  "last_update_label": "Terakhir diperbarui:",
+  "last_update_text": "Terakhir diperbarui: Baru saja"
 }

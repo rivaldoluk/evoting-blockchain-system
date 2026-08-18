@@ -205,6 +205,7 @@
   "log_voting_duration": "System: Duration set to",
   "log_tx_sent": "Transaction Hash:",
   "log_voting_ended": "System: Voting period has ended.",
+  "log_server_sync_failed": "500 Internal Server Error",
   "mobile_restricted_title": "Optimal View on Larger Screens",
   "mobile_restricted_desc": "To comfortably monitor <i>blockchain</i> transactions, <i>real-time logs</i>, and live voting charts, please access this dashboard via:",
   "mobile_device_ipad": "iPad / Tablet",
@@ -212,5 +213,7 @@
   "mobile_device_desktop": "Desktop PC",
   "mobile_restricted_tip": "Mobile landscape mode is not recommended.",
   "btn_confirm_metamask": "Confirmation on MetaMask...",
-  "btn_awaiting_confirm": "Waiting for Confirmation..."
+  "btn_awaiting_confirm": "Waiting for Confirmation...",
+  "last_update_label": "Last Update:",
+  "last_update_text": "Last Update: Just now"
 }
