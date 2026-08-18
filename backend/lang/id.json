@@ -200,13 +200,17 @@
   "log_admin_login_success": "Admin login berhasil:",
   "log_blockchain_sync": "Blockchain sync: Node diperbarui.",
   "log_tx_cancelled": "Transaksi dibatalkan oleh Admin.",
+  "log_awaiting_metamask_confirm": "Menunggu konfirmasi Metamask",
   "log_voting_opened": "Voting BERHASIL dibuka!",
   "log_voting_duration": "Sistem: Durasi berlangsung",
+  "log_tx_sent": "Hash Transaksi:",
   "log_voting_ended": "Sistem: Masa voting telah berakhir.",
   "mobile_restricted_title": "Tampilan Optimal di Layar Lebar",
   "mobile_restricted_desc": "Untuk memantau transaksi <i>blockchain</i>, <i>log waktu-nyata</i>, dan grafik suara dengan nyaman, silakan buka dasbor ini melalui:",
   "mobile_device_ipad": "iPad / Tablet",
   "mobile_device_laptop": "Laptop",
   "mobile_device_desktop": "Komputer Desktop",
-  "mobile_restricted_tip": "Mode lanskap seluler tidak direkomendasikan."
+  "mobile_restricted_tip": "Mode lanskap seluler tidak direkomendasikan.",
+  "btn_confirm_metamask": "Konfirmasi di MetaMask...",
+  "btn_awaiting_confirm": "Menunggu Konfirmasi..."
 }

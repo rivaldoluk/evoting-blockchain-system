@@ -1,7 +1,7 @@
 /**
  * KONFIGURASI GLOBAL
  */
-const BACKEND_URL = 'https://6c09-172-216-170-152.ngrok-free.app';
+const BACKEND_URL = 'https://e5a8-103-129-24-168.ngrok-free.app';
 const NGROK_HEADERS = {
     "ngrok-skip-browser-warning": "69420"
 };
@@ -976,7 +976,7 @@ async function executeVotingActivation(modalBtn) {
         const durationSeconds = DEFAULT_VOTING_DURATION * 3600;
         const tx = await contract.startVoting(durationSeconds); 
         
-        const shortTxHash = `${tx.hash.substring(0,10)}...`;
+        const shortTxHash = `${tx.hash.substring(0,6)}...${tx.hash.substring(tx.hash.length-4)}`;
         addLog('log_tx_sent', 'info', shortTxHash);
         
         if (modalBtn) modalBtn.innerHTML = `<span class="spinner-border spinner-border-sm me-2"></span>${t('btn_awaiting_confirm', 'Menunggu Konfirmasi...')}`;

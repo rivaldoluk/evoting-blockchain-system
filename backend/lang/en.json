@@ -200,13 +200,17 @@
   "log_admin_login_success": "Admin login successful:",
   "log_blockchain_sync": "Blockchain sync: Node updated.",
   "log_tx_cancelled": "Transaction cancelled by Admin.",
+  "log_awaiting_metamask_confirm": "Waiting Metamask confirm",
   "log_voting_opened": "Voting OPENED successfully!",
   "log_voting_duration": "System: Duration set to",
+  "log_tx_sent": "Transaction Hash:",
   "log_voting_ended": "System: Voting period has ended.",
   "mobile_restricted_title": "Optimal View on Larger Screens",
   "mobile_restricted_desc": "To comfortably monitor <i>blockchain</i> transactions, <i>real-time logs</i>, and live voting charts, please access this dashboard via:",
   "mobile_device_ipad": "iPad / Tablet",
   "mobile_device_laptop": "Laptop",
   "mobile_device_desktop": "Desktop PC",
-  "mobile_restricted_tip": "Mobile landscape mode is not recommended."
+  "mobile_restricted_tip": "Mobile landscape mode is not recommended.",
+  "btn_confirm_metamask": "Confirmation on MetaMask...",
+  "btn_awaiting_confirm": "Waiting for Confirmation..."
 }
