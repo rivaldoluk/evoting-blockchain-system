@@ -531,7 +531,7 @@ function renderTransactionTableRows() {
     
     if (!tbody) return;
 
-    // 1. Selalu perbarui jam/status sinkronisasi terlepas dari ada/tidaknya transaksi
+    // 1. Selalu perbarui jam/status sinkronisasi
     const timeLocale = currentLang === 'en' ? 'en-US' : 'id-ID';
     const labelPrefix = t('last_update_label', currentLang === 'en' ? 'Last Update:' : 'Terakhir diperbarui:');
     
@@ -557,12 +557,20 @@ function renderTransactionTableRows() {
 
     tbody.innerHTML = paginatedTx.map((voter, index) => {
         const txHash = voter.txHash || "";
-        const shortTx = `${txHash.substring(0, 10)}...${txHash.substring(60)}`;
-        const shortNik = `${voter.nikHash.substring(0, 10)}...${voter.nikHash.substring(54)}`;
+        const shortTx = txHash ? `${txHash.substring(0, 6)}...${txHash.substring(txHash.length - 4)}` : "0x00...000";
+        
+        const nikHash = voter.nikHash || "";
+        const shortNik = nikHash ? `${nikHash.substring(0, 10)}...${nikHash.substring(nikHash.length - 6)}` : "-";
         
         const txTime = parseInt(voter.timestamp);
         const diffInSeconds = Math.floor((now - txTime) / 1000);
         
+        // Format waktu presisi untuk tooltip saat di-hover (Contoh: 19/08/2026, 17:30:00)
+        const exactTimeFormatted = new Date(txTime).toLocaleString(timeLocale, {
+            dateStyle: 'medium',
+            timeStyle: 'medium'
+        });
+
         let statusHTML = '';
         
         if (diffInSeconds < 5) {
@@ -585,22 +593,36 @@ function renderTransactionTableRows() {
         return `
             <tr>
                 <td class="ps-4 text-muted mono" style="font-size: 0.75rem;">${start + index + 1}</td>
+                
+                <!-- 1. TRANSACTION HASH -->
                 <td>
-                    <a href="https://sepolia.etherscan.io/tx/${txHash}" target="_blank" class="text-decoration-none mono small text-primary">
-                        ${shortTx} <i class="bi bi-box-arrow-up-right ms-1"></i>
+                    <a href="https://sepolia.etherscan.io/tx/${txHash}" target="_blank" class="tx-hash-badge" title="${txHash}">
+                        <i class="bi bi-box-arrow-up-right" style="font-size: 0.75rem;"></i>
+                        <span>${shortTx}</span>
                     </a>
                 </td>
+
+                <!-- 2. VOTER ADDRESS (HASH NIK) -->
                 <td>
-                    <div class="d-flex align-items-center">
-                        <div class="icon-circle bg-blue me-3" style="width: 32px; height: 32px; font-size: 0.8rem;">
+                    <div class="d-flex align-items-center gap-2">
+                        <div class="nik-avatar-box">
                             <i class="bi bi-person-lock"></i>
                         </div>
-                        <span class="mono small text-main">${shortNik}</span>
+                        <span class="mono small fw-semibold text-main" title="${nikHash}">${shortNik}</span>
                     </div>
                 </td>
-                <td class="small text-muted live-time" data-time="${voter.timestamp}">
-                    ${timeAgo(voter.timestamp)}
+
+                <!-- 3. POLESAN WAKTU VOTING -->
+                <td>
+                    <div class="voting-time-box text-muted small" title="${exactTimeFormatted}">
+                        <i class="bi bi-clock-history text-primary"></i>
+                        <span class="live-time fw-medium" data-time="${voter.timestamp}">
+                            ${timeAgo(voter.timestamp)}
+                        </span>
+                    </div>
                 </td>
+
+                <!-- 4. STATUS -->
                 <td class="text-center">
                     ${statusHTML}
                 </td>
@@ -618,6 +640,9 @@ function renderTransactionTableRows() {
 /**
  * 4. BLOCKCHAIN TIMER & UTILITIES
  */
+// Deklarasikan variabel interval di tingkat global (di luar fungsi)
+let timerInterval = null;
+
 async function startCountdownTimer() {
     try {
         const res = await fetch(`${BACKEND_URL}/voting-status`, {
@@ -630,13 +655,22 @@ async function startCountdownTimer() {
         const timerEl = document.getElementById('statTimer');
         if (!timerEl) return;
 
+        // PERBAIKAN 1: Hentikan interval sebelumnya jika ada agar tidak menumpuk
+        if (timerInterval) clearInterval(timerInterval);
+
         if (data.status === 'active' && data.targetTime) {
-            const timerInterval = setInterval(() => {
+            // Hapus data-i18n karena konten berupa jam angka
+            timerEl.removeAttribute('data-i18n');
+
+            timerInterval = setInterval(() => {
                 const now = Date.now();
                 const diff = data.targetTime - now;
 
                 if (diff <= 0) {
                     clearInterval(timerInterval);
+                    
+                    // PERBAIKAN 2: Pasang atribut data-i18n agar responsif saat ganti bahasa
+                    timerEl.setAttribute('data-i18n', 'status_ended');
                     timerEl.innerText = t('status_ended', 'SELESAI');
                     
                     if (sessionStorage.getItem('log_ended_triggered') !== 'true') {
@@ -651,13 +685,16 @@ async function startCountdownTimer() {
                     timerEl.innerText = `${h}:${m}:${s}`;
                 }
             }, 1000);
+
         } else if (data.status === 'ended') {
+            // PERBAIKAN 3: Pasang atribut data-i18n saat status ended
+            timerEl.setAttribute('data-i18n', 'status_ended');
             timerEl.innerText = t('status_ended', 'SELESAI');
             sessionStorage.setItem('log_ended_triggered', 'true');
-        } else if (data.status === 'upcoming') {
-            // Tampilkan garis strip saat belum dimulai
-            timerEl.innerText = "--:--:--";
+
         } else {
+            // Status 'upcoming' atau default
+            timerEl.removeAttribute('data-i18n');
             timerEl.innerText = "--:--:--";
         }
     } catch (e) {
